@@ -48,3 +48,12 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
+
+# Object files
+*.obj
+*.sym
+!*.expected.sym
+!*.expected.obj
+#operating system
+!lc3os.obj
+!lc3os.sym
