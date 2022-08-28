@@ -21,7 +21,7 @@ class AssemblerTest extends AnyFunSuite with Matchers:
     expectedFile.close()
     actualFile.close()
 
-  test("t1 output should match expected binary") {
+  test("t1: assembly file without labels") {
     runTest("t1.asm")
   }
 

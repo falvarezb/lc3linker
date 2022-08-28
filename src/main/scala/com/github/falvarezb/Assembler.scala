@@ -19,10 +19,10 @@ object Assembler:
     val source = Source.fromFile(asmFileNamePath)
     val tokenizedLines = source.getLines().map(_.split("[ ,]").filterNot(_.isEmpty)).filterNot(_.isEmpty).toList
 
-    val instructions = tokenizedLines.map { line =>
-      if line(0) == ".ORIG" then 0x0030
-      else if line(0) == "ADD" then 0x2110
-      else if line(0) == "HALT" then 0x25f0
+    val instructions = tokenizedLines.map { lineTokens =>
+      if lineTokens(0) == ".ORIG" then parseOrig(lineTokens)
+      else if lineTokens(0) == "ADD" then parseAdd(lineTokens)
+      else if lineTokens(0) == "HALT" then 0xf025
       else 0
     }.filterNot(_ == 0)
 
@@ -31,15 +31,24 @@ object Assembler:
 
     instructions.foreach { instr =>
       println(instr.toHexString)
-      //swap bytes (because of little-endian representation)
+      //JVM's big-endian representation
+      //(1 << n) - 1 = 2^n - 1 = 111.. (n times) ..111
       val (mostSignificantByte, leastSignificantByte) = (instr >> 8, instr & ((1 << 8) - 1))
-      objFile.write(leastSignificantByte + 256)
       objFile.write(mostSignificantByte)
+      objFile.write(leastSignificantByte)
     }
     objFile.close()
 
 
-  def parseAdd(instr: Array[String]): Int =
-    1
+  def parseOrig(line: Array[String]): Int =
+    Integer.parseInt(line(1).drop(1), 16)
+
+  def parseAdd(tokens: Array[String]): Int =
+    //ops code: 0001
+    (1 << 12) +
+    (tokens(1).substring(1).toInt << 9) +
+    (tokens(2).substring(1).toInt << 6) +
+    (1 << 5) +
+    tokens(3).substring(1).toInt
 
 
