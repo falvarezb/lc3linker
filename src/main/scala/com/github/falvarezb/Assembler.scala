@@ -17,7 +17,7 @@ object Assembler:
 
   def doLexicalAnalysis(asmFileNamePath: String) =
     val source = Source.fromFile(asmFileNamePath)
-    val tokenizedLines = source.getLines().map(_.split(' ').filterNot(_.isEmpty)).filterNot(_.isEmpty).toList
+    val tokenizedLines = source.getLines().map(_.split("[ ,]").filterNot(_.isEmpty)).filterNot(_.isEmpty).toList
 
     val instructions = tokenizedLines.map { line =>
       if line(0) == ".ORIG" then 0x0030
@@ -26,7 +26,8 @@ object Assembler:
       else 0
     }.filterNot(_ == 0)
 
-    val objFile = new FileOutputStream("src/test/resources/t1.obj")
+    val asmFileNameWithoutExtension = asmFileNamePath.split('.')(0)
+    val objFile = new FileOutputStream(s"$asmFileNameWithoutExtension.obj")
 
     instructions.foreach { instr =>
       println(instr.toHexString)
@@ -38,6 +39,7 @@ object Assembler:
     objFile.close()
 
 
-
+  def parseAdd(instr: Array[String]): Int =
+    1
 
 
