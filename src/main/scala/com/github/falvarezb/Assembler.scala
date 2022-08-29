@@ -26,8 +26,9 @@ object Assembler:
 
   def doLexicalAnalysis(asmFileNamePath: String): List[LineMetadata] =
     val source = Source.fromFile(asmFileNamePath)
-    val tokenizedLines = source.getLines().map(_.split("[ ,]").filterNot(_.isEmpty)).filterNot(_.isEmpty).zipWithIndex.map{
-      case (tokenizedLine, idx) => LineMetadata(tokenizedLine, LineNumber(idx))}
+    val tokenizedLines = source.getLines().map(_.split("[ ,]").filterNot(_.isEmpty)).filterNot(_.isEmpty).zipWithIndex.map {
+      case (tokenizedLine, idx) => LineMetadata(tokenizedLine, LineNumber(idx))
+    }
     discardLinesAfterEnd(tokenizedLines, Nil).reverse
 
   def createSymbolTable(linesMetadata: Seq[LineMetadata], instructionsMetadata: mutable.ListBuffer[InstructionMetadata], instructionNumber: InstructionNumber, symbolTable: mutable.HashMap[String, InstructionNumber]): mutable.Map[String, InstructionNumber] =
@@ -35,16 +36,18 @@ object Assembler:
       case Nil => symbolTable
       case x :: xs => x match
         case lineMetadata if lineMetadata.tokenizedLine(0) == ".ORIG" => createSymbolTable(xs, instructionsMetadata += InstructionMetadata(lineMetadata, instructionNumber), InstructionNumber(parseOrig(lineMetadata.tokenizedLine)), symbolTable)
-        case lineMetadata if lineMetadata.isOpCode || lineMetadata.isDirective || lineMetadata.isComment => createSymbolTable(xs, instructionsMetadata += InstructionMetadata(lineMetadata, instructionNumber + 1), instructionNumber + 1, symbolTable)
+        case lineMetadata if lineMetadata.isOpCode || lineMetadata.isDirective || lineMetadata.isComment => createSymbolTable(xs, instructionsMetadata += InstructionMetadata(lineMetadata, instructionNumber ∆+ 1), instructionNumber ∆+ 1, symbolTable)
         case lineMetadata => createSymbolTable(xs, instructionsMetadata, instructionNumber, symbolTable += (lineMetadata.tokenizedLine(0) -> instructionNumber))
 
   def doSyntaxAnalysis(instructionsMetadata: mutable.Seq[InstructionMetadata], symbolTable: mutable.Map[String, InstructionNumber]): mutable.Seq[Int] =
-    instructionsMetadata.map {
-      case instructionMetadata if instructionMetadata.lineMetadata.tokenizedLine(0) == ".ORIG" => Some(parseOrig(instructionMetadata.lineMetadata.tokenizedLine))
-      case instructionMetadata if instructionMetadata.lineMetadata.tokenizedLine(0) == "ADD" => Some(parseAdd(instructionMetadata.lineMetadata.tokenizedLine))
-      case instructionMetadata if instructionMetadata.lineMetadata.tokenizedLine(0) == "JSR" => Some(parseJsr(instructionMetadata, symbolTable))
-      case instructionMetadata if instructionMetadata.lineMetadata.tokenizedLine(0) == "HALT" => Some(0xf025)
-      case _ => None
+    instructionsMetadata.map { instructionMetadata =>
+      val firstToken = instructionMetadata.lineMetadata.tokenizedLine(0)
+      firstToken match
+        case ".ORIG" => Some(parseOrig(instructionMetadata.lineMetadata.tokenizedLine))
+        case "ADD" => Some(parseAdd(instructionMetadata.lineMetadata.tokenizedLine))
+        case "JSR" => Some(parseJsr(instructionMetadata, symbolTable))
+        case "HALT" => Some(0xf025)
+        case _ => None
     }.filterNot(_.isEmpty).map(_.get)
 
   def write_obj(instructions: mutable.Seq[Int], asmFileNamePath: String): Unit =
@@ -66,7 +69,7 @@ object Assembler:
 
   def parseJsr(instructionMetadata: InstructionMetadata, symbolTable: mutable.Map[String, InstructionNumber]): Int =
     val label = instructionMetadata.lineMetadata.tokenizedLine(1)
-    val offset =  symbolTable(label).value - instructionMetadata.instructionNumber.value - 1
+    val offset = (symbolTable(label) - instructionMetadata.instructionNumber) ∇- 1
     (4 << 12) +
       (1 << 11) +
       offset
