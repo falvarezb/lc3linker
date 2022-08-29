@@ -9,15 +9,13 @@ import scala.io.Source
 object Assembler:
 
   def assemble(asmFileNamePath: String): Either[String, Unit] =
-    val instructionsMetadata = mutable.ListBuffer.empty[InstructionMetadata]
-    val symbolTable = mutable.HashMap.empty[String, InstructionNumber]
     val linesMetadata = doLexicalAnalysis(asmFileNamePath)
-    createSymbolTable(linesMetadata, instructionsMetadata, InstructionNumber(0), symbolTable)
+    val (instructionsMetadata, symbolTable) = createSymbolTable(linesMetadata)
     val instructions = doSyntaxAnalysis(instructionsMetadata, symbolTable)
     write_obj(instructions, asmFileNamePath)
     Right(())
 
-  def discardLinesAfterEnd(tokenizedLines: Iterator[LineMetadata]): List[LineMetadata] =
+  def filterNotLinesAfterEnd(tokenizedLines: Iterator[LineMetadata]): List[LineMetadata] =
     def loop(allTokenizedLines: Iterator[LineMetadata], tokenizedLinesBeforeEnd: List[LineMetadata]): List[LineMetadata] =
       if allTokenizedLines.hasNext then
         val nextLine = allTokenizedLines.next()
@@ -31,17 +29,31 @@ object Assembler:
     val tokenizedLines = source.getLines().map(_.split("[ ,]").filterNot(_.isEmpty)).filterNot(_.isEmpty).zipWithIndex.map {
       case (tokenizedLine, idx) => LineMetadata(tokenizedLine, LineNumber(idx))
     }
-    discardLinesAfterEnd(tokenizedLines)
+    filterNotLinesAfterEnd(tokenizedLines)
 
-  def createSymbolTable(linesMetadata: Seq[LineMetadata], instructionsMetadata: mutable.ListBuffer[InstructionMetadata], instructionNumber: InstructionNumber, symbolTable: mutable.HashMap[String, InstructionNumber]): mutable.Map[String, InstructionNumber] =
-    linesMetadata match
-      case Nil => symbolTable
-      case x :: xs => x match
-        case lineMetadata if lineMetadata.tokenizedLine(0) == ".ORIG" => createSymbolTable(xs, instructionsMetadata += InstructionMetadata(lineMetadata, instructionNumber), InstructionNumber(parseOrig(lineMetadata.tokenizedLine)), symbolTable)
-        case lineMetadata if lineMetadata.isOpCode || lineMetadata.isDirective || lineMetadata.isComment => createSymbolTable(xs, instructionsMetadata += InstructionMetadata(lineMetadata, instructionNumber ∆+ 1), instructionNumber ∆+ 1, symbolTable)
-        case lineMetadata => createSymbolTable(xs, instructionsMetadata, instructionNumber, symbolTable += (lineMetadata.tokenizedLine(0) -> instructionNumber))
+  def createSymbolTable(linesMetadata: Seq[LineMetadata]): (List[InstructionMetadata], Map[String, InstructionNumber]) =
+    val instructionsMetadata = mutable.ListBuffer.empty[InstructionMetadata]
+    val symbolTable = mutable.HashMap.empty[String, InstructionNumber]
+    def loop(linesMetadata: Seq[LineMetadata], instructionNumber: InstructionNumber): Unit =
+      linesMetadata match
+        case Nil => ()
+        case x :: xs => x match
+          case lineMetadata if lineMetadata.tokenizedLine(0) == ".ORIG" =>
+            val auxInstructionNumber = InstructionNumber(parseOrig(lineMetadata.tokenizedLine))
+            instructionsMetadata += InstructionMetadata(lineMetadata, auxInstructionNumber)
+            loop(xs, auxInstructionNumber)
+          case lineMetadata if lineMetadata.isOpCode || lineMetadata.isDirective || lineMetadata.isComment =>
+            instructionsMetadata += InstructionMetadata(lineMetadata, instructionNumber ∆+ 1)
+            loop(xs, instructionNumber ∆+ 1)
+          case lineMetadata =>
+            symbolTable += (lineMetadata.tokenizedLine(0) -> instructionNumber)
+            loop(xs, instructionNumber)
 
-  def doSyntaxAnalysis(instructionsMetadata: mutable.Seq[InstructionMetadata], symbolTable: mutable.Map[String, InstructionNumber]): mutable.Seq[Int] =
+
+    loop(linesMetadata, InstructionNumber(0))
+    (instructionsMetadata.toList, symbolTable.toMap)
+
+  def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata], symbolTable: Map[String, InstructionNumber]): List[Int] =
     instructionsMetadata.map { instructionMetadata =>
       val firstToken = instructionMetadata.lineMetadata.tokenizedLine(0)
       firstToken match
@@ -52,7 +64,7 @@ object Assembler:
         case _ => None
     }.filterNot(_.isEmpty).map(_.get)
 
-  def write_obj(instructions: mutable.Seq[Int], asmFileNamePath: String): Unit =
+  def write_obj(instructions: List[Int], asmFileNamePath: String): Unit =
     val asmFileNameWithoutExtension = asmFileNamePath.split('.')(0)
     val objFile = new FileOutputStream(s"$asmFileNameWithoutExtension.obj")
 
@@ -69,7 +81,7 @@ object Assembler:
   def parseOrig(tokens: Array[String]): Int =
     Integer.parseInt(tokens(1).drop(1), 16)
 
-  def parseJsr(instructionMetadata: InstructionMetadata, symbolTable: mutable.Map[String, InstructionNumber]): Int =
+  def parseJsr(instructionMetadata: InstructionMetadata, symbolTable: Map[String, InstructionNumber]): Int =
     val label = instructionMetadata.lineMetadata.tokenizedLine(1)
     val offset = (symbolTable(label) - instructionMetadata.instructionNumber) ∇- 1
     (4 << 12) +
