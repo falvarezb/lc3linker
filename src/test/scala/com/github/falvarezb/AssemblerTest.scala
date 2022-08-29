@@ -25,5 +25,8 @@ class AssemblerTest extends AnyFunSuite with Matchers:
     runTest("t1.asm")
   }
 
+  test("t2: assembly file with labels") {
+    runTest("t2.asm")
+  }
 
 
