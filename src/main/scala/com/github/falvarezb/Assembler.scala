@@ -17,19 +17,21 @@ object Assembler:
     write_obj(instructions, asmFileNamePath)
     Right(())
 
-  def discardLinesAfterEnd(allTokenizedLines: Iterator[LineMetadata], tokenizedLinesBeforeEnd: List[LineMetadata]): List[LineMetadata] =
-    if allTokenizedLines.hasNext then
-      val nextLine = allTokenizedLines.next()
-      if nextLine.tokenizedLine(0) == ".END" then tokenizedLinesBeforeEnd
-      else discardLinesAfterEnd(allTokenizedLines, nextLine :: tokenizedLinesBeforeEnd)
-    else tokenizedLinesBeforeEnd
+  def discardLinesAfterEnd(tokenizedLines: Iterator[LineMetadata]): List[LineMetadata] =
+    def loop(allTokenizedLines: Iterator[LineMetadata], tokenizedLinesBeforeEnd: List[LineMetadata]): List[LineMetadata] =
+      if allTokenizedLines.hasNext then
+        val nextLine = allTokenizedLines.next()
+        if nextLine.tokenizedLine(0) == ".END" then tokenizedLinesBeforeEnd
+        else loop(allTokenizedLines, nextLine :: tokenizedLinesBeforeEnd)
+      else tokenizedLinesBeforeEnd
+    loop(tokenizedLines, Nil).reverse
 
   def doLexicalAnalysis(asmFileNamePath: String): List[LineMetadata] =
     val source = Source.fromFile(asmFileNamePath)
     val tokenizedLines = source.getLines().map(_.split("[ ,]").filterNot(_.isEmpty)).filterNot(_.isEmpty).zipWithIndex.map {
       case (tokenizedLine, idx) => LineMetadata(tokenizedLine, LineNumber(idx))
     }
-    discardLinesAfterEnd(tokenizedLines, Nil).reverse
+    discardLinesAfterEnd(tokenizedLines)
 
   def createSymbolTable(linesMetadata: Seq[LineMetadata], instructionsMetadata: mutable.ListBuffer[InstructionMetadata], instructionNumber: InstructionNumber, symbolTable: mutable.HashMap[String, InstructionNumber]): mutable.Map[String, InstructionNumber] =
     linesMetadata match
