@@ -27,21 +27,8 @@ object Assembler:
       case Nil => symbolTable
       case x :: xs => x match
         case lineMetadata if lineMetadata.tokenizedLine(0) == ".ORIG" => createSymbolTable(xs, instructionsMetadata += InstructionMetadata(lineMetadata, instructionNumber), InstructionNumber(parseOrig(lineMetadata.tokenizedLine)), symbolTable)
-        case lineMetadata if lineMetadata.tokenizedLine(0) == "ADD" || lineMetadata.tokenizedLine(0) == "JSR" || lineMetadata.tokenizedLine(0) == "HALT" || lineMetadata.tokenizedLine(0)(0) == ';' => createSymbolTable(xs, instructionsMetadata += InstructionMetadata(lineMetadata, instructionNumber + 1), instructionNumber + 1, symbolTable)
+        case lineMetadata if lineMetadata.isOpCode || lineMetadata.isDirective || lineMetadata.isComment => createSymbolTable(xs, instructionsMetadata += InstructionMetadata(lineMetadata, instructionNumber + 1), instructionNumber + 1, symbolTable)
         case lineMetadata => createSymbolTable(xs, instructionsMetadata, instructionNumber, symbolTable += (lineMetadata.tokenizedLine(0) -> instructionNumber))
-
-
-        //        tokenizedLines.foreach {
-        //          case lineTokens if lineTokens(0) == ".ORIG" =>
-        //            instructionNumber = parseOrig(lineTokens)
-        //          case lineTokens if lineTokens(0) == "ADD" || lineTokens(0) == "JSR" || lineTokens(0) == "HALT" || lineTokens(0)(0) == ';' =>
-        //            instructionNumber += 1
-        //          case lineTokens =>
-        //            //label
-        //            symbolTable += (lineTokens(0) -> instructionNumber)
-        //            None
-        //        }
-        //        symbolTable
 
   def doSyntaxAnalysis(instructionsMetadata: mutable.Seq[InstructionMetadata], symbolTable: mutable.Map[String, InstructionNumber]): mutable.Seq[Int] =
     instructionsMetadata.map {
