@@ -3,6 +3,7 @@ package com.github.falvarezb
 import java.io.FileOutputStream
 import scala.collection.immutable.{AbstractSeq, LinearSeq}
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 object Assembler:
@@ -19,8 +20,15 @@ object Assembler:
 
   def doLexicalAnalysis(asmFileNamePath: String)=
     val source = Source.fromFile(asmFileNamePath)
-    source.getLines().map(_.split("[ ,]").filterNot(_.isEmpty)).filterNot(_.isEmpty).zipWithIndex.map{
-      case (tokenizedLine, idx) => LineMetadata(tokenizedLine, LineNumber(idx))}.toList
+    val tokenizedLinesIter = source.getLines().map(_.split("[ ,]").filterNot(_.isEmpty)).filterNot(_.isEmpty).zipWithIndex.map{
+      case (tokenizedLine, idx) => LineMetadata(tokenizedLine, LineNumber(idx))}
+    val tokenizedLines = ListBuffer[LineMetadata]()
+    var endFound = false;
+    while !endFound && tokenizedLinesIter.hasNext do
+      val next = tokenizedLinesIter.next()
+      if next.tokenizedLine(0) == ".END" then endFound = true
+      else tokenizedLines += next
+    tokenizedLines.toList
 
   def createSymbolTable(linesMetadata: Seq[LineMetadata], instructionsMetadata: mutable.ListBuffer[InstructionMetadata], instructionNumber: InstructionNumber, symbolTable: mutable.HashMap[String, InstructionNumber]): mutable.Map[String, InstructionNumber] =
     linesMetadata match
