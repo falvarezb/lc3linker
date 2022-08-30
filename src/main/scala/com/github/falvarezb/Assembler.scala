@@ -32,7 +32,7 @@ object Assembler:
   def doLexicalAnalysis(asmFileNamePath: String): List[LineMetadata] =
     val source = Source.fromFile(asmFileNamePath)
     val tokenizedLines = source.getLines().map(_.split("[ ,]").filterNot(_.isEmpty)).filterNot(_.isEmpty).zipWithIndex.map {
-      case (tokenizedLine, idx) => LineMetadata(tokenizedLine, LineNumber(idx))
+      case (tokenizedLine, idx) => LineMetadata(tokenizedLine, LineNumber(idx+1))
     }
     filterNotLinesAfterEnd(tokenizedLines)
 
