@@ -6,5 +6,6 @@ lazy val root = project
     name := "lc3linker",
     version := "0.1.0",
     scalaVersion := scala3Version,
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.12" % "test"
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.12" % "test" ,
+    libraryDependencies += "org.typelevel" %% "cats-core" % "2.7.0"
   )
