@@ -8,6 +8,7 @@ import scala.io.Source
 import cats.*
 import cats.implicits.*
 import com.github.falvarezb.Util.parseMemoryAddress
+import com.github.falvarezb.Parsers.*
 
 object Assembler:
 
@@ -16,8 +17,7 @@ object Assembler:
       linesMetadata <- doLexicalAnalysis(asmFileNamePath).asRight[String]
       tuple <- createSymbolTable(linesMetadata)
       instructions <- doSyntaxAnalysis(tuple._1, tuple._2)
-      _ <- serializeInstructions(instructions, asmFileNamePath).asRight[String]
-    yield ()
+    yield serializeInstructions(instructions, asmFileNamePath)
 
   def filterNotLinesAfterEnd(tokenizedLines: Iterator[LineMetadata]): List[LineMetadata] =
     def loop(allTokenizedLines: Iterator[LineMetadata], tokenizedLinesBeforeEnd: List[LineMetadata]): List[LineMetadata] =
@@ -34,7 +34,8 @@ object Assembler:
     val tokenizedLines = source.getLines()
       .map(_.split("[ ,]").filterNot(_.isEmpty))
       .zipWithIndex
-      .filterNot { case (tokenizedLine, idx) => tokenizedLine.isEmpty}
+      .filterNot { case (tokenizedLine, _) => tokenizedLine.isEmpty}
+      //.filterNot { case (tokenizedLine, _) => tokenizedLine.head.startsWith(";")}
       .map { case (tokenizedLine, idx) => LineMetadata(tokenizedLine, LineNumber(idx+1))}
     filterNotLinesAfterEnd(tokenizedLines)
     //result.foreach(line => println(line.tokenizedLine.mkString(" ")))
@@ -49,7 +50,7 @@ object Assembler:
         case Nil => Right(())
         case x :: xs => x match
           case lineMetadata if lineMetadata.tokenizedLine(0) == ".ORIG" =>
-            parseOrig(lineMetadata.tokenizedLine, lineMetadata.lineNumber).map(InstructionNumber.apply) match
+            parseOrig(lineMetadata).map(InstructionNumber.apply) match
               case Left(str) => Left(str)
               case Right(initialInstructionNumber) =>
                 instructionsMetadata += InstructionMetadata(lineMetadata, initialInstructionNumber)
@@ -69,7 +70,7 @@ object Assembler:
     val l: List[Either[String, Int]] = instructionsMetadata.map { instructionMetadata =>
       val firstToken = instructionMetadata.lineMetadata.tokenizedLine(0)
       firstToken match
-        case ".ORIG" => Some(parseOrig(instructionMetadata.lineMetadata.tokenizedLine, instructionMetadata.lineMetadata.lineNumber))
+        case ".ORIG" => Some(parseOrig(instructionMetadata.lineMetadata))
         case "ADD" => Some(parseAdd(instructionMetadata.lineMetadata.tokenizedLine))
         case "JSR" => Some(parseJsr(instructionMetadata, symbolTable))
         case "HALT" => Some(Right(0xf025))
@@ -92,28 +93,6 @@ object Assembler:
     }
     objFile.close()
 
-  def parseOrig(tokens: Array[String], lineNumber: LineNumber): Either[String, Int] =
-    if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
-    else parseMemoryAddress(tokens(1), lineNumber)
 
-  def parseJsr(instructionMetadata: InstructionMetadata, symbolTable: Map[String, InstructionNumber]): Either[String, Int] =
-    val label = instructionMetadata.lineMetadata.tokenizedLine(1)
-    val offset = (symbolTable(label) - instructionMetadata.instructionNumber) ∇- 1
-    Right {
-      (4 << 12) +
-        (1 << 11) +
-        offset
-    }
-
-  def parseAdd(tokens: Array[String]): Either[String, Int] =
-    val immediateBit = if tokens(3)(0) == 'R' then 0 else 1 << 5
-    //ops code: 0001
-    Right {
-      (1 << 12) +
-        (tokens(1).substring(1).toInt << 9) +
-        (tokens(2).substring(1).toInt << 6) +
-        immediateBit +
-        tokens(3).substring(1).toInt
-    }
 
 
