@@ -32,10 +32,10 @@ object Assembler:
   def doLexicalAnalysis(asmFileNamePath: String): List[LineMetadata] =
     val source = Source.fromFile(asmFileNamePath)
     val tokenizedLines = source.getLines()
-      .map(_.split("[ ,]").filterNot(_.isEmpty))
-      .zipWithIndex
-      .filterNot { case (tokenizedLine, _) => tokenizedLine.isEmpty}
-      //.filterNot { case (tokenizedLine, _) => tokenizedLine.head.startsWith(";")}
+      .map(_.split("[ ,]").filterNot(_.isEmpty)) // line tokenization (empty tokens are discarded)
+      .zipWithIndex // adding line number
+      .filterNot { case (tokenizedLine, _) => tokenizedLine.isEmpty} // removing blank lines
+      .filterNot { case (tokenizedLine, _) => tokenizedLine.head.startsWith(";")} // removing comments
       .map { case (tokenizedLine, idx) => LineMetadata(tokenizedLine, LineNumber(idx+1))}
     filterNotLinesAfterEnd(tokenizedLines)
     //result.foreach(line => println(line.tokenizedLine.mkString(" ")))
@@ -55,8 +55,8 @@ object Assembler:
               case Right(initialInstructionNumber) =>
                 instructionsMetadata += InstructionMetadata(lineMetadata, initialInstructionNumber)
                 loop(xs, initialInstructionNumber)
-          case lineMetadata if lineMetadata.isOpCode || lineMetadata.isDirective || lineMetadata.isComment =>
-            instructionsMetadata += InstructionMetadata(lineMetadata, instructionNumber ∆+ 1)
+          case lineMetadata if lineMetadata.isOpCode || lineMetadata.isDirective =>
+            instructionsMetadata += InstructionMetadata(lineMetadata, instructionNumber)
             loop(xs, instructionNumber ∆+ 1)
           case lineMetadata =>
             symbolTable += (lineMetadata.tokenizedLine(0) -> instructionNumber)
