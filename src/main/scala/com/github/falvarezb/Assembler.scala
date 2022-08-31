@@ -41,32 +41,32 @@ object Assembler:
     //result.foreach(line => println(line.tokenizedLine.mkString(" ")))
     //result
 
-  def createSymbolTable(linesMetadata: Seq[LineMetadata]): Either[String, (List[InstructionMetadata], Map[String, InstructionNumber])] =
+  def createSymbolTable(linesMetadata: Seq[LineMetadata]): Either[String, (List[InstructionMetadata], Map[String, InstructionMemoryAddress])] =
     val instructionsMetadata = mutable.ListBuffer.empty[InstructionMetadata]
-    val symbolTable = mutable.HashMap.empty[String, InstructionNumber]
+    val symbolTable = mutable.HashMap.empty[String, InstructionMemoryAddress]
 
-    def loop(linesMetadata: Seq[LineMetadata], instructionNumber: InstructionNumber): Either[String, Unit] =
+    def loop(linesMetadata: Seq[LineMetadata], instructionMemoryAddress: InstructionMemoryAddress): Either[String, Unit] =
       linesMetadata match
         case Nil => Right(())
         case x :: xs => x match
           case lineMetadata if lineMetadata.tokenizedLine(0) == ".ORIG" =>
-            parseOrig(lineMetadata).map(InstructionNumber.apply) match
+            parseOrig(lineMetadata).map(InstructionMemoryAddress.apply) match
               case Left(str) => Left(str)
               case Right(initialInstructionNumber) =>
                 instructionsMetadata += InstructionMetadata(lineMetadata, initialInstructionNumber)
                 loop(xs, initialInstructionNumber)
           case lineMetadata if lineMetadata.isOpCode || lineMetadata.isDirective =>
-            instructionsMetadata += InstructionMetadata(lineMetadata, instructionNumber)
-            loop(xs, instructionNumber ∆+ 1)
+            instructionsMetadata += InstructionMetadata(lineMetadata, instructionMemoryAddress)
+            loop(xs, instructionMemoryAddress ∆+ 1)
           case lineMetadata =>
-            symbolTable += (lineMetadata.tokenizedLine(0) -> instructionNumber)
-            loop(xs, instructionNumber)
+            symbolTable += (lineMetadata.tokenizedLine(0) -> instructionMemoryAddress)
+            loop(xs, instructionMemoryAddress)
 
 
-    loop(linesMetadata, InstructionNumber(0)).map(_ => (instructionsMetadata.toList, symbolTable.toMap))
+    loop(linesMetadata, InstructionMemoryAddress(0)).map(_ => (instructionsMetadata.toList, symbolTable.toMap))
 
 
-  def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata], symbolTable: Map[String, InstructionNumber]): Either[String,List[Int]] =
+  def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata], symbolTable: Map[String, InstructionMemoryAddress]): Either[String,List[Int]] =
     val l: List[Either[String, Int]] = instructionsMetadata.map { instructionMetadata =>
       val firstToken = instructionMetadata.lineMetadata.tokenizedLine(0)
       firstToken match

@@ -10,9 +10,9 @@ object Parsers {
     if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
     else parseMemoryAddress(tokens(1), lineNumber)
 
-  def parseJsr(instructionMetadata: InstructionMetadata, symbolTable: Map[String, InstructionNumber]): Either[String, Int] =
+  def parseJsr(instructionMetadata: InstructionMetadata, symbolTable: Map[String, InstructionMemoryAddress]): Either[String, Int] =
     val label = instructionMetadata.lineMetadata.tokenizedLine(1)
-    val offset = (symbolTable(label) - instructionMetadata.instructionNumber) ∇- 1
+    val offset = (symbolTable(label) - instructionMetadata.instructionMemoryAddress) ∇- 1
     Right {
       (4 << 12) +
         (1 << 11) +
