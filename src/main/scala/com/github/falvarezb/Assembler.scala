@@ -19,7 +19,7 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
       instructions <- doSyntaxAnalysis(tuple._1, tuple._2)
     yield serializeInstructions(instructions, asmFileNamePath)
 
-  def filterNotLinesAfterEnd(tokenizedLines: Iterator[LineMetadata]): List[LineMetadata] =
+  def filterNotLinesAfterEnd(lineIterator: Iterator[LineMetadata]): List[LineMetadata] =
     def loop(allTokenizedLines: Iterator[LineMetadata], tokenizedLinesBeforeEnd: List[LineMetadata]): List[LineMetadata] =
       if allTokenizedLines.hasNext then
         val nextLine = allTokenizedLines.next()
@@ -27,7 +27,7 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
         else loop(allTokenizedLines, nextLine :: tokenizedLinesBeforeEnd)
       else tokenizedLinesBeforeEnd
 
-    loop(tokenizedLines, Nil).reverse
+    loop(lineIterator, Nil).reverse
 
   def doLexicalAnalysis(asmFileNamePath: String): List[LineMetadata] =
     val source = Source.fromFile(asmFileNamePath)
@@ -63,6 +63,7 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
               case Some(label) =>
                 symbolTable += (label -> instructionMemoryAddress)
                 // process the rest of the line after removing the label
+                // rest of the line may be empty or not
                 loop(line.copy(tokenizedLine = line.tokenizedLine.drop(1)) :: remainingLines, instructionMemoryAddress)
               case None => loop(remainingLines, instructionMemoryAddress)
 

@@ -47,7 +47,7 @@ class AssemblerTest extends AnyFunSpec with Matchers:
 
     it("multiple labels associated to the same instruction") {
       val symbolTable = runSymbolTableTest("t4.asm")
-      //symbolTable should contain("LABEL1" -> InstructionMemoryAddress(0x3003))
+      symbolTable should contain("LABEL1" -> InstructionMemoryAddress(0x3003))
       symbolTable should contain("LABEL2" -> InstructionMemoryAddress(0x3001))
       symbolTable should contain("LABEL3" -> InstructionMemoryAddress(0x3002))
       symbolTable should contain("LABEL4" -> InstructionMemoryAddress(0x3004))
