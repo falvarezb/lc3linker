@@ -29,6 +29,11 @@ class AssemblerTest extends AnyFunSpec with Matchers:
     val result = new Assembler(symbolTable).assemble(s"$path/$asmFileName")
     (result, symbolTable)
 
+  def runErrorConditionTest(asmFileName: String) =
+    val path = "src/test/resources"
+    val symbolTable = mutable.HashMap.empty[String, InstructionMemoryAddress]
+    new Assembler(symbolTable).assemble(s"$path/$asmFileName")
+
   describe("assembled file") {
     it("t1: assembly file without labels") {
       runAssembledFileTest("t1.asm")
@@ -36,6 +41,13 @@ class AssemblerTest extends AnyFunSpec with Matchers:
 
     it("t2: assembly file with labels") {
       runAssembledFileTest("t2.asm")
+    }
+  }
+
+  describe("error conditions") {
+    it("wrong .ORIG operand") {
+      val result = runErrorConditionTest("t6.asm")
+      result shouldBe Left("ERROR (line 4): Immediate operand (545677767) outside of range (0 to 65535)")
     }
   }
 
