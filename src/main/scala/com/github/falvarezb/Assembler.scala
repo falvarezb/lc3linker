@@ -59,6 +59,9 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
                 // that's why initialInstructionNumber is not incremented when invoking loop
                 instructionsMetadata += InstructionMetadata(line, initialInstructionNumber)
                 loop(remainingLines, initialInstructionNumber)
+          case line if !line.isComment && instructionMemoryAddress == InstructionMemoryAddress(0) =>
+            // instruction not preceeded by .ORIG directive
+            s"ERROR (line 4): Instruction not preceeded by a .orig directive".asLeft[Unit]
           case line if line.isOpCode || line.isDirective || line.isComment =>
             instructionsMetadata += InstructionMetadata(line, instructionMemoryAddress)
             loop(remainingLines, instructionMemoryAddress ∆+ 1)
