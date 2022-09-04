@@ -32,7 +32,7 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
   def doLexicalAnalysis(asmFileNamePath: String): List[LineMetadata] =
     val source = Source.fromFile(asmFileNamePath)
     val tokenizedLines = source.getLines()
-      .map(_.split("[ ,]").filterNot(_.isEmpty)) // line tokenization (empty tokens are discarded)
+      .map(_.split("[ ,]").filterNot(_.isEmpty).toList) // line tokenization (empty tokens are discarded)
       .zipWithIndex // adding line number
       .filterNot { case (tokenizedLine, _) => tokenizedLine.isEmpty} // removing blank lines
       .filterNot { case (tokenizedLine, _) => tokenizedLine.head.startsWith(";")} // removing comments
@@ -46,21 +46,21 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
     def loop(linesMetadata: Seq[LineMetadata], instructionMemoryAddress: InstructionMemoryAddress): Either[String, Unit] =
       linesMetadata match
         case Nil => ().asRight[String]
-        case x :: xs => x match
+        case firstLine :: remainingLines => firstLine match
           case lineMetadata if lineMetadata.tokenizedLine(0) == ".ORIG" =>
             parseOrig(lineMetadata).map(InstructionMemoryAddress.apply) match
               case Left(str) => str.asLeft[Unit]
               case Right(initialInstructionNumber) =>
-                // this is not a real instruction to be executed but the memory address where LC-3 is to load the program 
+                // this is not a real instruction to be executed but the memory address where LC-3 is to load the program
                 // that's why initialInstructionNumber is not incremented when invoking loop
                 instructionsMetadata += InstructionMetadata(lineMetadata, initialInstructionNumber)
-                loop(xs, initialInstructionNumber)
+                loop(remainingLines, initialInstructionNumber)
           case lineMetadata if lineMetadata.isOpCode || lineMetadata.isDirective =>
             instructionsMetadata += InstructionMetadata(lineMetadata, instructionMemoryAddress)
-            loop(xs, instructionMemoryAddress ∆+ 1)
+            loop(remainingLines, instructionMemoryAddress ∆+ 1)
           case lineMetadata =>
             symbolTable += (lineMetadata.tokenizedLine(0) -> instructionMemoryAddress)
-            loop(xs, instructionMemoryAddress)
+            loop(remainingLines, instructionMemoryAddress)
 
 
     loop(linesMetadata, InstructionMemoryAddress(0)).map(_ => (instructionsMetadata.toList, symbolTable.toMap))

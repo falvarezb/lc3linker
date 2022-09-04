@@ -8,7 +8,7 @@ case class InstructionMemoryAddress(value: Int) extends AnyVal:
   def ∆-(other: Int): InstructionMemoryAddress = InstructionMemoryAddress(value - other)
   def ∇+(other: Int): Int = value - other
   def ∇-(other: Int): Int = value - other
-case class LineMetadata(tokenizedLine: Array[String], lineNumber: LineNumber):
+case class LineMetadata(tokenizedLine: List[String], lineNumber: LineNumber):
   val isOpCode = OpCode.values.map(_.toString).contains(this.tokenizedLine(0))
   val isDirective = Directive.values.map(_.toString).contains(this.tokenizedLine(0))
 case class InstructionMetadata(lineMetadata: LineMetadata, instructionMemoryAddress: InstructionMemoryAddress)

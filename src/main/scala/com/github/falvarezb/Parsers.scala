@@ -24,7 +24,7 @@ object Parsers {
 
 
 
-  def parseAdd(tokens: Array[String]): Either[String, Int] =
+  def parseAdd(tokens: List[String]): Either[String, Int] =
     val immediateBit = if tokens(3)(0) == 'R' then 0 else 1 << 5
     //ops code: 0001
     Right {
