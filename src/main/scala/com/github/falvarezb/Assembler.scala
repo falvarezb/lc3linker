@@ -10,7 +10,7 @@ import cats.implicits.*
 import com.github.falvarezb.Util.parseMemoryAddress
 import com.github.falvarezb.Parsers.*
 
-object Assembler:
+class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddress]):
 
   def assemble(asmFileNamePath: String): Either[String, Unit] =
     for
@@ -43,8 +43,6 @@ object Assembler:
 
   def createSymbolTable(linesMetadata: Seq[LineMetadata]): Either[String, (List[InstructionMetadata], Map[String, InstructionMemoryAddress])] =
     val instructionsMetadata = mutable.ListBuffer.empty[InstructionMetadata]
-    val symbolTable = mutable.HashMap.empty[String, InstructionMemoryAddress]
-
     def loop(linesMetadata: Seq[LineMetadata], instructionMemoryAddress: InstructionMemoryAddress): Either[String, Unit] =
       linesMetadata match
         case Nil => ().asRight[String]
