@@ -9,8 +9,9 @@ case class InstructionMemoryAddress(value: Int) extends AnyVal:
   def ∇+(other: Int): Int = value - other
   def ∇-(other: Int): Int = value - other
 case class LineMetadata(tokenizedLine: List[String], lineNumber: LineNumber):
-  val isOpCode = OpCode.values.map(_.toString).contains(this.tokenizedLine(0))
-  val isDirective = Directive.values.map(_.toString).contains(this.tokenizedLine(0))
+  val isOpCode = OpCode.values.map(_.toString).contains(this.tokenizedLine.headOption.getOrElse(""))
+  val isDirective = Directive.values.map(_.toString).contains(this.tokenizedLine.headOption.getOrElse(""))
+  val isComment = this.tokenizedLine.headOption.exists(_.startsWith(";"))
 case class InstructionMetadata(lineMetadata: LineMetadata, instructionMemoryAddress: InstructionMemoryAddress)
 
 enum OpCode:

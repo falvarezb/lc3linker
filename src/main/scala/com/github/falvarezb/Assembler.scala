@@ -41,32 +41,35 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
     //result.foreach(line => println(line.tokenizedLine.mkString(" ")))
     //result
 
-  def createSymbolTable(linesMetadata: Seq[LineMetadata]): Either[String, (List[InstructionMetadata], Map[String, InstructionMemoryAddress])] =
+  def createSymbolTable(linesMetadata: List[LineMetadata]): Either[String, (List[InstructionMetadata], Map[String, InstructionMemoryAddress])] =
     val instructionsMetadata = mutable.ListBuffer.empty[InstructionMetadata]
-    def loop(linesMetadata: Seq[LineMetadata], instructionMemoryAddress: InstructionMemoryAddress): Either[String, Unit] =
-      linesMetadata match
+    def loop(lines: List[LineMetadata], instructionMemoryAddress: InstructionMemoryAddress): Either[String, Unit] =
+      lines match
         case Nil => ().asRight[String]
         case firstLine :: remainingLines => firstLine match
-          case lineMetadata if lineMetadata.tokenizedLine(0) == ".ORIG" =>
-            parseOrig(lineMetadata).map(InstructionMemoryAddress.apply) match
+          case line if line.tokenizedLine.headOption.contains(".ORIG") =>
+            parseOrig(line).map(InstructionMemoryAddress.apply) match
               case Left(str) => str.asLeft[Unit]
               case Right(initialInstructionNumber) =>
                 // this is not a real instruction to be executed but the memory address where LC-3 is to load the program
                 // that's why initialInstructionNumber is not incremented when invoking loop
-                instructionsMetadata += InstructionMetadata(lineMetadata, initialInstructionNumber)
+                instructionsMetadata += InstructionMetadata(line, initialInstructionNumber)
                 loop(remainingLines, initialInstructionNumber)
-          case lineMetadata if lineMetadata.isOpCode || lineMetadata.isDirective =>
-            instructionsMetadata += InstructionMetadata(lineMetadata, instructionMemoryAddress)
+          case line if line.isOpCode || line.isDirective || line.isComment =>
+            instructionsMetadata += InstructionMetadata(line, instructionMemoryAddress)
             loop(remainingLines, instructionMemoryAddress ∆+ 1)
-          case lineMetadata =>
-            symbolTable += (lineMetadata.tokenizedLine(0) -> instructionMemoryAddress)
-            loop(remainingLines, instructionMemoryAddress)
-
+          case line =>
+            line.tokenizedLine.headOption match
+              case Some(label) =>
+                symbolTable += (label -> instructionMemoryAddress)
+                // process the rest of the line after removing the label
+                loop(line.copy(tokenizedLine = line.tokenizedLine.drop(1)) :: remainingLines, instructionMemoryAddress)
+              case None => loop(remainingLines, instructionMemoryAddress)
 
     loop(linesMetadata, InstructionMemoryAddress(0)).map(_ => (instructionsMetadata.toList, symbolTable.toMap))
 
 
-  def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata], symbolTable: Map[String, InstructionMemoryAddress]): Either[String,List[Int]] =
+  def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata], symbolTable: Map[String, InstructionMemoryAddress]): Either[String, List[Int]] =
     val l: List[Either[String, Int]] = instructionsMetadata.map { instructionMetadata =>
       val firstToken = instructionMetadata.lineMetadata.tokenizedLine(0)
       firstToken match
