@@ -11,7 +11,6 @@ case class InstructionMemoryAddress(value: Int) extends AnyVal:
 case class LineMetadata(tokenizedLine: Array[String], lineNumber: LineNumber):
   val isOpCode = OpCode.values.map(_.toString).contains(this.tokenizedLine(0))
   val isDirective = Directive.values.map(_.toString).contains(this.tokenizedLine(0))
-  val isComment = this.tokenizedLine(0)(0) == ';'
 case class InstructionMetadata(lineMetadata: LineMetadata, instructionMemoryAddress: InstructionMemoryAddress)
 
 enum OpCode:

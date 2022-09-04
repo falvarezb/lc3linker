@@ -1,6 +1,8 @@
 package com.github.falvarezb
 
-import com.github.falvarezb.Util.parseMemoryAddress
+import com.github.falvarezb.Util.{parseMemoryAddress, parseNumericValue, parseOffset, validateNumberRange}
+import cats.*
+import cats.implicits.*
 
 object Parsers {
 
@@ -11,13 +13,16 @@ object Parsers {
     else parseMemoryAddress(tokens(1), lineNumber)
 
   def parseJsr(instructionMetadata: InstructionMetadata, symbolTable: Map[String, InstructionMemoryAddress]): Either[String, Int] =
-    val label = instructionMetadata.lineMetadata.tokenizedLine(1)
-    val offset = (symbolTable(label) - instructionMetadata.instructionMemoryAddress) ∇- 1
-    Right {
-      (4 << 12) +
-        (1 << 11) +
-        offset
-    }
+    val offsetNumBits = 11
+    val tokens = instructionMetadata.lineMetadata.tokenizedLine
+    val lineNumber = instructionMetadata.lineMetadata.lineNumber
+    if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
+    else
+      parseOffset(tokens(1), lineNumber, instructionMetadata.instructionMemoryAddress, offsetNumBits, symbolTable).map { offset =>
+        (4 << 12) + (1 << 11) + offset
+      }
+
+
 
   def parseAdd(tokens: Array[String]): Either[String, Int] =
     val immediateBit = if tokens(3)(0) == 'R' then 0 else 1 << 5

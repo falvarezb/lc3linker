@@ -31,5 +31,16 @@ object Util {
       _ <- validateNumberRange(num, lineNumber, 0, 0xFFFF)
     yield num
 
+  def parseOffset(token: String, lineNumber: LineNumber, instructionMemoryAddress: InstructionMemoryAddress, offsetNumBits: Int, symbolTable: Map[String, InstructionMemoryAddress]): Either[String, Int] =
+    def twosComplement(offset: Int) = if offset < 0 then offset + (1 << offsetNumBits) else offset
+    
+    for
+      //is token a label or a number?
+      offset <- parseNumericValue(token, lineNumber).orElse {
+        ((symbolTable(token) - instructionMemoryAddress) ∇- 1).asRight[String]
+      }
+      _ <- validateNumberRange(offset, lineNumber, -(1 << (offsetNumBits - 1)), (1 << (offsetNumBits - 1)) - 1)
+    yield twosComplement(offset)
+
 
 }

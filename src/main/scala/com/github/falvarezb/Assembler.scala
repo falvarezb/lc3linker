@@ -53,6 +53,8 @@ object Assembler:
             parseOrig(lineMetadata).map(InstructionMemoryAddress.apply) match
               case Left(str) => Left(str)
               case Right(initialInstructionNumber) =>
+                // this is not a real instruction to be executed but the memory address where LC-3 is to load the program 
+                // that's why initialInstructionNumber is not incremented when invoking loop
                 instructionsMetadata += InstructionMetadata(lineMetadata, initialInstructionNumber)
                 loop(xs, initialInstructionNumber)
           case lineMetadata if lineMetadata.isOpCode || lineMetadata.isDirective =>
