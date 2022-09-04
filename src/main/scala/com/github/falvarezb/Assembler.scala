@@ -10,6 +10,8 @@ import cats.implicits.*
 import com.github.falvarezb.Util.parseMemoryAddress
 import com.github.falvarezb.Parsers.*
 
+import scala.annotation.tailrec
+
 class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddress]):
 
   def assemble(asmFileNamePath: String): Either[String, Unit] =
@@ -20,10 +22,11 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
     yield serializeInstructions(instructions, asmFileNamePath)
 
   def filterNotLinesAfterEnd(lineIterator: Iterator[LineMetadata]): List[LineMetadata] =
+    @tailrec
     def loop(allTokenizedLines: Iterator[LineMetadata], tokenizedLinesBeforeEnd: List[LineMetadata]): List[LineMetadata] =
       if allTokenizedLines.hasNext then
         val nextLine = allTokenizedLines.next()
-        if nextLine.tokenizedLine(0) == ".END" then tokenizedLinesBeforeEnd
+        if nextLine.tokenizedLine.head == ".END" then tokenizedLinesBeforeEnd
         else loop(allTokenizedLines, nextLine :: tokenizedLinesBeforeEnd)
       else tokenizedLinesBeforeEnd
 
@@ -43,6 +46,7 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
 
   def createSymbolTable(linesMetadata: List[LineMetadata]): Either[String, (List[InstructionMetadata], Map[String, InstructionMemoryAddress])] =
     val instructionsMetadata = mutable.ListBuffer.empty[InstructionMetadata]
+    @tailrec
     def loop(lines: List[LineMetadata], instructionMemoryAddress: InstructionMemoryAddress, isLabelLine: Boolean = false): Either[String, Unit] =
       lines match
         case Nil => ().asRight[String]
@@ -77,7 +81,7 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
 
   def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata], symbolTable: Map[String, InstructionMemoryAddress]): Either[String, List[Int]] =
     val l: List[Either[String, Int]] = instructionsMetadata.map { instructionMetadata =>
-      val firstToken = instructionMetadata.lineMetadata.tokenizedLine(0)
+      val firstToken = instructionMetadata.lineMetadata.tokenizedLine.head
       firstToken match
         case ".ORIG" => Some(parseOrig(instructionMetadata.lineMetadata))
         case "ADD" => Some(parseAdd(instructionMetadata.lineMetadata.tokenizedLine))
