@@ -47,11 +47,11 @@ object Assembler:
 
     def loop(linesMetadata: Seq[LineMetadata], instructionMemoryAddress: InstructionMemoryAddress): Either[String, Unit] =
       linesMetadata match
-        case Nil => Right(())
+        case Nil => ().asRight[String]
         case x :: xs => x match
           case lineMetadata if lineMetadata.tokenizedLine(0) == ".ORIG" =>
             parseOrig(lineMetadata).map(InstructionMemoryAddress.apply) match
-              case Left(str) => Left(str)
+              case Left(str) => str.asLeft[Unit]
               case Right(initialInstructionNumber) =>
                 // this is not a real instruction to be executed but the memory address where LC-3 is to load the program 
                 // that's why initialInstructionNumber is not incremented when invoking loop
