@@ -43,7 +43,7 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
 
   def createSymbolTable(linesMetadata: List[LineMetadata]): Either[String, (List[InstructionMetadata], Map[String, InstructionMemoryAddress])] =
     val instructionsMetadata = mutable.ListBuffer.empty[InstructionMetadata]
-    def loop(lines: List[LineMetadata], instructionMemoryAddress: InstructionMemoryAddress): Either[String, Unit] =
+    def loop(lines: List[LineMetadata], instructionMemoryAddress: InstructionMemoryAddress, isLabelLine: Boolean = false): Either[String, Unit] =
       lines match
         case Nil => ().asRight[String]
         case firstLine :: remainingLines => firstLine match
@@ -60,12 +60,17 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
             loop(remainingLines, instructionMemoryAddress ∆+ 1)
           case line =>
             line.tokenizedLine.headOption match
+              case Some(label) if isLabelLine =>
+                // two labels in the same line is illegal
+                s"ERROR (line ${line.lineNumber.value}): Invalid opcode ('$label')".asLeft[Unit]
               case Some(label) =>
                 symbolTable += (label -> instructionMemoryAddress)
                 // process the rest of the line after removing the label
                 // rest of the line may be empty or not
-                loop(line.copy(tokenizedLine = line.tokenizedLine.drop(1)) :: remainingLines, instructionMemoryAddress)
-              case None => loop(remainingLines, instructionMemoryAddress)
+                loop(line.copy(tokenizedLine = line.tokenizedLine.drop(1)) :: remainingLines, instructionMemoryAddress, true)
+              case None =>
+                // empty line
+                loop(remainingLines, instructionMemoryAddress)
 
     loop(linesMetadata, InstructionMemoryAddress(0)).map(_ => (instructionsMetadata.toList, symbolTable.toMap))
 
