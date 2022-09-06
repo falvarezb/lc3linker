@@ -5,8 +5,9 @@ import scala.collection.immutable.{AbstractSeq, LinearSeq}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
-import cats.*
-import cats.implicits.*
+import cats.instances.either
+import cats.syntax.either.*
+import cats.syntax.all.toTraverseOps
 import com.github.falvarezb.Util.parseMemoryAddress
 import com.github.falvarezb.Parsers.*
 
@@ -35,7 +36,7 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
   def doLexicalAnalysis(asmFileNamePath: String): List[LineMetadata] =
     val source = Source.fromFile(asmFileNamePath)
     val tokenizedLines = source.getLines()
-      .map(_.split("[ ,]").filterNot(_.isEmpty).toList) // line tokenization (empty tokens are discarded)
+      .map(_.split("""[ ,"]""").filterNot(_.isEmpty).toList) // line tokenization (empty tokens are discarded)
       .zipWithIndex // adding line number
       .filterNot { case (tokenizedLine, _) => tokenizedLine.isEmpty} // removing blank lines
       .filterNot { case (tokenizedLine, _) => tokenizedLine.head.startsWith(";")} // removing comments
@@ -62,6 +63,12 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
           case line if !line.isComment && instructionMemoryAddress == InstructionMemoryAddress(0) =>
             // instruction not preceeded by .ORIG directive
             s"ERROR (line 4): Instruction not preceeded by a .orig directive".asLeft[Unit]
+          case line if line.tokenizedLine.headOption.contains(".STRINGZ") =>
+            parseStringz(line).map(_.map(InstructionMemoryAddress.apply)) match
+              case Left(str) => str.asLeft[Unit]
+              case Right(instructionExpansionList) =>
+                instructionExpansionList.foreach { instructionsMetadata += InstructionMetadata(line, _)}
+                loop(remainingLines, instructionMemoryAddress ∆+ instructionExpansionList.length)
           case line if line.isOpCode || line.isDirective || line.isComment =>
             instructionsMetadata += InstructionMetadata(line, instructionMemoryAddress)
             loop(remainingLines, instructionMemoryAddress ∆+ 1)
@@ -90,6 +97,7 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
         case "ADD" => Some(parseAdd(instructionMetadata.lineMetadata.tokenizedLine))
         case "JSR" => Some(parseJsr(instructionMetadata, symbolTable))
         case "HALT" => Some(Right(0xf025))
+        case ".STRINGZ" => Some(Right(instructionMetadata.instructionMemoryAddress.value))
         case _ => None
     }.filterNot(_.isEmpty).map(_.get)
     l.sequence
