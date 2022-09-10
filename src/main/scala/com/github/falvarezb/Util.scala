@@ -67,33 +67,34 @@ object Util {
    * "hi\\nbye" = ['h','i','\\','n','b','y','e'] is transformed into
    * "hi\nbye" = ['h','i','\n','b','y','e']
    */
-  def interpretEscapeSequence(str: String) =
-    val result = mutable.StringBuilder()
-    var escapeSequenceMode = false
-    //TODO recursive implementation
-    str.foreach { ch =>
-      //https://en.wikipedia.org/wiki/Escape_sequences_in_C
-      if escapeSequenceMode then
-        ch match
-          case 'a' => result += '\u0007'
-          case 'b' => result += '\b'
-          case 'e' => result += '\u001b'
-          case 'f' => result += '\f'
-          case 'n' => result += '\n'
-          case 'r' => result += '\r'
-          case 't' => result += '\t'
-          case 'v' => result += '\u000b'
-          case '\\' => result += '\\'
-          case '"' => result += '"'
-          //TODO  error case
-          case _ => "error"
-        escapeSequenceMode = false
-      else if ch == '\\' then escapeSequenceMode = true
-      else result += ch
-    }
+  def interpretEscapeSequence(str: String): Either[Unit, String] =
+    def loop(loopStr: List[Char], escapeSequenceMode: Boolean, newStr: List[Char]): Either[Unit, List[Char]] = loopStr match
+      case Nil => newStr.asRight[Unit]
+      case ch :: remainingChars =>
+        //https://en.wikipedia.org/wiki/Escape_sequences_in_C
+        if escapeSequenceMode then
+          val replacementEither = ch match
+            case 'a' => '\u0007'.asRight[String]
+            case 'b' => '\b'.asRight[String]
+            case 'e' => '\u001b'.asRight[String]
+            case 'f' => '\f'.asRight[String]
+            case 'n' => '\n'.asRight[String]
+            case 'r' => '\r'.asRight[String]
+            case 't' => '\t'.asRight[String]
+            case 'v' => '\u000b'.asRight[String]
+            case '\\' => '\\'.asRight[String]
+            case '"' => '"'.asRight[String]
+            case _ => ().asLeft[Char]
+          replacementEither match
+            case Left(_) => ().asLeft[List[Char]]
+            case Right(replacement) =>
+              loop(remainingChars, false, replacement :: newStr)
+              else if ch == '\\' then loop(remainingChars, true, newStr)
+              else loop(remainingChars, escapeSequenceMode, ch :: newStr)
+
+    loop(str.toList, false, Nil).map(_.reverse.mkString)
 //    // adding null character
 //    result += '\u0000'
-    result.toString()
 
 
 }

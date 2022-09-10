@@ -7,12 +7,16 @@ import org.scalatest.matchers.should.Matchers
 class UtilTest extends AnyFunSpec with Matchers:
 
   describe("interpret characters") {
-    it("valid escape character is replaced") {
-      interpretEscapeSequence("hi\\nbye") shouldBe "hi\nbye"
+    it("valid escape sequence is replaced") {
+      interpretEscapeSequence("hi\\nbye") shouldBe Right("hi\nbye")
     }
 
-    it("multiple valid escape character are replaced") {
-      interpretEscapeSequence("hi\\nbye\\\"he\\ello\\\"") shouldBe "hi\nbye\"he\u001bllo\""
+    it("multiple valid escape sequences are replaced") {
+      interpretEscapeSequence("hi\\nbye\\\"he\\ello\\\"") shouldBe Right("hi\nbye\"he\u001bllo\"")
+    }
+
+    it("invalid escape sequence fails") {
+      interpretEscapeSequence("hi\\gbye") shouldBe Left(())
     }
   }
 
