@@ -1,7 +1,9 @@
 package com.github.falvarezb
 
-import cats.*
-import cats.implicits.*
+import cats.instances.either
+import cats.syntax.either.*
+
+import scala.collection.mutable
 
 object Util {
 
@@ -40,10 +42,10 @@ object Util {
 
   /**
    * Transforms the given token in a valid offset.
-   * 
+   *
    * The token can be a symbolic name (label) or a numeric value. If a label, the corresponding memory address is
    * retrieved from the symbol table.
-   * 
+   *
    * How to work out the offset:
    * - calculate difference between numeric value of the token and the instruction's memory address and then subtract 1
    * - validate the result of the previous step is within the range indicated by offsetNumBits
@@ -59,6 +61,39 @@ object Util {
       }
       _ <- validateNumberRange(offset, lineNumber, -(1 << (offsetNumBits - 1)), (1 << (offsetNumBits - 1)) - 1)
     yield twosComplement(offset)
+
+  /**
+   * Detect escape sequences in the given string and replace them by the corresponding escape character, e.g.
+   * "hi\\nbye" = ['h','i','\\','n','b','y','e'] is transformed into
+   * "hi\nbye" = ['h','i','\n','b','y','e']
+   */
+  def interpretEscapeSequence(str: String) =
+    val result = mutable.StringBuilder()
+    var escapeSequenceMode = false
+    //TODO recursive implementation
+    str.foreach { ch =>
+      //https://en.wikipedia.org/wiki/Escape_sequences_in_C
+      if escapeSequenceMode then
+        ch match
+          case 'a' => result += '\u0007'
+          case 'b' => result += '\b'
+          case 'e' => result += '\u001b'
+          case 'f' => result += '\f'
+          case 'n' => result += '\n'
+          case 'r' => result += '\r'
+          case 't' => result += '\t'
+          case 'v' => result += '\u000b'
+          case '\\' => result += '\\'
+          case '"' => result += '"'
+          //TODO  error case
+          case _ => "error"
+        escapeSequenceMode = false
+      else if ch == '\\' then escapeSequenceMode = true
+      else result += ch
+    }
+//    // adding null character
+//    result += '\u0000'
+    result.toString()
 
 
 }
