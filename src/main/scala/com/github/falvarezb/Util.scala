@@ -95,8 +95,6 @@ object Util {
               else loop(remainingChars, escapeSequenceMode, ch :: newStr)
 
     loop(str.toList, false, Nil).map(_.reverse.mkString)
-//    // adding null character
-//    result += '\u0000'
 
 
 }

@@ -25,16 +25,19 @@ object Parsers {
       val line = lineMetadata.line
       val firstQuotationMarkIdx = line.indexOf('"')
       val secondQuotationMarkIdx = line.lastIndexOf('"')
-      val quotedContent = line.substring(firstQuotationMarkIdx+1, secondQuotationMarkIdx)
-      val stringzIdx = line.indexOfSlice(".STRINGZ")
-      val contentOutsideQuotationMark =
-        line.substring(stringzIdx + ".STRINGZ".length, firstQuotationMarkIdx).trim.nonEmpty ||
-          line.substring(secondQuotationMarkIdx + 1).headOption.exists(_ != ';')
+      if firstQuotationMarkIdx == -1 || secondQuotationMarkIdx == firstQuotationMarkIdx then
+        s"ERROR (line ${lineNumber.value}): Bad string ('$line')".asLeft[List[Int]]
+      else
+        val quotedContent = line.substring(firstQuotationMarkIdx+1, secondQuotationMarkIdx)
+        val stringzIdx = line.indexOfSlice(".STRINGZ")
+        val contentOutsideQuotationMark =
+          line.substring(stringzIdx + ".STRINGZ".length, firstQuotationMarkIdx).trim.nonEmpty ||
+            line.substring(secondQuotationMarkIdx + 1).headOption.exists(_ != ';')
 
-      for
-        _ <- Either.cond(!contentOutsideQuotationMark, Nil, s"ERROR (line ${lineNumber.value}): Bad string ('$line')")
-        str <- interpretEscapeSequence(quotedContent, lineNumber)
-      yield str.toList.map(_.toInt)
+        for
+          _ <- Either.cond(!contentOutsideQuotationMark, Nil, s"ERROR (line ${lineNumber.value}): Bad string ('$line')")
+          str <- interpretEscapeSequence(quotedContent, lineNumber)
+        yield str.toList.map(_.toInt)
 
 
 
