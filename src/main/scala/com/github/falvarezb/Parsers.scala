@@ -16,28 +16,42 @@ object Parsers {
     if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
     else parseMemoryAddress(tokens(1), lineNumber)
 
+  /**
+   * Parse .STRINGZ directives to generate the corresponding instructions: each of the chars of the string
+   * results in an "instruction" whose value is the int value of the char according to the ASCII standard
+   *
+   * When reading the content of the asm file and storing it in a string, special characters are escaped
+   * according to https://en.wikipedia.org/wiki/Escape_sequences_in_C.
+   *
+   * As a result, escape characters in the operand of the .STRINGZ directive lose their meaning and need
+   * to be re-interpreted, e.g.
+   *
+   * .STRINGZ "hi\nbye" in the asm file --> ".STRINGZ \"hi\\nbye" in the program
+   *
+   * So effectively, the escape sequence '\n' has become 2 different characters: '\' and 'n'
+   *
+   * @param lineMetadata
+   * @return
+   */
   def parseStringz(lineMetadata: LineMetadata): Either[String, List[Int]] =
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
-    if tokens.length < 2 then
-      s"ERROR (line ${lineNumber.value}): Bad string".asLeft[List[Int]]
+    val line = lineMetadata.line
+    val firstQuotationMarkIdx = line.indexOf('"')
+    val secondQuotationMarkIdx = line.lastIndexOf('"')
+    if firstQuotationMarkIdx == -1 || secondQuotationMarkIdx == firstQuotationMarkIdx then
+      s"ERROR (line ${lineNumber.value}): Bad string ('$line')".asLeft[List[Int]]
     else
-      val line = lineMetadata.line
-      val firstQuotationMarkIdx = line.indexOf('"')
-      val secondQuotationMarkIdx = line.lastIndexOf('"')
-      if firstQuotationMarkIdx == -1 || secondQuotationMarkIdx == firstQuotationMarkIdx then
-        s"ERROR (line ${lineNumber.value}): Bad string ('$line')".asLeft[List[Int]]
-      else
-        val quotedContent = line.substring(firstQuotationMarkIdx+1, secondQuotationMarkIdx)
-        val stringzIdx = line.indexOfSlice(".STRINGZ")
-        val contentOutsideQuotationMark =
-          line.substring(stringzIdx + ".STRINGZ".length, firstQuotationMarkIdx).trim.nonEmpty ||
-            line.substring(secondQuotationMarkIdx + 1).headOption.exists(_ != ';')
+      val quotedContent = line.substring(firstQuotationMarkIdx+1, secondQuotationMarkIdx)
+      val stringzIdx = line.indexOfSlice(".STRINGZ")
+      val contentOutsideQuotationMark =
+        line.substring(stringzIdx + ".STRINGZ".length, firstQuotationMarkIdx).trim.nonEmpty ||
+          line.substring(secondQuotationMarkIdx + 1).headOption.exists(_ != ';')
 
-        for
-          _ <- Either.cond(!contentOutsideQuotationMark, Nil, s"ERROR (line ${lineNumber.value}): Bad string ('$line')")
-          str <- interpretEscapeSequence(quotedContent, lineNumber)
-        yield str.toList.map(_.toInt)
+      for
+        _ <- Either.cond(!contentOutsideQuotationMark, Nil, s"ERROR (line ${lineNumber.value}): Bad string ('$line')")
+        str <- interpretEscapeSequence(quotedContent, lineNumber)
+      yield str.toList.map(_.toInt)
 
 
 

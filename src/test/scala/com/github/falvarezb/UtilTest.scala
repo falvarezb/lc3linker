@@ -14,10 +14,6 @@ class UtilTest extends AnyFunSpec with Matchers:
     it("multiple valid escape sequences are replaced") {
       interpretEscapeSequence("hi\\nbye\\\"he\\ello\\\"", LineNumber(1)) shouldBe Right("hi\nbye\"he\u001bllo\"")
     }
-
-    it("invalid escape sequence fails") {
-      interpretEscapeSequence("hi\\gbye", LineNumber(1)) shouldBe Left("ERROR (line 1): Unrecognised escape sequence ('hi\\gbye')")
-    }
   }
 
 
