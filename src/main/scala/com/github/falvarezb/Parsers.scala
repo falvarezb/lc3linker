@@ -1,6 +1,6 @@
 package com.github.falvarezb
 
-import com.github.falvarezb.Util.{parseMemoryAddress, parseNumericValue, parseOffset, validateNumberRange}
+import com.github.falvarezb.Util.{interpretEscapeSequence, parseMemoryAddress, parseNumericValue, parseOffset, validateNumberRange}
 
 import scala.collection.mutable
 //import cats.*
@@ -22,32 +22,21 @@ object Parsers {
     if tokens.length < 2 then
       s"ERROR (line ${lineNumber.value}): Bad string".asLeft[List[Int]]
     else
-      interpretEscapeSequence(tokens(1)).map(_.toInt).toList.asRight[String]
+      val line = lineMetadata.line
+      val firstQuotationMarkIdx = line.indexOf('"')
+      val secondQuotationMarkIdx = line.lastIndexOf('"')
+      val quotedContent = line.substring(firstQuotationMarkIdx+1, secondQuotationMarkIdx)
+      val stringzIdx = line.indexOfSlice(".STRINGZ")
+      val contentOutsideQuotationMark =
+        line.substring(stringzIdx + ".STRINGZ".length, firstQuotationMarkIdx).trim.nonEmpty ||
+          line.substring(secondQuotationMarkIdx + 1).headOption.exists(_ != ';')
 
-  def interpretEscapeSequence(str: String) =
-    val result = mutable.StringBuilder()
-    var escapeSequenceMode = false
-    str.foreach { ch =>
-      //https://en.wikipedia.org/wiki/Escape_sequences_in_C
-      if escapeSequenceMode then
-        ch match
-          case 'a' => result += '\u0007'
-          case 'b' => result += '\b'
-          case 'e' => result += '\u001b'
-          case 'f' => result += '\f'
-          case 'n' => result += '\n'
-          case 'r' => result += '\r'
-          case 't' => result += '\t'
-          case 'v' => result += '\u000b'
-          case '\\' => result += '\\'
-          case _ => "error"
-        escapeSequenceMode = false
-      else if ch == '\\' then escapeSequenceMode = true
-      else result += ch
-    }
-    // adding null character
-    result += '\u0000'
-    result.toList
+      for
+        _ <- Either.cond(!contentOutsideQuotationMark, Nil, s"ERROR (line ${lineNumber.value}): Bad string ('$line')")
+        str <- interpretEscapeSequence(quotedContent, lineNumber)
+      yield str.toList.map(_.toInt)
+
+
 
 
   def parseJsr(instructionMetadata: InstructionMetadata, symbolTable: Map[String, InstructionMemoryAddress]): Either[String, Int] =

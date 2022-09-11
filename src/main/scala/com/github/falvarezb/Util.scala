@@ -67,9 +67,11 @@ object Util {
    * "hi\\nbye" = ['h','i','\\','n','b','y','e'] is transformed into
    * "hi\nbye" = ['h','i','\n','b','y','e']
    */
-  def interpretEscapeSequence(str: String): Either[Unit, String] =
-    def loop(loopStr: List[Char], escapeSequenceMode: Boolean, newStr: List[Char]): Either[Unit, List[Char]] = loopStr match
-      case Nil => newStr.asRight[Unit]
+  def interpretEscapeSequence(str: String, lineNumber: LineNumber): Either[String, String] =
+    def loop(loopStr: List[Char], escapeSequenceMode: Boolean, newStr: List[Char]): Either[String, List[Char]] = loopStr match
+      case Nil =>
+        // adding null character
+        ('\u0000' :: newStr).asRight[String]
       case ch :: remainingChars =>
         //https://en.wikipedia.org/wiki/Escape_sequences_in_C
         if escapeSequenceMode then
@@ -86,7 +88,7 @@ object Util {
             case '"' => '"'.asRight[String]
             case _ => ().asLeft[Char]
           replacementEither match
-            case Left(_) => ().asLeft[List[Char]]
+            case Left(_) => s"ERROR (line ${lineNumber.value}): Unrecognised escape sequence ('$str')".asLeft[List[Char]]
             case Right(replacement) =>
               loop(remainingChars, false, replacement :: newStr)
               else if ch == '\\' then loop(remainingChars, true, newStr)

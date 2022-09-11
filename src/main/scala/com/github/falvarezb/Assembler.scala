@@ -35,18 +35,20 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
 
   def doLexicalAnalysis(asmFileNamePath: String): List[LineMetadata] =
     val source = Source.fromFile(asmFileNamePath)
-    val tokenizedLines = source.getLines()
-      .map(_.split("""[ ,"]""").filterNot(_.isEmpty).toList) // line tokenization (empty tokens are discarded)
+    val linesWithMetadata = source.getLines()
+      .map(line => (line, line.split("""[ ,"]""").filterNot(_.isEmpty).toList)) // line tokenization (empty tokens are discarded)
       .zipWithIndex // adding line number
-      .filterNot { case (tokenizedLine, _) => tokenizedLine.isEmpty} // removing blank lines
-      .filterNot { case (tokenizedLine, _) => tokenizedLine.head.startsWith(";")} // removing comments
-      .map { case (tokenizedLine, idx) => LineMetadata(tokenizedLine, LineNumber(idx+1))}
-    filterNotLinesAfterEnd(tokenizedLines)
+      .filterNot { case ((_, tokenizedLine), _) => tokenizedLine.isEmpty} // removing blank lines
+      .filterNot { case ((_, tokenizedLine), _) => tokenizedLine.head.startsWith(";")} // removing comments
+      .map { case ((line, tokenizedLine), idx) => LineMetadata(line, tokenizedLine, LineNumber(idx+1))}
+
+    filterNotLinesAfterEnd(linesWithMetadata)
     //result.foreach(line => println(line.tokenizedLine.mkString(" ")))
     //result
 
   def createSymbolTable(linesMetadata: List[LineMetadata]): Either[String, (List[InstructionMetadata], Map[String, InstructionMemoryAddress])] =
     val instructionsMetadata = mutable.ListBuffer.empty[InstructionMetadata]
+
     @tailrec
     def loop(lines: List[LineMetadata], instructionMemoryAddress: InstructionMemoryAddress, isLabelLine: Boolean = false): Either[String, Unit] =
       lines match
@@ -60,18 +62,22 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
                 // that's why initialInstructionNumber is not incremented when invoking loop
                 instructionsMetadata += InstructionMetadata(line, initialInstructionNumber)
                 loop(remainingLines, initialInstructionNumber)
+
           case line if !line.isComment && instructionMemoryAddress == InstructionMemoryAddress(0) =>
-            // instruction not preceeded by .ORIG directive
+            // instruction not preceded by .ORIG directive
             s"ERROR (line 4): Instruction not preceeded by a .orig directive".asLeft[Unit]
+
           case line if line.tokenizedLine.headOption.contains(".STRINGZ") =>
             parseStringz(line).map(_.map(InstructionMemoryAddress.apply)) match
               case Left(str) => str.asLeft[Unit]
               case Right(instructionExpansionList) =>
                 instructionExpansionList.foreach { instructionsMetadata += InstructionMetadata(line, _)}
                 loop(remainingLines, instructionMemoryAddress ∆+ instructionExpansionList.length)
+
           case line if line.isOpCode || line.isDirective || line.isComment =>
             instructionsMetadata += InstructionMetadata(line, instructionMemoryAddress)
             loop(remainingLines, instructionMemoryAddress ∆+ 1)
+
           case line =>
             line.tokenizedLine.headOption match
               case Some(label) if isLabelLine =>

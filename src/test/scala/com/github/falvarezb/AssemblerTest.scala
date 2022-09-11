@@ -34,7 +34,7 @@ class AssemblerTest extends AnyFunSpec with Matchers:
     val symbolTable = mutable.HashMap.empty[String, InstructionMemoryAddress]
     new Assembler(symbolTable).assemble(s"$path/$asmFileName")
 
-  describe("assembled file") {
+  describe("assembly process") {
     it("t1: assembly file without labels") {
       runAssembledFileTest("t1.asm")
     }
