@@ -78,7 +78,7 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
             instructionsMetadata += InstructionMetadata(line, instructionMemoryAddress)
             loop(remainingLines, instructionMemoryAddress ∆+ 1)
 
-          case line =>
+          case line => //label
             line.tokenizedLine.headOption match
               case Some(label) if isLabelLine =>
                 // two labels in the same line is illegal

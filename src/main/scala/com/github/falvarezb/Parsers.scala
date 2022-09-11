@@ -17,7 +17,7 @@ object Parsers {
     else parseMemoryAddress(tokens(1), lineNumber)
 
   /**
-   * Parse .STRINGZ directives to generate the corresponding instructions: each of the chars of the string
+   * Parse .STRINGZ directive to generate the corresponding instructions: each of the chars of the string
    * results in an "instruction" whose value is the int value of the char according to the ASCII standard
    *
    * When reading the content of the asm file and storing it in a string, special characters are escaped
@@ -34,7 +34,8 @@ object Parsers {
    * @return
    */
   def parseStringz(lineMetadata: LineMetadata): Either[String, List[Int]] =
-    val tokens = lineMetadata.tokenizedLine
+    def isAsciiChar(ch: Char) = ch >= 0 && ch < 128
+
     val lineNumber = lineMetadata.lineNumber
     val line = lineMetadata.line
     val firstQuotationMarkIdx = line.indexOf('"')
@@ -51,6 +52,7 @@ object Parsers {
       for
         _ <- Either.cond(!contentOutsideQuotationMark, Nil, s"ERROR (line ${lineNumber.value}): Bad string ('$line')")
         str <- interpretEscapeSequence(quotedContent, lineNumber)
+        _ <- Either.cond(str.forall(isAsciiChar), Nil, s"ERROR (line ${lineNumber.value}): Bad string, non-ascii char ('$line')")
       yield str.toList.map(_.toInt)
 
 

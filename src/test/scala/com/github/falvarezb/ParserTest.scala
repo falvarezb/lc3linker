@@ -32,6 +32,11 @@ class ParserTest extends AnyFunSpec with Matchers:
       val lineMetadata = LineMetadata(".STRINGZ  \"hi\\gbye\"", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1))
       parseStringz(lineMetadata) shouldBe Left("ERROR (line 1): Unrecognised escape sequence ('hi\\gbye')")
     }
+
+    it("non-ASCII char") {
+      val lineMetadata = LineMetadata(".STRINGZ  \"dπ\"", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1))
+      parseStringz(lineMetadata) shouldBe Left("ERROR (line 1): Bad string, non-ascii char ('.STRINGZ  \"dπ\"')")
+    }
   }
 
 
