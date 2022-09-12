@@ -57,11 +57,11 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
           case line if line.tokenizedLine.headOption.contains(".ORIG") =>
             parseOrig(line).map(InstructionMemoryAddress.apply) match
               case Left(str) => str.asLeft[Unit]
-              case Right(initialInstructionNumber) =>
+              case Right(initialInstructionLocation) =>
                 // this is not a real instruction to be executed but the memory address where LC-3 is to load the program
                 // that's why initialInstructionNumber is not incremented when invoking loop
-                instructionsMetadata += InstructionMetadata(line, initialInstructionNumber)
-                loop(remainingLines, initialInstructionNumber)
+                instructionsMetadata += InstructionMetadata(line, initialInstructionLocation)
+                loop(remainingLines, initialInstructionLocation)
 
           case line if !line.isComment && instructionMemoryAddress == InstructionMemoryAddress(0) =>
             // instruction not preceded by .ORIG directive
@@ -103,13 +103,14 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
 
 
   def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata], symbolTable: Map[String, InstructionMemoryAddress]): Either[String, List[Int]] =
+    val initialInstructionLocation = instructionsMetadata.head.instructionMemoryAddress
     val l: List[Either[String, Int]] = instructionsMetadata.map { instructionMetadata =>
       val firstToken = instructionMetadata.lineMetadata.tokenizedLine.head
       firstToken match
-        case ".ORIG" => Some(parseOrig(instructionMetadata.lineMetadata))
+        case ".ORIG" => Some(initialInstructionLocation.value.asRight[String])
         case "ADD" => Some(parseAdd(instructionMetadata.lineMetadata.tokenizedLine))
         case "JSR" => Some(parseJsr(instructionMetadata, symbolTable))
-        case "HALT" => Some(Right(0xf025))
+        case "HALT" => Some(0xf025.asRight[String])
         case ".STRINGZ" | ".BLKW" => Some(Right(instructionMetadata.instructionMemoryAddress.value))
         case _ => None
     }.filterNot(_.isEmpty).map(_.get)
