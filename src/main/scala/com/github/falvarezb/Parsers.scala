@@ -1,6 +1,6 @@
 package com.github.falvarezb
 
-import com.github.falvarezb.Util.{interpretEscapeSequence, parseMemoryAddress, parseNumericValue, parseOffset, validateNumberRange}
+import com.github.falvarezb.Util.{interpretEscapeSequence, parseBlockOfWordsSize, parseMemoryAddress, parseNumericValue, parseOffset, validateNumberRange}
 
 import scala.collection.mutable
 //import cats.*
@@ -73,7 +73,7 @@ object Parsers {
     if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
     else
       for
-        block_size <- parseMemoryAddress(tokens(1), lineMetadata.lineNumber)
+        block_size <- parseBlockOfWordsSize(tokens(1), lineMetadata.lineNumber)
         instructions <- List.fill(block_size)(0).asRight[String]
       yield instructions
 
