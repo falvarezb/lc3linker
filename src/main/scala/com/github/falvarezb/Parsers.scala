@@ -16,6 +16,18 @@ object Parsers {
     if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
     else parseMemoryAddress(tokens(1), lineNumber)
 
+  def parseFill(lineMetadata: LineMetadata, symbolTable: Map[String, InstructionMemoryAddress]): Either[String, Int] =
+    val tokens = lineMetadata.tokenizedLine
+    val lineNumber = lineMetadata.lineNumber
+    if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
+    else
+      val operand = tokens(1)
+      for
+        //is token a label or a number?
+        num <- parseNumericValue(operand, lineNumber).orElse {symbolTable(operand).value.asRight[String]}
+        _ <- validateNumberRange(operand, num, lineNumber, -32768, 65535)
+      yield num
+
   /**
    * Parse .STRINGZ directive to generate the corresponding instructions: each of the chars of the string
    * results in an "instruction" whose value is the int value of the char according to the ASCII standard

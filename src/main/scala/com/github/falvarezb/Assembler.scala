@@ -111,7 +111,8 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
         case "ADD" => Some(parseAdd(instructionMetadata.lineMetadata.tokenizedLine))
         case "JSR" => Some(parseJsr(instructionMetadata, symbolTable))
         case "HALT" => Some(0xf025.asRight[String])
-        case ".STRINGZ" | ".BLKW" => Some(Right(instructionMetadata.instructionMemoryAddress.value))
+        case ".STRINGZ" | ".BLKW" => Some(instructionMetadata.instructionMemoryAddress.value.asRight[String])
+        case ".FILL" => Some(parseFill(instructionMetadata.lineMetadata, symbolTable))
         case _ => None
     }.filterNot(_.isEmpty).map(_.get)
     l.sequence

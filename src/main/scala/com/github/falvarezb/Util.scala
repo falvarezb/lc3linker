@@ -26,9 +26,9 @@ object Util {
           Integer.parseInt(token)
     }.leftMap(_ => s"ERROR (line ${lineNumber.value}): Immediate $token is not a numeric value")
 
-  def validateNumberRange(value: Int, lineNumber: LineNumber, lowerBound: Int, upperBound: Int): Either[String, Unit] =
+  def validateNumberRange(token: String, value: Int, lineNumber: LineNumber, lowerBound: Int, upperBound: Int): Either[String, Unit] =
     if value < lowerBound || value > upperBound then
-      s"ERROR (line ${lineNumber.value}): Immediate operand ($value) outside of range ($lowerBound to $upperBound)".asLeft[Unit]
+      s"ERROR (line ${lineNumber.value}): Immediate operand ($token) out of range ($lowerBound to $upperBound)".asLeft[Unit]
     else ().asRight[String]
 
   /**
@@ -37,7 +37,7 @@ object Util {
   def parseMemoryAddress(token: String, lineNumber: LineNumber): Either[String, Int] =
     for
       num <- parseNumericValue(token, lineNumber)
-      _ <- validateNumberRange(num, lineNumber, 0, 0xFFFF)
+      _ <- validateNumberRange(token, num, lineNumber, 0, 0xFFFF)
     yield num
 
   def parseBlockOfWordsSize(token: String, lineNumber: LineNumber): Either[String, Int] =
@@ -63,7 +63,7 @@ object Util {
       offset <- parseNumericValue(token, lineNumber).orElse {
         ((symbolTable(token) - instructionMemoryAddress) ∇- 1).asRight[String]
       }
-      _ <- validateNumberRange(offset, lineNumber, -(1 << (offsetNumBits - 1)), (1 << (offsetNumBits - 1)) - 1)
+      _ <- validateNumberRange(token, offset, lineNumber, -(1 << (offsetNumBits - 1)), (1 << (offsetNumBits - 1)) - 1)
     yield twosComplement(offset)
 
   /**

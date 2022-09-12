@@ -1,6 +1,6 @@
 package com.github.falvarezb
 
-import com.github.falvarezb.Parsers.parseStringz
+import com.github.falvarezb.Parsers.{parseFill, parseStringz}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -36,6 +36,32 @@ class ParserTest extends AnyFunSpec with Matchers:
     it("non-ASCII char") {
       val lineMetadata = LineMetadata(".STRINGZ  \"dπ\"", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1))
       parseStringz(lineMetadata) shouldBe Left("ERROR (line 1): Bad string, non-ascii char ('.STRINGZ  \"dπ\"')")
+    }
+  }
+
+  describe(".FILL parser") {
+    it("successful parse when operand is an immediate value") {
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List(".FILL", "10"), LineNumber(1))
+      val symbolTable = Map[String, InstructionMemoryAddress]()
+      parseFill(lineMetadata, symbolTable) shouldBe Right(10)
+    }
+
+    it("successful parse when operand is a symbolic value") {
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List(".FILL", "LABEL"), LineNumber(1))
+      val symbolTable = Map[String, InstructionMemoryAddress]("LABEL" -> InstructionMemoryAddress(0x3003))
+      parseFill(lineMetadata, symbolTable) shouldBe Right(0x3003)
+    }
+
+    it("immediate too big") {
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List(".FILL", "#70000"), LineNumber(1))
+      val symbolTable = Map[String, InstructionMemoryAddress]()
+      parseFill(lineMetadata, symbolTable) shouldBe Left("ERROR (line 1): Immediate operand (#70000) out of range (-32768 to 65535)")
+    }
+
+    it("immediate too small") {
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List(".FILL", "#-33000"), LineNumber(1))
+      val symbolTable = Map[String, InstructionMemoryAddress]()
+      parseFill(lineMetadata, symbolTable) shouldBe Left("ERROR (line 1): Immediate operand (#-33000) out of range (-32768 to 65535)")
     }
   }
 
