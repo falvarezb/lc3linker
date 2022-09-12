@@ -40,6 +40,10 @@ object Util {
       _ <- validateNumberRange(num, lineNumber, 0, 0xFFFF)
     yield num
 
+  def parseBlockOfWordsSize(token: String, lineNumber: LineNumber): Either[String, Int] =
+    // same validation as memory address
+    parseMemoryAddress(token, lineNumber)
+
   /**
    * Transforms the given token in a valid offset.
    *
