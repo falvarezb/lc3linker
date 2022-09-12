@@ -46,6 +46,10 @@ class AssemblerTest extends AnyFunSpec with Matchers:
     it("t9: .STRINGZ directive") {
       runAssembledFileTest("t9.asm")
     }
+
+    it("t10: .BLKW directive") {
+      runAssembledFileTest("t10.asm")
+    }
   }
 
   describe("error conditions") {

@@ -34,7 +34,7 @@ object Parsers {
    * @return
    */
   def parseStringz(lineMetadata: LineMetadata): Either[String, List[Int]] =
-    def isAsciiChar(ch: Char) = ch >= 0 && ch < 128
+    def isAsciiChar(ch: Char) = ch < 128
 
     val lineNumber = lineMetadata.lineNumber
     val line = lineMetadata.line
@@ -54,6 +54,16 @@ object Parsers {
         str <- interpretEscapeSequence(quotedContent, lineNumber)
         _ <- Either.cond(str.forall(isAsciiChar), Nil, s"ERROR (line ${lineNumber.value}): Bad string, non-ascii char ('$line')")
       yield str.toList.map(_.toInt)
+
+  def parseBlkw(lineMetadata: LineMetadata): Either[String, List[Int]] =
+    val tokens = lineMetadata.tokenizedLine
+    val lineNumber = lineMetadata.lineNumber
+    if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
+    else
+      for
+        block_size <- parseMemoryAddress(tokens(1), lineMetadata.lineNumber)
+        instructions <- List.fill(block_size)(0).asRight[String]
+      yield instructions
 
 
 

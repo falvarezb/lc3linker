@@ -18,4 +18,4 @@ enum OpCode:
   case ADD, JSR
 
 enum Directive:
-  case `.ORIG`, HALT, `.STRINGZ`
+  case `.ORIG`, HALT, `.STRINGZ`, `.BLKW`
