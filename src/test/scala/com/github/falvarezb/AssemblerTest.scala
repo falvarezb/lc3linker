@@ -50,6 +50,10 @@ class AssemblerTest extends AnyFunSpec with Matchers:
     it("t10: .BLKW directive") {
       runAssembledFileTest("t10.asm")
     }
+
+    it("t11: backwards jump") {
+      runAssembledFileTest("t11.asm")
+    }
   }
 
   describe("error conditions") {
