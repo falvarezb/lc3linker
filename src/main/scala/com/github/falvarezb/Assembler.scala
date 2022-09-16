@@ -57,18 +57,18 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
             s"ERROR (line 4): Instruction not preceeded by a .orig directive".asLeft[Unit]
 
           case line if line.tokenizedLine.headOption.contains(".STRINGZ") =>
-            parseStringz(line).map(_.map(InstructionMemoryAddress.apply)) match
+            parseStringz2(line).map(InstructionMemoryAddress.apply) match
               case Left(str) => str.asLeft[Unit]
-              case Right(instructionExpansionList) =>
-                instructionExpansionList.foreach { instructionsMetadata += InstructionMetadata(line, _)}
-                loop(remainingLines, instructionMemoryAddress ∆+ instructionExpansionList.length)
+              case Right(memoryAllocatedSize) =>
+                instructionsMetadata += InstructionMetadata(line, instructionMemoryAddress)
+                loop(remainingLines, instructionMemoryAddress ∆+ memoryAllocatedSize.value)
 
           case line if line.tokenizedLine.headOption.contains(".BLKW") =>
-            parseBlkw(line).map(_.map(InstructionMemoryAddress.apply)) match
+            parseBlkw2(line).map(InstructionMemoryAddress.apply) match
               case Left(str) => str.asLeft[Unit]
-              case Right(instructionExpansionList) =>
-                instructionExpansionList.foreach {instructionsMetadata += InstructionMetadata(line, _)}
-                loop(remainingLines, instructionMemoryAddress ∆+ instructionExpansionList.length)
+              case Right(memoryAllocatedSize) =>
+                instructionsMetadata += InstructionMetadata(line, instructionMemoryAddress)
+                loop(remainingLines, instructionMemoryAddress ∆+ memoryAllocatedSize.value)
 
           case line if line.isOpCode || line.isDirective || line.isComment =>
             instructionsMetadata += InstructionMetadata(line, instructionMemoryAddress)
@@ -93,18 +93,19 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
 
   def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata], symbolTable: Map[String, InstructionMemoryAddress]): Either[String, List[Int]] =
     val initialInstructionLocation = instructionsMetadata.head.instructionMemoryAddress
-    val l: List[Either[String, Int]] = instructionsMetadata.map { instructionMetadata =>
+    val l: List[Either[String, List[Int]]] = instructionsMetadata.map { instructionMetadata =>
       val firstToken = instructionMetadata.lineMetadata.tokenizedLine.head
       firstToken match
-        case ".ORIG" => Some(initialInstructionLocation.value.asRight[String])
-        case "ADD" => Some(parseAdd(instructionMetadata.lineMetadata.tokenizedLine))
-        case "JSR" => Some(parseJsr(instructionMetadata, symbolTable))
-        case "HALT" => Some(0xf025.asRight[String])
-        case ".STRINGZ" | ".BLKW" => Some(instructionMetadata.instructionMemoryAddress.value.asRight[String])
-        case ".FILL" => Some(parseFill(instructionMetadata.lineMetadata, symbolTable))
-        case _ => None
-    }.filterNot(_.isEmpty).map(_.get)
-    l.sequence
+        case ".ORIG" => List(initialInstructionLocation.value).asRight[String]
+        case "ADD" => parseAdd(instructionMetadata.lineMetadata.tokenizedLine).map(List(_))
+        case "JSR" => parseJsr(instructionMetadata, symbolTable).map(List(_))
+        case "HALT" => List(0xf025).asRight[String]
+        case ".STRINGZ" => parseStringz(instructionMetadata.lineMetadata)
+        case ".BLKW" => parseBlkw(instructionMetadata.lineMetadata)
+        case ".FILL" => parseFill(instructionMetadata.lineMetadata, symbolTable).map(List(_))
+        case _ => Nil.asRight[String]
+    }
+    l.sequence.map(_.flatten)
 
 
   def serializeInstructions(instructions: List[Int], asmFileNamePath: String): Unit =

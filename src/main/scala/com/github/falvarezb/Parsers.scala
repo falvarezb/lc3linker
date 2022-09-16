@@ -67,6 +67,11 @@ object Parsers {
         _ <- Either.cond(str.forall(isAsciiChar), Nil, s"ERROR (line ${lineNumber.value}): Bad string, non-ascii char ('$line')")
       yield str.toList.map(_.toInt)
 
+  def parseStringz2(lineMetadata: LineMetadata): Either[String, Int] =
+    parseStringz(lineMetadata).map(_.length)
+  def parseBlkw2(lineMetadata: LineMetadata): Either[String, Int] =
+    parseBlkw(lineMetadata).map(_.length)
+
   def parseBlkw(lineMetadata: LineMetadata): Either[String, List[Int]] =
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
