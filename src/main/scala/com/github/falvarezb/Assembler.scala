@@ -12,12 +12,13 @@ import com.github.falvarezb.Util.parseMemoryAddress
 import com.github.falvarezb.Parsers.*
 
 import scala.annotation.tailrec
+import scala.util.Using
 
 class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddress]):
 
   def assemble(asmFileNamePath: String): Either[String, Unit] =
     for
-      linesMetadata <- doLexicalAnalysis(asmFileNamePath).asRight[String]
+      linesMetadata <- doLexicalAnalysis(asmFileNamePath)
       tuple <- createSymbolTable(linesMetadata)
       instructions <- doSyntaxAnalysis(tuple._1, tuple._2)
     yield serializeInstructions(instructions, asmFileNamePath)
@@ -33,16 +34,17 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
 
     loop(lineIterator, Nil).reverse
 
-  def doLexicalAnalysis(asmFileNamePath: String): List[LineMetadata] =
-    val source = Source.fromFile(asmFileNamePath)
-    val linesWithMetadata = source.getLines()
-      .map(line => (line, line.split("""[ ,"]""").filterNot(_.isEmpty).toList)) // line tokenization (empty tokens are discarded)
-      .zipWithIndex // adding line number
-      .filterNot { case ((_, tokenizedLine), _) => tokenizedLine.isEmpty} // removing blank lines
-      .filterNot { case ((_, tokenizedLine), _) => tokenizedLine.head.startsWith(";")} // removing comments
-      .map { case ((line, tokenizedLine), idx) => LineMetadata(line, tokenizedLine, LineNumber(idx+1))}
+  def doLexicalAnalysis(asmFileNamePath: String) =
+    Using(Source.fromFile(asmFileNamePath)) { source =>
+      val linesWithMetadata: Iterator[LineMetadata] = source.getLines()
+        .map(line => (line, line.split("""[ ,"]""").filterNot(_.isEmpty).toList)) // line tokenization (empty tokens are discarded)
+        .zipWithIndex // adding line number
+        .filterNot { case ((_, tokenizedLine), _) => tokenizedLine.isEmpty } // removing blank lines
+        .filterNot { case ((_, tokenizedLine), _) => tokenizedLine.head.startsWith(";") } // removing comments
+        .map { case ((line, tokenizedLine), idx) => LineMetadata(line, tokenizedLine, LineNumber(idx + 1)) }
 
-    filterNotLinesAfterEnd(linesWithMetadata)
+      filterNotLinesAfterEnd(linesWithMetadata)
+    }.toEither.leftMap(t => s"Error while reading file ${t.getMessage}")
     //result.foreach(line => println(line.tokenizedLine.mkString(" ")))
     //result
 
