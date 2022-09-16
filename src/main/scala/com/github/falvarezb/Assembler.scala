@@ -30,8 +30,9 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
         .zipWithIndex // adding line number
         .filterNot { case ((_, tokenizedLine), _) => tokenizedLine.isEmpty } // removing blank lines
         .filterNot { case ((_, tokenizedLine), _) => tokenizedLine.head.startsWith(";") } // removing comments
+        .takeWhile { case ((_, tokenizedLine), _) => tokenizedLine.head != ".END"} // discarding lines after '.END' directive
         .map { case ((line, tokenizedLine), idx) => LineMetadata(line, tokenizedLine, LineNumber(idx + 1)) }
-        .takeWhile(_.tokenizedLine.head != ".END").toList
+        .toList
     }.toEither.leftMap(t => s"Error while reading file ${t.getMessage}")
 
   def createSymbolTable(linesMetadata: List[LineMetadata]): Either[String, (List[InstructionMetadata], Map[String, InstructionMemoryAddress])] =
