@@ -14,7 +14,7 @@ import com.github.falvarezb.Parsers.*
 import scala.annotation.tailrec
 import scala.util.Using
 
-class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddress]):
+class Assembler(val symbolTable: mutable.HashMap[String, InstructionLocation]):
 
   def assemble(asmFileNamePath: String): Either[String, Unit] =
     for
@@ -35,16 +35,16 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
         .toList
     }.toEither.leftMap(t => s"Error while reading file ${t.getMessage}")
 
-  def createSymbolTable(linesMetadata: List[LineMetadata]): Either[String, (List[InstructionMetadata], Map[String, InstructionMemoryAddress])] =
+  def createSymbolTable(linesMetadata: List[LineMetadata]): Either[String, (List[InstructionMetadata], Map[String, InstructionLocation])] =
     val instructionsMetadata = mutable.ListBuffer.empty[InstructionMetadata]
 
     @tailrec
-    def loop(lines: List[LineMetadata], instructionMemoryAddress: InstructionMemoryAddress, isLabelLine: Boolean = false): Either[String, Unit] =
+    def loop(lines: List[LineMetadata], instructionMemoryAddress: InstructionLocation, isLabelLine: Boolean = false): Either[String, Unit] =
       lines match
         case Nil => ().asRight[String]
         case firstLine :: remainingLines => firstLine match
           case line if line.tokenizedLine.headOption.contains(".ORIG") =>
-            parseOrig(line).map(InstructionMemoryAddress.apply) match
+            parseOrig(line).map(InstructionLocation.apply) match
               case Left(str) => str.asLeft[Unit]
               case Right(initialInstructionLocation) =>
                 // this is not a real instruction to be executed but the memory address where LC-3 is to load the program
@@ -52,23 +52,23 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
                 instructionsMetadata += InstructionMetadata(line, initialInstructionLocation)
                 loop(remainingLines, initialInstructionLocation)
 
-          case line if !line.isComment && instructionMemoryAddress == InstructionMemoryAddress(0) =>
+          case line if !line.isComment && instructionMemoryAddress == InstructionLocation(0) =>
             // instruction not preceded by .ORIG directive
             s"ERROR (line 4): Instruction not preceeded by a .orig directive".asLeft[Unit]
 
           case line if line.tokenizedLine.headOption.contains(".STRINGZ") =>
-            parseStringz2(line).map(InstructionMemoryAddress.apply) match
+            parseStringz2(line).map(InstructionLocation.apply) match
               case Left(str) => str.asLeft[Unit]
-              case Right(memoryAllocatedSize) =>
+              case Right(allocatedMemorySize) =>
                 instructionsMetadata += InstructionMetadata(line, instructionMemoryAddress)
-                loop(remainingLines, instructionMemoryAddress ∆+ memoryAllocatedSize.value)
+                loop(remainingLines, instructionMemoryAddress ∆+ allocatedMemorySize.value)
 
           case line if line.tokenizedLine.headOption.contains(".BLKW") =>
-            parseBlkw2(line).map(InstructionMemoryAddress.apply) match
+            parseBlkw2(line).map(InstructionLocation.apply) match
               case Left(str) => str.asLeft[Unit]
-              case Right(memoryAllocatedSize) =>
+              case Right(allocatedMemorySize) =>
                 instructionsMetadata += InstructionMetadata(line, instructionMemoryAddress)
-                loop(remainingLines, instructionMemoryAddress ∆+ memoryAllocatedSize.value)
+                loop(remainingLines, instructionMemoryAddress ∆+ allocatedMemorySize.value)
 
           case line if line.isOpCode || line.isDirective || line.isComment =>
             instructionsMetadata += InstructionMetadata(line, instructionMemoryAddress)
@@ -88,11 +88,11 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
                 // empty line
                 loop(remainingLines, instructionMemoryAddress)
 
-    loop(linesMetadata, InstructionMemoryAddress(0)).map(_ => (instructionsMetadata.toList, symbolTable.toMap))
+    loop(linesMetadata, InstructionLocation(0)).map(_ => (instructionsMetadata.toList, symbolTable.toMap))
 
 
-  def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata], symbolTable: Map[String, InstructionMemoryAddress]): Either[String, List[Int]] =
-    val initialInstructionLocation = instructionsMetadata.head.instructionMemoryAddress
+  def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata], symbolTable: Map[String, InstructionLocation]): Either[String, List[Int]] =
+    val initialInstructionLocation = instructionsMetadata.head.instructionLocation
     val l: List[Either[String, List[Int]]] = instructionsMetadata.map { instructionMetadata =>
       val firstToken = instructionMetadata.lineMetadata.tokenizedLine.head
       firstToken match

@@ -16,7 +16,7 @@ object Parsers {
     if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
     else parseMemoryAddress(tokens(1), lineNumber)
 
-  def parseFill(lineMetadata: LineMetadata, symbolTable: Map[String, InstructionMemoryAddress]): Either[String, Int] =
+  def parseFill(lineMetadata: LineMetadata, symbolTable: Map[String, InstructionLocation]): Either[String, Int] =
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
     if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
@@ -85,13 +85,13 @@ object Parsers {
 
 
 
-  def parseJsr(instructionMetadata: InstructionMetadata, symbolTable: Map[String, InstructionMemoryAddress]): Either[String, Int] =
+  def parseJsr(instructionMetadata: InstructionMetadata, symbolTable: Map[String, InstructionLocation]): Either[String, Int] =
     val offsetNumBits = 11
     val tokens = instructionMetadata.lineMetadata.tokenizedLine
     val lineNumber = instructionMetadata.lineMetadata.lineNumber
     if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
     else
-      parseOffset(tokens(1), lineNumber, instructionMetadata.instructionMemoryAddress, offsetNumBits, symbolTable).map { offset =>
+      parseOffset(tokens(1), lineNumber, instructionMetadata.instructionLocation, offsetNumBits, symbolTable).map { offset =>
         (4 << 12) + (1 << 11) + offset
       }
 

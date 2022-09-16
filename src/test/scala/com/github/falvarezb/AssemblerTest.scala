@@ -13,7 +13,7 @@ class AssemblerTest extends AnyFunSpec with Matchers:
 
   def runAssembledFileTest(asmFileName: String): Unit =
     val path = "src/test/resources"
-    new Assembler(mutable.HashMap.empty[String, InstructionMemoryAddress]).assemble(s"$path/$asmFileName") shouldBe Right(())
+    new Assembler(mutable.HashMap.empty[String, InstructionLocation]).assemble(s"$path/$asmFileName") shouldBe Right(())
 
     val asmFileNameWithoutExtension = asmFileName.split('.')(0)
     val expectedFile = new FileInputStream(s"$path/$asmFileNameWithoutExtension.expected.obj")
@@ -25,13 +25,13 @@ class AssemblerTest extends AnyFunSpec with Matchers:
 
   def runSymbolTableTest(asmFileName: String) =
     val path = "src/test/resources"
-    val symbolTable = mutable.HashMap.empty[String, InstructionMemoryAddress]
+    val symbolTable = mutable.HashMap.empty[String, InstructionLocation]
     val result = new Assembler(symbolTable).assemble(s"$path/$asmFileName")
     (result, symbolTable)
 
   def runErrorConditionTest(asmFileName: String) =
     val path = "src/test/resources"
-    val symbolTable = mutable.HashMap.empty[String, InstructionMemoryAddress]
+    val symbolTable = mutable.HashMap.empty[String, InstructionLocation]
     new Assembler(symbolTable).assemble(s"$path/$asmFileName")
 
   describe("assembly process") {
@@ -77,17 +77,17 @@ class AssemblerTest extends AnyFunSpec with Matchers:
     it("label and instruction are in the same line") {
       val (result, symbolTable) = runSymbolTableTest("t3.asm")
       result shouldBe Right(())
-      symbolTable should contain ("LABEL" -> InstructionMemoryAddress(0x3003))
+      symbolTable should contain ("LABEL" -> InstructionLocation(0x3003))
     }
 
     it("multiple labels associated to the same instruction") {
       val (result, symbolTable) = runSymbolTableTest("t4.asm")
       result shouldBe Right(())
-      symbolTable should contain("LABEL1" -> InstructionMemoryAddress(0x3003))
-      symbolTable should contain("LABEL2" -> InstructionMemoryAddress(0x3001))
-      symbolTable should contain("LABEL3" -> InstructionMemoryAddress(0x3002))
-      symbolTable should contain("LABEL4" -> InstructionMemoryAddress(0x3004))
-      symbolTable should contain("LABEL5" -> InstructionMemoryAddress(0x3003))
+      symbolTable should contain("LABEL1" -> InstructionLocation(0x3003))
+      symbolTable should contain("LABEL2" -> InstructionLocation(0x3001))
+      symbolTable should contain("LABEL3" -> InstructionLocation(0x3002))
+      symbolTable should contain("LABEL4" -> InstructionLocation(0x3004))
+      symbolTable should contain("LABEL5" -> InstructionLocation(0x3003))
     }
 
     it("two labels in the same line is illegal") {

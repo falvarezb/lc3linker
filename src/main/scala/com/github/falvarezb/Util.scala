@@ -55,7 +55,7 @@ object Util {
    * - validate the result of the previous step is within the range indicated by offsetNumBits
    * - calculate 2's complement
    */
-  def parseOffset(token: String, lineNumber: LineNumber, instructionMemoryAddress: InstructionMemoryAddress, offsetNumBits: Int, symbolTable: Map[String, InstructionMemoryAddress]): Either[String, Int] =
+  def parseOffset(token: String, lineNumber: LineNumber, instructionMemoryAddress: InstructionLocation, offsetNumBits: Int, symbolTable: Map[String, InstructionLocation]): Either[String, Int] =
     def twosComplement(offset: Int) = if offset < 0 then offset + (1 << offsetNumBits) else offset
     
     for
