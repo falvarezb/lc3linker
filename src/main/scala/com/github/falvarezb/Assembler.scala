@@ -23,30 +23,16 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionMemoryAddres
       instructions <- doSyntaxAnalysis(tuple._1, tuple._2)
     yield serializeInstructions(instructions, asmFileNamePath)
 
-  def filterNotLinesAfterEnd(lineIterator: Iterator[LineMetadata]): List[LineMetadata] =
-    @tailrec
-    def loop(allTokenizedLines: Iterator[LineMetadata], tokenizedLinesBeforeEnd: List[LineMetadata]): List[LineMetadata] =
-      if allTokenizedLines.hasNext then
-        val nextLine = allTokenizedLines.next()
-        if nextLine.tokenizedLine.head == ".END" then tokenizedLinesBeforeEnd
-        else loop(allTokenizedLines, nextLine :: tokenizedLinesBeforeEnd)
-      else tokenizedLinesBeforeEnd
-
-    loop(lineIterator, Nil).reverse
-
   def doLexicalAnalysis(asmFileNamePath: String) =
     Using(Source.fromFile(asmFileNamePath)) { source =>
-      val linesWithMetadata: Iterator[LineMetadata] = source.getLines()
+      source.getLines()
         .map(line => (line, line.split("""[ ,"]""").filterNot(_.isEmpty).toList)) // line tokenization (empty tokens are discarded)
         .zipWithIndex // adding line number
         .filterNot { case ((_, tokenizedLine), _) => tokenizedLine.isEmpty } // removing blank lines
         .filterNot { case ((_, tokenizedLine), _) => tokenizedLine.head.startsWith(";") } // removing comments
         .map { case ((line, tokenizedLine), idx) => LineMetadata(line, tokenizedLine, LineNumber(idx + 1)) }
-
-      filterNotLinesAfterEnd(linesWithMetadata)
+        .takeWhile(_.tokenizedLine.head != ".END").toList
     }.toEither.leftMap(t => s"Error while reading file ${t.getMessage}")
-    //result.foreach(line => println(line.tokenizedLine.mkString(" ")))
-    //result
 
   def createSymbolTable(linesMetadata: List[LineMetadata]): Either[String, (List[InstructionMetadata], Map[String, InstructionMemoryAddress])] =
     val instructionsMetadata = mutable.ListBuffer.empty[InstructionMetadata]
