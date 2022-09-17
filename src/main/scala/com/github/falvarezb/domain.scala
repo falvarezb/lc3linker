@@ -6,7 +6,7 @@ case class InstructionLocation(value: Int) extends AnyVal:
   def -(other: InstructionLocation): InstructionLocation = InstructionLocation(value - other.value)
   def ∆+(other: Int): InstructionLocation = InstructionLocation(value + other)
   def ∆-(other: Int): InstructionLocation = InstructionLocation(value - other)
-  def ∇+(other: Int): Int = value - other
+  def ∇+(other: Int): Int = value + other
   def ∇-(other: Int): Int = value - other
 case class LineMetadata(line: String, tokenizedLine: List[String], lineNumber: LineNumber):
   val isOpCode = OpCode.values.map(_.toString).contains(this.tokenizedLine.headOption.getOrElse(""))
