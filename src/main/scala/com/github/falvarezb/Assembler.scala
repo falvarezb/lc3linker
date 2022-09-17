@@ -68,10 +68,7 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionLocation]):
           processLine(firstLine, instructionLocation) match
             case Left(str) => str.asLeft[Unit]
             case Right(nextInstructionLocationIncrement) =>
-              val nextinstr = instructionLocation ∆+ 1
               loop(remainingLines, instructionLocation ∆+ nextInstructionLocationIncrement)
-
-
 
     loop(linesMetadata, InstructionLocation(0)).map(_ => (instructionsMetadata.toList, symbolTable.toMap))
 
