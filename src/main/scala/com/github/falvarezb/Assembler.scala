@@ -39,7 +39,7 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionLocation]):
     val instructionsMetadata = mutable.ListBuffer.empty[InstructionMetadata]
 
     @tailrec
-    def loop(lines: List[LineMetadata], instructionMemoryAddress: InstructionLocation, isLabelLine: Boolean = false): Either[String, Unit] =
+    def loop(lines: List[LineMetadata], instructionLocation: InstructionLocation, isLabelLine: Boolean = false): Either[String, Unit] =
       lines match
         case Nil => ().asRight[String]
         case firstLine :: remainingLines => firstLine match
@@ -52,27 +52,27 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionLocation]):
                 instructionsMetadata += InstructionMetadata(line, initialInstructionLocation)
                 loop(remainingLines, initialInstructionLocation)
 
-          case line if !line.isComment && instructionMemoryAddress == InstructionLocation(0) =>
+          case line if !line.isComment && instructionLocation == InstructionLocation(0) =>
             // instruction not preceded by .ORIG directive
             s"ERROR (line 4): Instruction not preceeded by a .orig directive".asLeft[Unit]
 
           case line if line.tokenizedLine.headOption.contains(".STRINGZ") =>
-            parseStringz2(line).map(InstructionLocation.apply) match
+            parseStringz2(line) match
               case Left(str) => str.asLeft[Unit]
               case Right(allocatedMemorySize) =>
-                instructionsMetadata += InstructionMetadata(line, instructionMemoryAddress)
-                loop(remainingLines, instructionMemoryAddress ∆+ allocatedMemorySize.value)
+                instructionsMetadata += InstructionMetadata(line, instructionLocation)
+                loop(remainingLines, instructionLocation ∆+ allocatedMemorySize)
 
           case line if line.tokenizedLine.headOption.contains(".BLKW") =>
-            parseBlkw2(line).map(InstructionLocation.apply) match
+            parseBlkw2(line) match
               case Left(str) => str.asLeft[Unit]
               case Right(allocatedMemorySize) =>
-                instructionsMetadata += InstructionMetadata(line, instructionMemoryAddress)
-                loop(remainingLines, instructionMemoryAddress ∆+ allocatedMemorySize.value)
+                instructionsMetadata += InstructionMetadata(line, instructionLocation)
+                loop(remainingLines, instructionLocation ∆+ allocatedMemorySize)
 
           case line if line.isOpCode || line.isDirective || line.isComment =>
-            instructionsMetadata += InstructionMetadata(line, instructionMemoryAddress)
-            loop(remainingLines, instructionMemoryAddress ∆+ 1)
+            instructionsMetadata += InstructionMetadata(line, instructionLocation)
+            loop(remainingLines, instructionLocation ∆+ 1)
 
           case line => //label
             line.tokenizedLine.headOption match
@@ -80,13 +80,13 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionLocation]):
                 // two labels in the same line is illegal
                 s"ERROR (line ${line.lineNumber.value}): Invalid opcode ('$label')".asLeft[Unit]
               case Some(label) =>
-                symbolTable += (label -> instructionMemoryAddress)
+                symbolTable += (label -> instructionLocation)
                 // process the rest of the line after removing the label
                 // rest of the line may be empty or not
-                loop(line.copy(tokenizedLine = line.tokenizedLine.drop(1)) :: remainingLines, instructionMemoryAddress, true)
+                loop(line.copy(tokenizedLine = line.tokenizedLine.drop(1)) :: remainingLines, instructionLocation, true)
               case None =>
                 // empty line
-                loop(remainingLines, instructionMemoryAddress)
+                loop(remainingLines, instructionLocation)
 
     loop(linesMetadata, InstructionLocation(0)).map(_ => (instructionsMetadata.toList, symbolTable.toMap))
 
