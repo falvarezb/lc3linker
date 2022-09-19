@@ -113,11 +113,11 @@ object Parsers {
     val offsetNumBits = 11
     val tokens = instructionMetadata.lineMetadata.tokenizedLine
     val lineNumber = instructionMetadata.lineMetadata.lineNumber
-    if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
-    else parseOffset(tokens(1), lineNumber, instructionMetadata.instructionLocation, offsetNumBits, symbolTable).map { offset =>
-        (4 << 12) + (1 << 11) + offset
-      }
 
+    for
+      _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): Immediate expected")
+      offset <- parseOffset(tokens(1), lineNumber, instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
+    yield (4 << 12) + (1 << 11) + offset
 
 
   def parseAdd(lineMetadata: LineMetadata): Either[String, Int] =
@@ -137,8 +137,6 @@ object Parsers {
           (1 << 5) + twosComplement(num, immediateNumBits)
         }
       }
-    yield {
-      (1 << 12) + DR + SR1 + operand
-    }
+    yield (1 << 12) + DR + SR1 + operand
 
 }
