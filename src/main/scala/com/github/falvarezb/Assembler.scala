@@ -36,18 +36,30 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionLocation]):
     }.toEither.leftMap(t => s"Error while reading file ${t.getMessage}")
 
 
+  /**
+   * Calculate the instruction location in memory corresponding to each line and with that information create
+   * the symbol table.
+   *
+   * Lines corresponding to labels contain the instruction location of the next instruction
+   *
+   * @param linesMetadata lines and metadata
+   * @return lines with the instruction location
+   */
   def createSymbolTable(linesMetadata: List[LineMetadata]): Either[String, List[InstructionMetadata]] =
 
     /**
-     * Process given line to calculate memory address (increment) of the next instruction, e.g.
-     * - comments and directives .ORIG and .END do not increment instruction counter
+     * Process given line to calculate and return the memory address delta to the next instruction, e.g.
+     * - comments, labels and directives .ORIG and .END do not increment instruction counter
      * - instructions increase instruction counter by 1
      * - directive .BLKW increases instruction counter by the number of words that needs to allocate
      * - directive .STRINGZ increase instruction counter by the number of chars of the corresponding string
-     * @param line
-     * @param instructionLocation
-     * @param isLabelLine
-     * @return
+     *
+     * As a side effect, found labels are stored in the symbol table
+     *
+     * @param line line and metadata
+     * @param instructionLocation instruction location corresponding to the given line; needed to build the symbol table
+     * @param isLabelLine flag used to help process lines containing label and instruction at the same time
+     * @return delta to the next instruction
      */
     @tailrec
     def processLine(line: LineMetadata, instructionLocation: InstructionLocation, isLabelLine: Boolean = false): Either[String, Int] =
@@ -65,19 +77,22 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionLocation]):
             if line.tokenizedLine.tail.headOption.exists(!isComment(_)) then
               // process the rest of the line after removing the label
               processLine(line.copy(tokenizedLine = line.tokenizedLine.drop(1)), instructionLocation, true)
-            else 0.asRight[String]
+            else
+              // ignore rest of the line as it is a comment
+              0.asRight[String]
 
     @tailrec
-    def next(lines: List[LineMetadata], instructions: List[InstructionMetadata], instructionLocation: InstructionLocation): Either[String, List[InstructionMetadata]] =
+    def nextLine(lines: List[LineMetadata], instructions: List[InstructionMetadata], instructionLocation: InstructionLocation): Either[String, List[InstructionMetadata]] =
       lines match
         case Nil => instructions.asRight[String]
         case firstLine :: remainingLines =>
           processLine(firstLine, instructionLocation) match
             case Left(str) => str.asLeft[List[InstructionMetadata]]
             case Right(nextInstructionLocationIncrement) =>
-              next(remainingLines, InstructionMetadata(firstLine, instructionLocation) :: instructions, instructionLocation ∆+ nextInstructionLocationIncrement)
+              val nextInstructionLocation = instructionLocation ∆+ nextInstructionLocationIncrement
+              nextLine(remainingLines, InstructionMetadata(firstLine, instructionLocation) :: instructions, nextInstructionLocation)
 
-    next(linesMetadata, Nil, InstructionLocation(0)).map(_.reverse)
+    nextLine(linesMetadata, Nil, InstructionLocation(0)).map(_.reverse)
 
 
   def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata]): Either[String, List[Int]] =
