@@ -11,7 +11,6 @@ case class InstructionLocation(value: Int) extends AnyVal:
 case class LineMetadata(line: String, tokenizedLine: List[String], lineNumber: LineNumber):
   val isOpCode = OpCode.values.map(_.toString).contains(this.tokenizedLine.headOption.getOrElse(""))
   val isDirective = Directive.values.map(_.toString).contains(this.tokenizedLine.headOption.getOrElse(""))
-  val isComment = this.tokenizedLine.headOption.exists(_.startsWith(";"))
 case class InstructionMetadata(lineMetadata: LineMetadata, instructionLocation: InstructionLocation)
 
 enum OpCode:
@@ -19,3 +18,6 @@ enum OpCode:
 
 enum Directive:
   case `.ORIG`, HALT, `.STRINGZ`, `.BLKW`
+
+
+def isComment(str: String) = str.startsWith(";")

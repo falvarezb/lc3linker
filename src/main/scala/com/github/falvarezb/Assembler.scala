@@ -19,8 +19,8 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionLocation]):
   def assemble(asmFileNamePath: String): Either[String, Unit] =
     for
       linesMetadata <- doLexicalAnalysis(asmFileNamePath)
-      tuple <- createSymbolTable(linesMetadata)
-      instructions <- doSyntaxAnalysis(tuple._1, tuple._2)
+      instructionsMetadata <- createSymbolTable(linesMetadata)
+      instructions <- doSyntaxAnalysis(instructionsMetadata)
     yield serializeInstructions(instructions, asmFileNamePath)
 
   def doLexicalAnalysis(asmFileNamePath: String): Either[String, List[LineMetadata]] =
@@ -36,9 +36,19 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionLocation]):
     }.toEither.leftMap(t => s"Error while reading file ${t.getMessage}")
 
 
-  def createSymbolTable(linesMetadata: List[LineMetadata]): Either[String, (List[InstructionMetadata], Map[String, InstructionLocation])] =
-    val instructionsMetadata = mutable.ListBuffer.empty[InstructionMetadata]
+  def createSymbolTable(linesMetadata: List[LineMetadata]): Either[String, List[InstructionMetadata]] =
 
+    /**
+     * Process given line to calculate memory address (increment) of the next instruction, e.g.
+     * - comments and directives .ORIG and .END do not increment instruction counter
+     * - instructions increase instruction counter by 1
+     * - directive .BLKW increases instruction counter by the number of words that needs to allocate
+     * - directive .STRINGZ increase instruction counter by the number of chars of the corresponding string
+     * @param line
+     * @param instructionLocation
+     * @param isLabelLine
+     * @return
+     */
     @tailrec
     def processLine(line: LineMetadata, instructionLocation: InstructionLocation, isLabelLine: Boolean = false): Either[String, Int] =
       line match
@@ -52,28 +62,25 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionLocation]):
             s"ERROR (line ${line.lineNumber.value}): Invalid opcode ('${line.tokenizedLine.head}')".asLeft[Int]
           else
             symbolTable += (line.tokenizedLine.head -> instructionLocation)
-            // process the rest of the line after removing the label
-            // rest of the line may be empty or not
-            if line.tokenizedLine.tail.headOption.exists(!_.startsWith(";")) then
+            if line.tokenizedLine.tail.headOption.exists(!isComment(_)) then
+              // process the rest of the line after removing the label
               processLine(line.copy(tokenizedLine = line.tokenizedLine.drop(1)), instructionLocation, true)
             else 0.asRight[String]
 
-
     @tailrec
-    def loop(lines: List[LineMetadata], instructionLocation: InstructionLocation): Either[String, Unit] =
+    def next(lines: List[LineMetadata], instructions: List[InstructionMetadata], instructionLocation: InstructionLocation): Either[String, List[InstructionMetadata]] =
       lines match
-        case Nil => ().asRight[String]
+        case Nil => instructions.asRight[String]
         case firstLine :: remainingLines =>
-          instructionsMetadata += InstructionMetadata(firstLine, instructionLocation)
           processLine(firstLine, instructionLocation) match
-            case Left(str) => str.asLeft[Unit]
+            case Left(str) => str.asLeft[List[InstructionMetadata]]
             case Right(nextInstructionLocationIncrement) =>
-              loop(remainingLines, instructionLocation ∆+ nextInstructionLocationIncrement)
+              next(remainingLines, InstructionMetadata(firstLine, instructionLocation) :: instructions, instructionLocation ∆+ nextInstructionLocationIncrement)
 
-    loop(linesMetadata, InstructionLocation(0)).map(_ => (instructionsMetadata.toList, symbolTable.toMap))
+    next(linesMetadata, Nil, InstructionLocation(0)).map(_.reverse)
 
 
-  def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata], symbolTable: Map[String, InstructionLocation]): Either[String, List[Int]] =
+  def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata]): Either[String, List[Int]] =
     if instructionsMetadata.head.lineMetadata.tokenizedLine.head != ".ORIG" then
       s"ERROR (line ${instructionsMetadata.head.lineMetadata.lineNumber.value}): Instruction not preceeded by a .orig directive".asLeft[List[Int]]
     else
@@ -82,11 +89,11 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionLocation]):
         firstToken match
           case ".ORIG" => parseOrig(instructionMetadata.lineMetadata).map(List(_))
           case "ADD" => parseAdd(instructionMetadata.lineMetadata.tokenizedLine).map(List(_))
-          case "JSR" => parseJsr(instructionMetadata, symbolTable).map(List(_))
+          case "JSR" => parseJsr(instructionMetadata, symbolTable.toMap).map(List(_))
           case "HALT" => List(0xf025).asRight[String]
           case ".STRINGZ" => parseStringz(instructionMetadata.lineMetadata)
           case ".BLKW" => parseBlkw(instructionMetadata.lineMetadata)
-          case ".FILL" => parseFill(instructionMetadata.lineMetadata, symbolTable).map(List(_))
+          case ".FILL" => parseFill(instructionMetadata.lineMetadata, symbolTable.toMap).map(List(_))
           case _ => Nil.asRight[String]
       }
       l.sequence.map(_.flatten)
