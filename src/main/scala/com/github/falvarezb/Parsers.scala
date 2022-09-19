@@ -1,6 +1,6 @@
 package com.github.falvarezb
 
-import com.github.falvarezb.Util.{interpretEscapeSequence, parseBlockOfWordsSize, parseMemoryAddress, parseNumericValue, parseOffset, validateNumberRange}
+import com.github.falvarezb.Util.{interpretEscapeSequence, parseBlockOfWordsSize, parseMemoryAddress, parseNumericValue, parseOffset, parseRegister, validateNumberRange}
 
 import scala.collection.mutable
 //import cats.*
@@ -44,7 +44,11 @@ object Parsers {
       val operand = tokens(1)
       for
         //is token a label or a number?
-        num <- parseNumericValue(operand, lineNumber).orElse {symbolTable(operand).value.asRight[String]}
+        num <- parseNumericValue(operand, lineNumber).orElse {
+          Either.catchOnly[NoSuchElementException] {symbolTable(operand)}
+            .map(_.value)
+            .leftMap(_ => s"ERROR (line ${lineNumber.value}): Symbol not found ('$operand')")
+        }
         _ <- validateNumberRange(operand, num, lineNumber, -32768, 65535)
       yield num
 
@@ -110,22 +114,31 @@ object Parsers {
     val tokens = instructionMetadata.lineMetadata.tokenizedLine
     val lineNumber = instructionMetadata.lineMetadata.lineNumber
     if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
-    else
-      parseOffset(tokens(1), lineNumber, instructionMetadata.instructionLocation, offsetNumBits, symbolTable).map { offset =>
+    else parseOffset(tokens(1), lineNumber, instructionMetadata.instructionLocation, offsetNumBits, symbolTable).map { offset =>
         (4 << 12) + (1 << 11) + offset
       }
 
 
 
-  def parseAdd(tokens: List[String]): Either[String, Int] =
-    val immediateBit = if tokens(3)(0) == 'R' then 0 else 1 << 5
-    //ops code: 0001
-    Right {
-      (1 << 12) +
-        (tokens(1).substring(1).toInt << 9) +
-        (tokens(2).substring(1).toInt << 6) +
-        immediateBit +
-        tokens(3).substring(1).toInt
+  def parseAdd(lineMetadata: LineMetadata): Either[String, Int] =
+    val tokens = lineMetadata.tokenizedLine
+    val lineNumber = lineMetadata.lineNumber
+    val immediateNumBits = 5
+
+    for
+      _ <- Either.cond(tokens.length >= 4, (), s"ERROR (line ${lineNumber.value}): missing operands")
+      DR <- parseRegister(tokens(1), lineNumber).map(_ << 9)
+      SR1 <- parseRegister(tokens(2), lineNumber).map(_ << 6)
+      operand <- parseRegister(tokens(3), lineNumber).orElse {
+        for
+          num <- parseNumericValue(tokens(3), lineNumber)
+          _ <- validateNumberRange(tokens(3), num, lineNumber, -(1 << (immediateNumBits - 1)), (1 << (immediateNumBits - 1)) - 1)
+        yield {
+          (1 << 5) + twosComplement(num, immediateNumBits)
+        }
+      }
+    yield {
+      (1 << 12) + DR + SR1 + operand
     }
 
 }

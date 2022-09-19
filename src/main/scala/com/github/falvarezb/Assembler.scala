@@ -105,7 +105,7 @@ class Assembler:
         val firstToken = instructionMetadata.lineMetadata.tokenizedLine.head
         firstToken match
           case ".ORIG" => parseOrig(instructionMetadata.lineMetadata).map(List(_))
-          case "ADD" => parseAdd(instructionMetadata.lineMetadata.tokenizedLine).map(List(_))
+          case "ADD" => parseAdd(instructionMetadata.lineMetadata).map(List(_))
           case "JSR" => parseJsr(instructionMetadata, symbolTable.toMap).map(List(_))
           case "HALT" => List(0xf025).asRight[String]
           case ".STRINGZ" => parseStringz(instructionMetadata.lineMetadata)

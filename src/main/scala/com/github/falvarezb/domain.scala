@@ -21,3 +21,4 @@ enum Directive:
 
 
 def isComment(str: String) = str.startsWith(";")
+def twosComplement(int: Int, numBits: Int) = if int < 0 then int + (1 << numBits) else int

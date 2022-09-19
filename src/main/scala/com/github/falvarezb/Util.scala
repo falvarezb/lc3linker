@@ -56,8 +56,6 @@ object Util {
    * - calculate 2's complement
    */
   def parseOffset(token: String, lineNumber: LineNumber, instructionMemoryAddress: InstructionLocation, offsetNumBits: Int, symbolTable: Map[String, InstructionLocation]): Either[String, Int] =
-    def twosComplement(offset: Int) = if offset < 0 then offset + (1 << offsetNumBits) else offset
-    
     for
       //is token a label or a number?
       offset <- parseNumericValue(token, lineNumber).orElse {
@@ -66,7 +64,7 @@ object Util {
           .leftMap(_ => s"ERROR (line ${lineNumber.value}): Symbol not found ('$token')")
       }
       _ <- validateNumberRange(token, offset, lineNumber, -(1 << (offsetNumBits - 1)), (1 << (offsetNumBits - 1)) - 1)
-    yield twosComplement(offset)
+    yield twosComplement(offset, offsetNumBits)
 
   /**
    * Detect escape sequences in the given string and replace them by the corresponding escape character, e.g.
@@ -102,5 +100,8 @@ object Util {
 
     loop(str.toList, false, Nil).map(_.reverse.mkString)
 
+
+  def parseRegister(token: String, lineNumber: LineNumber): Either[String, Int] =
+    Either.cond(token.length == 2 && token.head == 'R' && token(1) >= '0' && token(1) <= '7', token(1).toString.toInt, s"ERROR (line ${lineNumber.value}): Expected register but found $token")
 
 }
