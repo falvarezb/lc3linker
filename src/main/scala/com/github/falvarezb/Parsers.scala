@@ -10,11 +10,25 @@ import cats.syntax.either.*
 
 object Parsers {
 
-  def parseOrig(lineMetadata: LineMetadata): Either[String, Int] =
+  sealed trait Cache[T]:
+    val value: mutable.Map[LineMetadata, Either[String, T]] = mutable.Map.empty
+
+  private object IntCache extends Cache[Int]
+  private object IntListCache extends Cache[List[Int]]
+  private def withCache[T](cache: Cache[T], lineMetadata: LineMetadata)(computation: => Either[String,T]): Either[String,T] =
+    cache.value.get(lineMetadata) match
+      case Some(value) => value
+      case None =>
+        cache.value += (lineMetadata -> computation)
+        cache.value(lineMetadata)
+
+
+  def parseOrig(lineMetadata: LineMetadata): Either[String, Int] = withCache(IntCache, lineMetadata) {
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
     if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
     else parseMemoryAddress(tokens(1), lineNumber)
+  }
 
   def parseFill(lineMetadata: LineMetadata, symbolTable: Map[String, InstructionLocation]): Either[String, Int] =
     val tokens = lineMetadata.tokenizedLine
