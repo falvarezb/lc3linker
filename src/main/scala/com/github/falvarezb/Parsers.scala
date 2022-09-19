@@ -31,7 +31,7 @@ object Parsers {
   }
 
   /**
-   * .FILL operand may be an integer [-32768, 65535] or a label of a memory address [0, 65536]
+   * .FILL operand may be an integer [-32768, 65535] or a label of a memory address [0, 65535]
    * @param lineMetadata
    * @param symbolTable
    * @return
@@ -45,7 +45,7 @@ object Parsers {
       for
         //is token a label or a number?
         num <- parseNumericValue(operand, lineNumber).orElse {symbolTable(operand).value.asRight[String]}
-        _ <- validateNumberRange(operand, num, lineNumber, -32768, 32767)
+        _ <- validateNumberRange(operand, num, lineNumber, -32768, 65535)
       yield num
 
   def stringzAllocatedMemory(lineMetadata: LineMetadata): Either[String, Int] =

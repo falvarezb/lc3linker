@@ -13,7 +13,7 @@ class AssemblerTest extends AnyFunSpec with Matchers:
 
   def runAssembledFileTest(asmFileName: String): Unit =
     val path = "src/test/resources"
-    new Assembler(mutable.HashMap.empty[String, InstructionLocation]).assemble(s"$path/$asmFileName") shouldBe Right(())
+    new Assembler().assemble(s"$path/$asmFileName") shouldBe Right(())
 
     val asmFileNameWithoutExtension = asmFileName.split('.')(0)
     val expectedFile = new FileInputStream(s"$path/$asmFileNameWithoutExtension.expected.obj")
@@ -25,14 +25,15 @@ class AssemblerTest extends AnyFunSpec with Matchers:
 
   def runSymbolTableTest(asmFileName: String) =
     val path = "src/test/resources"
-    val symbolTable = mutable.HashMap.empty[String, InstructionLocation]
-    val result = new Assembler(symbolTable).assemble(s"$path/$asmFileName")
-    (result, symbolTable)
+    val symbolTableMock = mutable.HashMap.empty[String, InstructionLocation]
+    val result = new Assembler {
+      override protected val symbolTable: mutable.Map[String, InstructionLocation] = symbolTableMock
+    }.assemble(s"$path/$asmFileName")
+    (result, symbolTableMock)
 
   def runErrorConditionTest(asmFileName: String) =
     val path = "src/test/resources"
-    val symbolTable = mutable.HashMap.empty[String, InstructionLocation]
-    new Assembler(symbolTable).assemble(s"$path/$asmFileName")
+    new Assembler().assemble(s"$path/$asmFileName")
 
   describe("assembly process") {
     it("t1: assembly file without labels") {

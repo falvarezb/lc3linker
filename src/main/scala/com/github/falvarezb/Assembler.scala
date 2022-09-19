@@ -14,7 +14,9 @@ import com.github.falvarezb.Parsers.*
 import scala.annotation.tailrec
 import scala.util.Using
 
-class Assembler(val symbolTable: mutable.HashMap[String, InstructionLocation]):
+class Assembler:
+
+  protected val symbolTable: mutable.Map[String, InstructionLocation] = mutable.Map.empty
 
   def assemble(asmFileNamePath: String): Either[String, Unit] =
     for
