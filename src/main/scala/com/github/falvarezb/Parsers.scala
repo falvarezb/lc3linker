@@ -77,20 +77,18 @@ object Parsers {
     val line = lineMetadata.line
     val firstQuotationMarkIdx = line.indexOf('"')
     val secondQuotationMarkIdx = line.lastIndexOf('"')
-    if firstQuotationMarkIdx == -1 || secondQuotationMarkIdx == firstQuotationMarkIdx then
-      s"ERROR (line ${lineNumber.value}): Bad string ('$line')".asLeft[List[Int]]
-    else
-      val quotedContent = line.substring(firstQuotationMarkIdx + 1, secondQuotationMarkIdx)
-      val stringzIdx = line.indexOfSlice(".STRINGZ")
-      val contentOutsideQuotationMark =
+
+    for
+      _ <- Either.cond(!(firstQuotationMarkIdx == -1 || secondQuotationMarkIdx == firstQuotationMarkIdx), (), s"ERROR (line ${lineNumber.value}): Bad string ('$line')")
+      quotedContent = line.substring(firstQuotationMarkIdx + 1, secondQuotationMarkIdx)
+      stringzIdx = line.indexOfSlice(".STRINGZ")
+      contentOutsideQuotationMark =
         line.substring(stringzIdx + ".STRINGZ".length, firstQuotationMarkIdx).trim.nonEmpty ||
           line.substring(secondQuotationMarkIdx + 1).headOption.exists(_ != ';')
-
-      for
-        _ <- Either.cond(!contentOutsideQuotationMark, Nil, s"ERROR (line ${lineNumber.value}): Bad string ('$line')")
-        str <- interpretEscapeSequence(quotedContent, lineNumber)
-        _ <- Either.cond(str.forall(isAsciiChar), Nil, s"ERROR (line ${lineNumber.value}): Bad string, non-ascii char ('$line')")
-      yield str.toList.map(_.toInt)
+      _ <- Either.cond(!contentOutsideQuotationMark, Nil, s"ERROR (line ${lineNumber.value}): Bad string ('$line')")
+      str <- interpretEscapeSequence(quotedContent, lineNumber)
+      _ <- Either.cond(str.forall(isAsciiChar), Nil, s"ERROR (line ${lineNumber.value}): Bad string, non-ascii char ('$line')")
+    yield str.toList.map(_.toInt)
   }
 
   def blkwAllocatedMemory(lineMetadata: LineMetadata): Either[String, Int] =
