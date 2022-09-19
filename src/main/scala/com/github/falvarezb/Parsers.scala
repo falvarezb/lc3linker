@@ -30,6 +30,12 @@ object Parsers {
     else parseMemoryAddress(tokens(1), lineNumber)
   }
 
+  /**
+   * .FILL operand may be an integer [-32768, 65535] or a label of a memory address [0, 65536]
+   * @param lineMetadata
+   * @param symbolTable
+   * @return
+   */
   def parseFill(lineMetadata: LineMetadata, symbolTable: Map[String, InstructionLocation]): Either[String, Int] =
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
@@ -39,19 +45,17 @@ object Parsers {
       for
         //is token a label or a number?
         num <- parseNumericValue(operand, lineNumber).orElse {symbolTable(operand).value.asRight[String]}
-        _ <- validateNumberRange(operand, num, lineNumber, -32768, 65535)
+        _ <- validateNumberRange(operand, num, lineNumber, -32768, 32767)
       yield num
 
   def stringzAllocatedMemory(lineMetadata: LineMetadata): Either[String, Int] =
     parseStringz(lineMetadata).map(_.length)
 
   /**
-   * Parse .STRINGZ directive to generate the corresponding instructions: each of the chars of the string
-   * results in an "instruction" whose value is the int value of the char according to the ASCII standard
+   * Parse .STRINGZ directive to store the ASCII representation of each of the chars of the string
    *
    * When reading the content of the asm file and storing it in a string, special characters are escaped
    * according to https://en.wikipedia.org/wiki/Escape_sequences_in_C.
-   *
    * As a result, escape characters in the operand of the .STRINGZ directive lose their meaning and need
    * to be re-interpreted, e.g.
    *
