@@ -61,7 +61,9 @@ object Util {
     for
       //is token a label or a number?
       offset <- parseNumericValue(token, lineNumber).orElse {
-        ((symbolTable(token) - instructionMemoryAddress) ∇- 1).asRight[String]
+        Either.catchOnly[NoSuchElementException]{symbolTable(token)}
+          .map(symbolicNameValue => (symbolicNameValue - instructionMemoryAddress) ∇- 1)
+          .leftMap(_ => s"ERROR (line ${lineNumber.value}): Symbol not found ('$token')")
       }
       _ <- validateNumberRange(token, offset, lineNumber, -(1 << (offsetNumBits - 1)), (1 << (offsetNumBits - 1)) - 1)
     yield twosComplement(offset)
