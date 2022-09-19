@@ -96,17 +96,16 @@ object Parsers {
   def blkwAllocatedMemory(lineMetadata: LineMetadata): Either[String, Int] =
     parseBlkw(lineMetadata).map(_.length)
 
-  def parseBlkw(lineMetadata: LineMetadata): Either[String, List[Int]] =
+  def parseBlkw(lineMetadata: LineMetadata): Either[String, List[Int]] = withCache(IntListCache, lineMetadata) {
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
-    if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
-    else
-      for
-        block_size <- parseBlockOfWordsSize(tokens(1), lineMetadata.lineNumber)
-        instructions <- List.fill(block_size)(0).asRight[String]
-      yield instructions
 
-
+    for
+      _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): Immediate expected")
+      block_size <- parseBlockOfWordsSize(tokens(1), lineMetadata.lineNumber)
+      instructions <- List.fill(block_size)(0).asRight[String]
+    yield instructions
+  }
 
 
   def parseJsr(instructionMetadata: InstructionMetadata, symbolTable: Map[String, InstructionLocation]): Either[String, Int] =
