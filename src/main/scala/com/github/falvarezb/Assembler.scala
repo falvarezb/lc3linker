@@ -65,8 +65,8 @@ class Assembler(val symbolTable: mutable.HashMap[String, InstructionLocation]):
     def processLine(line: LineMetadata, instructionLocation: InstructionLocation, isLabelLine: Boolean = false): Either[String, Int] =
       line match
         case _ if line.tokenizedLine.head.contains(".ORIG") => parseOrig(line)
-        case _ if line.tokenizedLine.head.contains(".STRINGZ") => parseStringz2(line)
-        case _ if line.tokenizedLine.head.contains(".BLKW") => parseBlkw2(line)
+        case _ if line.tokenizedLine.head.contains(".STRINGZ") => stringzAllocatedMemory(line)
+        case _ if line.tokenizedLine.head.contains(".BLKW") => blkwAllocatedMemory(line)
         case _ if line.isOpCode || line.isDirective => 1.asRight[String]
         case _ =>
           if isLabelLine then

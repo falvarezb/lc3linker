@@ -42,6 +42,9 @@ object Parsers {
         _ <- validateNumberRange(operand, num, lineNumber, -32768, 65535)
       yield num
 
+  def stringzAllocatedMemory(lineMetadata: LineMetadata): Either[String, Int] =
+    parseStringz(lineMetadata).map(_.length)
+
   /**
    * Parse .STRINGZ directive to generate the corresponding instructions: each of the chars of the string
    * results in an "instruction" whose value is the int value of the char according to the ASCII standard
@@ -59,7 +62,7 @@ object Parsers {
    * @param lineMetadata
    * @return
    */
-  def parseStringz(lineMetadata: LineMetadata): Either[String, List[Int]] =
+  def parseStringz(lineMetadata: LineMetadata): Either[String, List[Int]] = withCache(IntListCache, lineMetadata) {
     def isAsciiChar(ch: Char) = ch < 128
 
     val lineNumber = lineMetadata.lineNumber
@@ -69,7 +72,7 @@ object Parsers {
     if firstQuotationMarkIdx == -1 || secondQuotationMarkIdx == firstQuotationMarkIdx then
       s"ERROR (line ${lineNumber.value}): Bad string ('$line')".asLeft[List[Int]]
     else
-      val quotedContent = line.substring(firstQuotationMarkIdx+1, secondQuotationMarkIdx)
+      val quotedContent = line.substring(firstQuotationMarkIdx + 1, secondQuotationMarkIdx)
       val stringzIdx = line.indexOfSlice(".STRINGZ")
       val contentOutsideQuotationMark =
         line.substring(stringzIdx + ".STRINGZ".length, firstQuotationMarkIdx).trim.nonEmpty ||
@@ -80,10 +83,9 @@ object Parsers {
         str <- interpretEscapeSequence(quotedContent, lineNumber)
         _ <- Either.cond(str.forall(isAsciiChar), Nil, s"ERROR (line ${lineNumber.value}): Bad string, non-ascii char ('$line')")
       yield str.toList.map(_.toInt)
+  }
 
-  def parseStringz2(lineMetadata: LineMetadata): Either[String, Int] =
-    parseStringz(lineMetadata).map(_.length)
-  def parseBlkw2(lineMetadata: LineMetadata): Either[String, Int] =
+  def blkwAllocatedMemory(lineMetadata: LineMetadata): Either[String, Int] =
     parseBlkw(lineMetadata).map(_.length)
 
   def parseBlkw(lineMetadata: LineMetadata): Either[String, List[Int]] =
