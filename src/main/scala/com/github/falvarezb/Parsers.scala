@@ -31,7 +31,7 @@ object Parsers {
   }
 
   /**
-   * .FILL operand may be an integer [-32768, 65535] or a label of a memory address [0, 65535]
+   * .FILL operand may be an integer [-32768, 32767] or a label of a memory address [0, 65535]
    * @param lineMetadata
    * @param symbolTable
    * @return
