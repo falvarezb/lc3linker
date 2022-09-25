@@ -1,5 +1,6 @@
 package com.github.falvarezb
 
+type SymbolTable = Map[String, InstructionLocation]
 case class LineNumber(value: Int) extends AnyVal
 case class InstructionLocation(value: Int) extends AnyVal:
   def +(other: InstructionLocation): InstructionLocation = InstructionLocation(value + other.value)

@@ -53,7 +53,7 @@ object Util {
    * - validate the result of the previous step is within the range indicated by offsetNumBits
    * - calculate 2's complement
    */
-  def parseOffset(token: String, lineNumber: LineNumber, instructionMemoryAddress: InstructionLocation, offsetNumBits: Int, symbolTable: Map[String, InstructionLocation]): Either[String, Int] =
+  def parseOffset(token: String, lineNumber: LineNumber, instructionMemoryAddress: InstructionLocation, offsetNumBits: Int, symbolTable: SymbolTable): Either[String, Int] =
     for
       //is token a label or a number?
       offset <- parseNumericValue(token, lineNumber).orElse {

@@ -36,7 +36,7 @@ object Parsers {
    * @param symbolTable
    * @return
    */
-  def parseFill(lineMetadata: LineMetadata, symbolTable: Map[String, InstructionLocation]): Either[String, Int] =
+  def parseFill(lineMetadata: LineMetadata, symbolTable: SymbolTable): Either[String, Int] =
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
     for
@@ -105,7 +105,7 @@ object Parsers {
   }
 
 
-  def parseJsr(instructionMetadata: InstructionMetadata, symbolTable: Map[String, InstructionLocation]): Either[String, Int] =
+  def parseJsr(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
     val offsetNumBits = 11
     val tokens = instructionMetadata.lineMetadata.tokenizedLine
     val lineNumber = instructionMetadata.lineMetadata.lineNumber
@@ -169,12 +169,12 @@ object Parsers {
       SR <- parseRegister(tokens(2), lineNumber).map(_ << 6)
     yield (9 << 12) + DR + SR + 63
 
-  def parseLdr(instructionMetadata: InstructionMetadata, symbolTable: Map[String, InstructionLocation]) =
+  def parseLdr(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable) =
     baseRegisterPlusOffsetAddressingMode(instructionMetadata, symbolTable, LDR)
 
-  def parseStr(instructionMetadata: InstructionMetadata, symbolTable: Map[String, InstructionLocation]) =
+  def parseStr(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable) =
     baseRegisterPlusOffsetAddressingMode(instructionMetadata, symbolTable, STR)
-  private def baseRegisterPlusOffsetAddressingMode(instructionMetadata: InstructionMetadata, symbolTable: Map[String, InstructionLocation], opCode: OpCode) =
+  private def baseRegisterPlusOffsetAddressingMode(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable, opCode: OpCode) =
     assert(opCode == LDR || opCode == STR)
     val tokens = instructionMetadata.lineMetadata.tokenizedLine
     val lineNumber = instructionMetadata.lineMetadata.lineNumber
