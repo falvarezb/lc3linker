@@ -124,6 +124,15 @@ object Parsers {
       baseRegister <- parseRegister(tokens(1), lineNumber).map(_ << 6)
     yield (4 << 12) + baseRegister
 
+  def parseJmp(lineMetadata: LineMetadata): Either[String, Int] =
+    val tokens = lineMetadata.tokenizedLine
+    val lineNumber = lineMetadata.lineNumber
+
+    for
+      _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): Register expected")
+      baseRegister <- parseRegister(tokens(1), lineNumber).map(_ << 6)
+    yield (12 << 12) + baseRegister
+
 
   def parseAdd(lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(lineMetadata, OpCode.ADD)
   def parseAnd(lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(lineMetadata, OpCode.AND)
