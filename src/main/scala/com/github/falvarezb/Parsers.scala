@@ -116,7 +116,11 @@ object Parsers {
     yield (4 << 12) + (1 << 11) + offset
 
 
-  def parseAdd(lineMetadata: LineMetadata): Either[String, Int] =
+  def parseAdd(lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(lineMetadata, OpCode.ADD)
+  def parseAnd(lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(lineMetadata, OpCode.AND)
+
+  private def parseAddAnd(lineMetadata: LineMetadata, opCode: OpCode): Either[String, Int] =
+    assert(opCode == OpCode.ADD || opCode == OpCode.AND)
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
     val immediateNumBits = 5
@@ -133,6 +137,6 @@ object Parsers {
           (1 << 5) + twosComplement(num, immediateNumBits)
         }
       }
-    yield (1 << 12) + DR + SR1 + operand
+    yield (if opCode == OpCode.ADD then 1 << 12 else 5 << 12) + DR + SR1 + operand
 
 }

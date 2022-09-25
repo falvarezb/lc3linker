@@ -1,6 +1,6 @@
 package com.github.falvarezb
 
-import com.github.falvarezb.Parsers.{parseAdd, parseFill, parseJsr, parseStringz}
+import com.github.falvarezb.Parsers.{parseAdd, parseAnd, parseFill, parseJsr, parseStringz}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -162,6 +162,13 @@ class ParserTest extends AnyFunSpec with Matchers:
     it("wrong immediate") {
       val lineMetadata = LineMetadata("DOES NOT MATTER", List("ADD", "R0", "R1", "#y"), LineNumber(1))
       parseAdd(lineMetadata) shouldBe Left("ERROR (line 1): Immediate #y is not a numeric value")
+    }
+  }
+
+  describe("AND parser") {
+    it("successful parse when using destination register") {
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List("AND", "R0", "R1", "R2"), LineNumber(1))
+      parseAnd(lineMetadata) shouldBe Right(0x5042)
     }
   }
 
