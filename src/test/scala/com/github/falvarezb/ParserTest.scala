@@ -1,6 +1,6 @@
 package com.github.falvarezb
 
-import com.github.falvarezb.Parsers.{parseAdd, parseAnd, parseFill, parseJsr, parseNot, parseStringz}
+import com.github.falvarezb.Parsers.{parseAdd, parseAnd, parseFill, parseJsr, parseJsrr, parseNot, parseStringz}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -186,6 +186,18 @@ class ParserTest extends AnyFunSpec with Matchers:
     it("source register SR is wrong") {
       val lineMetadata = LineMetadata("DOES NOT MATTER", List("NOT", "R0", "SR"), LineNumber(1))
       parseNot(lineMetadata) shouldBe Left("ERROR (line 1): Expected register but found SR")
+    }
+  }
+
+  describe("JSRR parser") {
+    it("successful parse") {
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List("JSRR", "R0"), LineNumber(1))
+      parseJsrr(lineMetadata) shouldBe Right(0x4000)
+    }
+
+    it("destination register DR is wrong") {
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List("JSRR", "R8"), LineNumber(1))
+      parseJsrr(lineMetadata) shouldBe Left("ERROR (line 1): Expected register but found R8")
     }
   }
 
