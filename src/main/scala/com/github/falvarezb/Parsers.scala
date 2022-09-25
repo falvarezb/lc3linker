@@ -115,23 +115,15 @@ object Parsers {
       offset <- parseOffset(tokens(1), lineNumber, instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
     yield (4 << 12) + (1 << 11) + offset
 
-  def parseJsrr(lineMetadata: LineMetadata): Either[String, Int] =
+  def parseJumpInstruction(lineMetadata: LineMetadata, opCode: OpCode): Either[String, Int] =
+    assert(opCode == OpCode.JSRR || opCode == OpCode.JMP || opCode == OpCode.JMPT)
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
 
     for
       _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): Register expected")
       baseRegister <- parseRegister(tokens(1), lineNumber).map(_ << 6)
-    yield (4 << 12) + baseRegister
-
-  def parseJmp(lineMetadata: LineMetadata): Either[String, Int] =
-    val tokens = lineMetadata.tokenizedLine
-    val lineNumber = lineMetadata.lineNumber
-
-    for
-      _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): Register expected")
-      baseRegister <- parseRegister(tokens(1), lineNumber).map(_ << 6)
-    yield (12 << 12) + baseRegister
+    yield (if opCode == OpCode.JSRR then 4 << 12 else 12 << 12)  + baseRegister + (if opCode == OpCode.JMPT then 1 else 0)
 
 
   def parseAdd(lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(lineMetadata, OpCode.ADD)
