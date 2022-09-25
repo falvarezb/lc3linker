@@ -1,6 +1,6 @@
 package com.github.falvarezb
 
-import com.github.falvarezb.Parsers.{parseAdd, parseAnd, parseFill, parseJmp, parseJsr, parseJsrr, parseJumpInstruction, parseNot, parseStringz}
+import com.github.falvarezb.Parsers.{parseAdd, parseAnd, parseFill, parseJmp, parseJsr, parseJsrr, parseLdr, parseNot, parseStr, parseStringz}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -210,6 +210,45 @@ class ParserTest extends AnyFunSpec with Matchers:
     it("base register is wrong") {
       val lineMetadata = LineMetadata("DOES NOT MATTER", List("JMP", "R8"), LineNumber(1))
       parseJmp(lineMetadata) shouldBe Left("ERROR (line 1): Expected register but found R8")
+    }
+  }
+
+  describe("LDR parser") {
+    it("successful parse when offset is an immediate value") {
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LDR", "R0", "R1", "1"), LineNumber(1)), InstructionLocation(0))
+      parseLdr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Right(0x6041)
+    }
+
+    it("wrong destination register (DR)") {
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LDR", "R8", "R1", "1"), LineNumber(1)), InstructionLocation(0))
+      parseLdr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (line 1): Expected register but found R8")
+    }
+
+    it("wrong base register") {
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LDR", "R0", "R8", "1"), LineNumber(1)), InstructionLocation(0))
+      parseLdr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (line 1): Expected register but found R8")
+    }
+
+    it("offset too big") {
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LDR", "R0", "R1", "40"), LineNumber(1)), InstructionLocation(0))
+      parseLdr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (line 1): Immediate operand (40) out of range (-32 to 31)")
+    }
+
+    it("offset too small") {
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LDR", "R0", "R1", "-40"), LineNumber(1)), InstructionLocation(0))
+      parseLdr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (line 1): Immediate operand (-40) out of range (-32 to 31)")
+    }
+
+    it("symbolic name not found") {
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LDR", "R0", "R1", "NON_EXISTENT_LABEL"), LineNumber(1)), InstructionLocation(0x3001))
+      parseLdr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (line 1): Symbol not found ('NON_EXISTENT_LABEL')")
+    }
+  }
+
+  describe("STR parser") {
+    it("successful parse when offset is an immediate value") {
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("STR", "R0", "R1", "1"), LineNumber(1)), InstructionLocation(0))
+      parseStr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Right(0x7041)
     }
   }
 

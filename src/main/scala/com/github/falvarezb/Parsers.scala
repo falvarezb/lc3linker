@@ -1,7 +1,7 @@
 package com.github.falvarezb
 
 import com.github.falvarezb.Util.{interpretEscapeSequence, parseBlockOfWordsSize, parseMemoryAddress, parseNumericValue, parseOffset, parseRegister, validateNumberRange}
-
+import com.github.falvarezb.OpCode.*
 import scala.collection.mutable
 //import cats.*
 //import cats.implicits.*
@@ -116,30 +116,30 @@ object Parsers {
     yield (4 << 12) + (1 << 11) + offset
 
   def parseJsrr(lineMetadata: LineMetadata): Either[String, Int] =
-    parseJumpInstruction(lineMetadata, OpCode.JSRR)
+    jumpInstruction(lineMetadata, JSRR)
 
   def parseJmp(lineMetadata: LineMetadata): Either[String, Int] =
-    parseJumpInstruction(lineMetadata, OpCode.JMP)
+    jumpInstruction(lineMetadata, JMP)
 
   def parseJmpt(lineMetadata: LineMetadata): Either[String, Int] =
-    parseJumpInstruction(lineMetadata, OpCode.JMPT)
+    jumpInstruction(lineMetadata, JMPT)
     
-  private def parseJumpInstruction(lineMetadata: LineMetadata, opCode: OpCode): Either[String, Int] =
-    assert(opCode == OpCode.JSRR || opCode == OpCode.JMP || opCode == OpCode.JMPT)
+  private def jumpInstruction(lineMetadata: LineMetadata, opCode: OpCode): Either[String, Int] =
+    assert(opCode == JSRR || opCode == JMP || opCode == JMPT)
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
 
     for
       _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): Register expected")
       baseRegister <- parseRegister(tokens(1), lineNumber).map(_ << 6)
-    yield (if opCode == OpCode.JSRR then 4 << 12 else 12 << 12)  + baseRegister + (if opCode == OpCode.JMPT then 1 else 0)
+    yield (if opCode == JSRR then 4 << 12 else 12 << 12)  + baseRegister + (if opCode == JMPT then 1 else 0)
 
 
-  def parseAdd(lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(lineMetadata, OpCode.ADD)
-  def parseAnd(lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(lineMetadata, OpCode.AND)
+  def parseAdd(lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(lineMetadata, ADD)
+  def parseAnd(lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(lineMetadata, AND)
 
   private def parseAddAnd(lineMetadata: LineMetadata, opCode: OpCode): Either[String, Int] =
-    assert(opCode == OpCode.ADD || opCode == OpCode.AND)
+    assert(opCode == ADD || opCode == AND)
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
     val immediateNumBits = 5
@@ -157,7 +157,7 @@ object Parsers {
           (1 << 5) + twosComplement(num, immediateNumBits)
         }
       }
-    yield (if opCode == OpCode.ADD then 1 << 12 else 5 << 12) + DR + SR1 + operand
+    yield (if opCode == ADD then 1 << 12 else 5 << 12) + DR + SR1 + operand
 
   def parseNot(lineMetadata: LineMetadata): Either[String, Int] =
     val tokens = lineMetadata.tokenizedLine
@@ -168,4 +168,23 @@ object Parsers {
       DR <- parseRegister(tokens(1), lineNumber).map(_ << 9)
       SR <- parseRegister(tokens(2), lineNumber).map(_ << 6)
     yield (9 << 12) + DR + SR + 63
+
+  def parseLdr(instructionMetadata: InstructionMetadata, symbolTable: Map[String, InstructionLocation]) =
+    baseRegisterPlusOffsetAddressingMode(instructionMetadata, symbolTable, LDR)
+
+  def parseStr(instructionMetadata: InstructionMetadata, symbolTable: Map[String, InstructionLocation]) =
+    baseRegisterPlusOffsetAddressingMode(instructionMetadata, symbolTable, STR)
+  private def baseRegisterPlusOffsetAddressingMode(instructionMetadata: InstructionMetadata, symbolTable: Map[String, InstructionLocation], opCode: OpCode) =
+    assert(opCode == LDR || opCode == STR)
+    val tokens = instructionMetadata.lineMetadata.tokenizedLine
+    val lineNumber = instructionMetadata.lineMetadata.lineNumber
+    val offsetNumBits = 6
+
+    for
+      _ <- Either.cond(tokens.length >= 4, (), s"ERROR (line ${lineNumber.value}): missing operands")
+      SR_DR <- parseRegister(tokens(1), lineNumber).map(_ << 9)
+      baseRegister <- parseRegister(tokens(2), lineNumber).map(_ << 6)
+      offset <- parseOffset(tokens(3), lineNumber, instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
+
+    yield (if opCode == LDR then 6 << 12 else 7 << 12) + SR_DR + baseRegister + offset
 }
