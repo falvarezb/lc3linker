@@ -27,9 +27,7 @@ object Util {
     }.leftMap(_ => s"ERROR (line ${lineNumber.value}): Immediate $token is not a numeric value")
 
   def validateNumberRange(token: String, value: Int, lineNumber: LineNumber, lowerBound: Int, upperBound: Int): Either[String, Unit] =
-    if value < lowerBound || value > upperBound then
-      s"ERROR (line ${lineNumber.value}): Immediate operand ($token) out of range ($lowerBound to $upperBound)".asLeft[Unit]
-    else ().asRight[String]
+    Either.cond(value >= lowerBound && value <= upperBound, (), s"ERROR (line ${lineNumber.value}): Immediate operand ($token) out of range ($lowerBound to $upperBound)")
 
   /**
    * Transforms the given token in a valid memory address, namely: an integer in the range [0, 0xFFFF]
