@@ -129,6 +129,7 @@ object Parsers {
       _ <- Either.cond(tokens.length >= 4, (), s"ERROR (line ${lineNumber.value}): missing operands")
       DR <- parseRegister(tokens(1), lineNumber).map(_ << 9)
       SR1 <- parseRegister(tokens(2), lineNumber).map(_ << 6)
+      // register or immediate value?
       operand <- parseRegister(tokens(3), lineNumber).orElse {
         for
           num <- parseNumericValue(tokens(3), lineNumber)
@@ -139,4 +140,13 @@ object Parsers {
       }
     yield (if opCode == OpCode.ADD then 1 << 12 else 5 << 12) + DR + SR1 + operand
 
+  def parseNot(lineMetadata: LineMetadata): Either[String, Int] =
+    val tokens = lineMetadata.tokenizedLine
+    val lineNumber = lineMetadata.lineNumber
+
+    for
+      _ <- Either.cond(tokens.length >= 3, (), s"ERROR (line ${lineNumber.value}): missing operands")
+      DR <- parseRegister(tokens(1), lineNumber).map(_ << 9)
+      SR <- parseRegister(tokens(2), lineNumber).map(_ << 6)
+    yield (9 << 12) + DR + SR + 63
 }
