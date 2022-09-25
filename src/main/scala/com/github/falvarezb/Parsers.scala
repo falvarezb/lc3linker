@@ -39,18 +39,17 @@ object Parsers {
   def parseFill(lineMetadata: LineMetadata, symbolTable: Map[String, InstructionLocation]): Either[String, Int] =
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
-    if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
-    else
-      val operand = tokens(1)
-      for
-        //is token a label or a number?
-        num <- parseNumericValue(operand, lineNumber).orElse {
-          Either.catchOnly[NoSuchElementException] {symbolTable(operand)}
-            .map(_.value)
-            .leftMap(_ => s"ERROR (line ${lineNumber.value}): Symbol not found ('$operand')")
-        }
-        _ <- validateNumberRange(operand, num, lineNumber, -32768, 65535)
-      yield num
+    for
+      _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): Immediate expected")
+      operand = tokens(1)
+      //is token a label or a number?
+      num <- parseNumericValue(operand, lineNumber).orElse {
+        Either.catchOnly[NoSuchElementException] {symbolTable(operand)}
+          .map(_.value)
+          .leftMap(_ => s"ERROR (line ${lineNumber.value}): Symbol not found ('$operand')")
+      }
+      _ <- validateNumberRange(operand, num, lineNumber, -32768, 65535)
+    yield num
 
   def stringzAllocatedMemory(lineMetadata: LineMetadata): Either[String, Int] =
     parseStringz(lineMetadata).map(_.length)
