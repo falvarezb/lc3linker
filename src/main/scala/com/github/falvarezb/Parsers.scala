@@ -1,7 +1,8 @@
 package com.github.falvarezb
 
-import com.github.falvarezb.Util.{interpretEscapeSequence, parseBlockOfWordsSize, parseMemoryAddress, parseNumericValue, parseOffset, parseRegister, validateNumberRange}
+import com.github.falvarezb.Util.{interpretEscapeSequence, parseBlockOfWordsSize, parseInteger, parseMemoryAddress, parseNumericValue, parseOffset, parseRegister, validateNumberRange, withAlternativeParser}
 import com.github.falvarezb.OpCode.*
+
 import scala.collection.mutable
 //import cats.*
 //import cats.implicits.*
@@ -43,12 +44,13 @@ object Parsers {
       _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): Immediate expected")
       operand = tokens(1)
       //is token a label or a number?
-      num <- parseNumericValue(operand, lineNumber).orElse {
-        Either.catchOnly[NoSuchElementException] {symbolTable(operand)}
+      num <- withAlternativeParser(operand, lineNumber, -32768, 65535) {
+        Either.catchOnly[NoSuchElementException] {
+          symbolTable(operand)
+        }
           .map(_.value)
           .leftMap(_ => s"ERROR (line ${lineNumber.value}): Symbol not found ('$operand')")
       }
-      _ <- validateNumberRange(operand, num, lineNumber, -32768, 65535)
     yield num
 
   def stringzAllocatedMemory(lineMetadata: LineMetadata): Either[String, Int] =
@@ -150,10 +152,7 @@ object Parsers {
       SR1 <- parseRegister(tokens(2), lineNumber).map(_ << 6)
       // register or immediate value?
       operand <- parseRegister(tokens(3), lineNumber).orElse {
-        for
-          num <- parseNumericValue(tokens(3), lineNumber)
-          _ <- validateNumberRange(tokens(3), num, lineNumber, -(1 << (immediateNumBits - 1)), (1 << (immediateNumBits - 1)) - 1)
-        yield {
+        parseInteger(tokens(3), lineNumber, -(1 << (immediateNumBits - 1)), (1 << (immediateNumBits - 1)) - 1).map{ num =>
           (1 << 5) + twosComplement(num, immediateNumBits)
         }
       }

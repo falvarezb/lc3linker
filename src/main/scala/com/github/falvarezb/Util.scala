@@ -32,11 +32,8 @@ object Util {
   /**
    * Transforms the given token in a valid memory address, namely: an integer in the range [0, 0xFFFF]
    */
-  def parseMemoryAddress(token: String, lineNumber: LineNumber): Either[String, Int] =
-    for
-      num <- parseNumericValue(token, lineNumber)
-      _ <- validateNumberRange(token, num, lineNumber, 0, 0xFFFF)
-    yield num
+  def parseMemoryAddress(token: String, lineNumber: LineNumber): Either[String, Int] = 
+    parseInteger(token, lineNumber, 0, 0xFFFF)
 
   def parseBlockOfWordsSize(token: String, lineNumber: LineNumber): Either[String, Int] =
     // same validation as memory address
@@ -54,15 +51,11 @@ object Util {
    * - calculate 2's complement
    */
   def parseOffset(token: String, lineNumber: LineNumber, instructionMemoryAddress: InstructionLocation, offsetNumBits: Int, symbolTable: SymbolTable): Either[String, Int] =
-    for
-      //is token a label or a number?
-      offset <- parseNumericValue(token, lineNumber).orElse {
-        Either.catchOnly[NoSuchElementException]{symbolTable(token)}
-          .map(symbolicNameValue => (symbolicNameValue - instructionMemoryAddress) ∇- 1)
-          .leftMap(_ => s"ERROR (line ${lineNumber.value}): Symbol not found ('$token')")
-      }
-      _ <- validateNumberRange(token, offset, lineNumber, -(1 << (offsetNumBits - 1)), (1 << (offsetNumBits - 1)) - 1)
-    yield twosComplement(offset, offsetNumBits)
+    withAlternativeParser(token, lineNumber, -(1 << (offsetNumBits - 1)), (1 << (offsetNumBits - 1)) - 1) {
+      Either.catchOnly[NoSuchElementException] {symbolTable(token)}
+        .map(symbolicNameValue => (symbolicNameValue - instructionMemoryAddress) ∇- 1)
+        .leftMap(_ => s"ERROR (line ${lineNumber.value}): Symbol not found ('$token')")
+    }.map(offset => twosComplement(offset, offsetNumBits))
 
   /**
    * Detect escape sequences in the given string and replace them by the corresponding escape character, e.g.
@@ -102,4 +95,16 @@ object Util {
   def parseRegister(token: String, lineNumber: LineNumber): Either[String, Int] =
     Either.cond(token.length == 2 && token.head == 'R' && token(1) >= '0' && token(1) <= '7', token(1).toString.toInt, s"ERROR (line ${lineNumber.value}): Expected register but found $token")
 
+  def withAlternativeParser(token: String, lineNumber: LineNumber, lowerBound: Int, upperBound: Int)(altParser: => Either[String, Int]) =
+    val parsedValue = parseNumericValue(token, lineNumber)
+    for
+      num <- parsedValue.orElse(altParser)
+      _ <- validateNumberRange(token, num, lineNumber, lowerBound, upperBound)
+    yield num
+
+  def parseInteger(token: String, lineNumber: LineNumber, lowerBound: Int, upperBound: Int) =
+    for
+      num <- parseNumericValue(token, lineNumber)
+      _ <- validateNumberRange(token, num, lineNumber, lowerBound, upperBound)
+    yield num
 }
