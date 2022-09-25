@@ -115,7 +115,16 @@ object Parsers {
       offset <- parseOffset(tokens(1), lineNumber, instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
     yield (4 << 12) + (1 << 11) + offset
 
-  def parseJumpInstruction(lineMetadata: LineMetadata, opCode: OpCode): Either[String, Int] =
+  def parseJsrr(lineMetadata: LineMetadata): Either[String, Int] =
+    parseJumpInstruction(lineMetadata, OpCode.JSRR)
+
+  def parseJmp(lineMetadata: LineMetadata): Either[String, Int] =
+    parseJumpInstruction(lineMetadata, OpCode.JMP)
+
+  def parseJmpt(lineMetadata: LineMetadata): Either[String, Int] =
+    parseJumpInstruction(lineMetadata, OpCode.JMPT)
+    
+  private def parseJumpInstruction(lineMetadata: LineMetadata, opCode: OpCode): Either[String, Int] =
     assert(opCode == OpCode.JSRR || opCode == OpCode.JMP || opCode == OpCode.JMPT)
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
