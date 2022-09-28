@@ -2,7 +2,7 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      java: openjdk8
+      java: corretto17
     commands:
       #install sbt
       - echo "deb https://dl.bintray.com/sbt/debian /" | tee -a  /etc/apt/sources.list.d/sbt.list
