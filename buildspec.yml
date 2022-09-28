@@ -1,0 +1,17 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      java: openjdk8
+    commands:
+      #install sbt
+      - echo "deb https://dl.bintray.com/sbt/debian /" | tee -a  /etc/apt/sources.list.d/sbt.list
+      - apt-get update
+      - apt-get install sbt
+  build:
+    commands:
+      - echo Build started on `date`
+      - sbt clean test   # generate build
+  post_build:
+    commands:
+      - echo "build completed"
