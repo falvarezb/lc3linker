@@ -24,10 +24,21 @@ case class LineMetadata(line: String, tokenizedLine: List[String], lineNumber: L
 case class InstructionMetadata(lineMetadata: LineMetadata, instructionLocation: InstructionLocation)
 
 enum OpCode:
-  case ADD, AND, NOT, JSR, JSRR, JMP, JMPT, LDR, STR, LD, ST, LDI, STI, LEA
+  case ADD, AND, NOT, JSR, JSRR, JMP, JMPT, LDR, STR, LD, ST, LDI, STI, LEA, BR, BRp, BRz, BRn, BRzp, BRnp, BRnz, BRnzp
 
 enum Directive:
   case `.ORIG`, HALT, `.STRINGZ`, `.BLKW`
+
+enum ConditionCode(val value: Int):
+  case N extends ConditionCode(4) //100
+  case Z extends ConditionCode(2) //010
+  case P extends ConditionCode(1) //001
+  case NZ extends ConditionCode(6) //110
+  case NP extends ConditionCode(5) //101
+  case ZP extends ConditionCode(3) //011
+  case NZP extends ConditionCode(7) //111
+
+
 
 
 def isComment(str: String) = str.startsWith(";")

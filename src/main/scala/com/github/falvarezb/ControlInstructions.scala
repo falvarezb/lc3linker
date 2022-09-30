@@ -32,4 +32,15 @@ object ControlInstructions:
       _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): Register expected")
       baseRegister <- parseRegister(tokens(1), lineNumber).map(_ << 6)
     yield (if opCode == JSRR then 4 << 12 else 12 << 12) + baseRegister + (if opCode == JMPT then 1 else 0)
-  
+
+  def parseBr(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable, conditionCode: ConditionCode): Either[String, Int] =
+    val tokens = instructionMetadata.lineMetadata.tokenizedLine
+    val lineNumber = instructionMetadata.lineMetadata.lineNumber
+    val numTokens = 2
+    val offsetNumBits = 9
+
+    for
+      _ <- Either.cond(tokens.length >= numTokens, (), s"ERROR (line ${lineNumber.value}): missing operands")
+      offset <- parseOffset(tokens(1), lineNumber, instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
+    yield (conditionCode.value << 9) + offset
+
