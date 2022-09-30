@@ -8,9 +8,9 @@ import scala.io.Source
 import cats.instances.either
 import cats.syntax.either.*
 import cats.syntax.all.toTraverseOps
+import com.github.falvarezb.OperateInstructions.parseAdd
 import com.github.falvarezb.Util.parseMemoryAddress
 import com.github.falvarezb.Parsers.*
-
 import scala.annotation.tailrec
 import scala.util.Using
 
