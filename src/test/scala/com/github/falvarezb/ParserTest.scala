@@ -4,7 +4,7 @@ import com.github.falvarezb.Parsers.{parseAdd, parseAnd, parseFill, parseJmp, pa
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
-class ParserTest extends AnyFunSpec with Matchers:
+class ParserTest extends AnyFunSpec with Matchers :
 
   describe(".STRINGZ parser") {
 

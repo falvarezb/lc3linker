@@ -5,7 +5,7 @@ import cats.syntax.either.*
 
 import scala.collection.mutable
 
-object Util {
+object Util:
 
   /**
    * Integer literals in LC-3 assembly language can be represented as:
@@ -32,11 +32,11 @@ object Util {
   /**
    * Transforms the given token in a valid memory address, namely: an integer in the range [0, 0xFFFF]
    */
-  def parseMemoryAddress(token: String, lineNumber: LineNumber): Either[String, Int] = 
+  def parseMemoryAddress(token: String, lineNumber: LineNumber): Either[String, Int] =
     parseInteger(token, lineNumber, 0, 0xFFFF)
 
   def parseBlockOfWordsSize(token: String, lineNumber: LineNumber): Either[String, Int] =
-    // same validation as memory address
+  // same validation as memory address
     parseMemoryAddress(token, lineNumber)
 
   /**
@@ -52,7 +52,9 @@ object Util {
    */
   def parseOffset(token: String, lineNumber: LineNumber, instructionMemoryAddress: InstructionLocation, offsetNumBits: Int, symbolTable: SymbolTable): Either[String, Int] =
     withAlternativeParser(token, lineNumber, -(1 << (offsetNumBits - 1)), (1 << (offsetNumBits - 1)) - 1) {
-      Either.catchOnly[NoSuchElementException] {symbolTable(token)}
+      Either.catchOnly[NoSuchElementException] {
+        symbolTable(token)
+      }
         .map(symbolicNameValue => (symbolicNameValue - instructionMemoryAddress) ∇- 1)
         .leftMap(_ => s"ERROR (line ${lineNumber.value}): Symbol not found ('$token')")
     }.map(offset => twosComplement(offset, offsetNumBits))
@@ -87,7 +89,7 @@ object Util {
             case Right(replacement) =>
               loop(remainingChars, false, replacement :: newStr)
               else if ch == '\\' then loop(remainingChars, true, newStr)
-              else loop(remainingChars, escapeSequenceMode, ch :: newStr)
+            else loop(remainingChars, escapeSequenceMode, ch :: newStr)
 
     loop(str.toList, false, Nil).map(_.reverse.mkString)
 
@@ -107,4 +109,4 @@ object Util {
       num <- parseNumericValue(token, lineNumber)
       _ <- validateNumberRange(token, num, lineNumber, lowerBound, upperBound)
     yield num
-}
+

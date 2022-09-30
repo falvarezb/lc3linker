@@ -4,7 +4,7 @@ import com.github.falvarezb.Util.interpretEscapeSequence
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
-class UtilTest extends AnyFunSpec with Matchers:
+class UtilTest extends AnyFunSpec with Matchers :
 
   describe("interpret characters") {
     it("valid escape sequence is replaced") {

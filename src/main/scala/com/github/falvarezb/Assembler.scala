@@ -32,7 +32,7 @@ class Assembler:
         .zipWithIndex // adding line number
         .filterNot { case ((_, tokenizedLine), _) => tokenizedLine.isEmpty } // removing blank lines
         .filterNot { case ((_, tokenizedLine), _) => tokenizedLine.head.startsWith(";") } // removing comments
-        .takeWhile { case ((_, tokenizedLine), _) => tokenizedLine.head != ".END"} // discarding lines after '.END' directive
+        .takeWhile { case ((_, tokenizedLine), _) => tokenizedLine.head != ".END" } // discarding lines after '.END' directive
         .map { case ((line, tokenizedLine), idx) => LineMetadata(line, tokenizedLine, LineNumber(idx + 1)) }
         .toList
     }.toEither.leftMap(t => s"Error while reading file ${t.getMessage}")
@@ -58,9 +58,9 @@ class Assembler:
      *
      * As a side effect, found labels are stored in the symbol table
      *
-     * @param line line and metadata
+     * @param line                line and metadata
      * @param instructionLocation instruction location corresponding to the given line; needed to build the symbol table
-     * @param isLabelLine flag used to help process lines containing label and instruction at the same time
+     * @param isLabelLine         flag used to help process lines containing label and instruction at the same time
      * @return delta to the next instruction
      */
     @tailrec
@@ -72,15 +72,15 @@ class Assembler:
         case _ if line.isOpCode || line.isDirective => 1.asRight[String]
         case _ =>
           if isLabelLine then
-            // two labels in the same line is illegal
+          // two labels in the same line is illegal
             s"ERROR (line ${line.lineNumber.value}): Invalid opcode ('${line.tokenizedLine.head}')".asLeft[Int]
           else
             symbolTable += (line.tokenizedLine.head -> instructionLocation)
             if line.tokenizedLine.tail.headOption.exists(!isComment(_)) then
-              // process the rest of the line after removing the label
+            // process the rest of the line after removing the label
               processLine(line.copy(tokenizedLine = line.tokenizedLine.drop(1)), instructionLocation, true)
             else
-              // ignore rest of the line as it is a comment
+            // ignore rest of the line as it is a comment
               0.asRight[String]
 
     @tailrec

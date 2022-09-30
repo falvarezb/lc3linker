@@ -15,8 +15,10 @@ object Parsers {
     val value: mutable.Map[LineMetadata, Either[String, T]] = mutable.Map.empty
 
   private object IntCache extends Cache[Int]
+
   private object IntListCache extends Cache[List[Int]]
-  private def withCache[T](cache: Cache[T], lineMetadata: LineMetadata)(computation: => Either[String,T]): Either[String,T] =
+
+  private def withCache[T](cache: Cache[T], lineMetadata: LineMetadata)(computation: => Either[String, T]): Either[String, T] =
     cache.value.get(lineMetadata) match
       case Some(value) => value
       case None =>
@@ -33,6 +35,7 @@ object Parsers {
 
   /**
    * .FILL operand may be an integer [-32768, 32767] or a label of a memory address [0, 65535]
+   *
    * @param lineMetadata
    * @param symbolTable
    * @return
@@ -125,7 +128,7 @@ object Parsers {
 
   def parseJmpt(lineMetadata: LineMetadata): Either[String, Int] =
     jumpInstruction(lineMetadata, JMPT)
-    
+
   private def jumpInstruction(lineMetadata: LineMetadata, opCode: OpCode): Either[String, Int] =
     assert(opCode == JSRR || opCode == JMP || opCode == JMPT)
     val tokens = lineMetadata.tokenizedLine
@@ -134,10 +137,11 @@ object Parsers {
     for
       _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): Register expected")
       baseRegister <- parseRegister(tokens(1), lineNumber).map(_ << 6)
-    yield (if opCode == JSRR then 4 << 12 else 12 << 12)  + baseRegister + (if opCode == JMPT then 1 else 0)
+    yield (if opCode == JSRR then 4 << 12 else 12 << 12) + baseRegister + (if opCode == JMPT then 1 else 0)
 
 
   def parseAdd(lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(lineMetadata, ADD)
+
   def parseAnd(lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(lineMetadata, AND)
 
   private def parseAddAnd(lineMetadata: LineMetadata, opCode: OpCode): Either[String, Int] =
@@ -152,7 +156,7 @@ object Parsers {
       SR1 <- parseRegister(tokens(2), lineNumber).map(_ << 6)
       // register or immediate value?
       operand <- parseRegister(tokens(3), lineNumber).orElse {
-        parseInteger(tokens(3), lineNumber, -(1 << (immediateNumBits - 1)), (1 << (immediateNumBits - 1)) - 1).map{ num =>
+        parseInteger(tokens(3), lineNumber, -(1 << (immediateNumBits - 1)), (1 << (immediateNumBits - 1)) - 1).map { num =>
           (1 << 5) + twosComplement(num, immediateNumBits)
         }
       }
@@ -179,16 +183,17 @@ object Parsers {
 
   def parseSt(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
     pcRelativeAddressingMode(instructionMetadata, symbolTable, ST)
-    
+
   def parseLdi(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
     pcRelativeAddressingMode(instructionMetadata, symbolTable, LDI)
-    
+
   def parseLea(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
     pcRelativeAddressingMode(instructionMetadata, symbolTable, LEA)
 
   def parseSti(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
     pcRelativeAddressingMode(instructionMetadata, symbolTable, STI)
-  private def baseRegisterPlusOffsetAddressingMode(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable, opCode: OpCode)=
+
+  private def baseRegisterPlusOffsetAddressingMode(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable, opCode: OpCode) =
     assert(opCode == LDR || opCode == STR)
     val tokens = instructionMetadata.lineMetadata.tokenizedLine
     val lineNumber = instructionMetadata.lineMetadata.lineNumber

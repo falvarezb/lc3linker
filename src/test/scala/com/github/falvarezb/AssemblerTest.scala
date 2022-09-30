@@ -9,7 +9,7 @@ import java.util
 import scala.collection.mutable
 import scala.io.Source
 
-class AssemblerTest extends AnyFunSpec with Matchers:
+class AssemblerTest extends AnyFunSpec with Matchers :
 
   def runAssembledFileTest(asmFileName: String): Unit =
     val path = "src/test/resources"
@@ -78,7 +78,7 @@ class AssemblerTest extends AnyFunSpec with Matchers:
     it("label and instruction are in the same line") {
       val (result, symbolTable) = runSymbolTableTest("t3.asm")
       result shouldBe Right(())
-      symbolTable should contain ("LABEL" -> InstructionLocation(0x3003))
+      symbolTable should contain("LABEL" -> InstructionLocation(0x3003))
     }
 
     it("multiple labels associated to the same instruction") {
