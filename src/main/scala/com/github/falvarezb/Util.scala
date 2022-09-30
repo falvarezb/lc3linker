@@ -97,14 +97,14 @@ object Util:
   def parseRegister(token: String, lineNumber: LineNumber): Either[String, Int] =
     Either.cond(token.length == 2 && token.head == 'R' && token(1) >= '0' && token(1) <= '7', token(1).toString.toInt, s"ERROR (line ${lineNumber.value}): Expected register but found $token")
 
-  def withAlternativeParser(token: String, lineNumber: LineNumber, lowerBound: Int, upperBound: Int)(altParser: => Either[String, Int]) =
+  def withAlternativeParser(token: String, lineNumber: LineNumber, lowerBound: Int, upperBound: Int)(altParser: => Either[String, Int]): Either[String, Int] =
     val parsedValue = parseNumericValue(token, lineNumber)
     for
       num <- parsedValue.orElse(altParser)
       _ <- validateNumberRange(token, num, lineNumber, lowerBound, upperBound)
     yield num
 
-  def parseInteger(token: String, lineNumber: LineNumber, lowerBound: Int, upperBound: Int) =
+  def parseInteger(token: String, lineNumber: LineNumber, lowerBound: Int, upperBound: Int): Either[String, Int] =
     for
       num <- parseNumericValue(token, lineNumber)
       _ <- validateNumberRange(token, num, lineNumber, lowerBound, upperBound)
