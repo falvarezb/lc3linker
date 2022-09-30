@@ -1,11 +1,11 @@
 package com.github.falvarezb
 
 import com.github.falvarezb.ControlInstructions.parseJsr
-import com.github.falvarezb.Parsers.{parseFill, parseStringz}
+import com.github.falvarezb.Directives.{parseFill, parseStringz}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
-class ParserTest extends AnyFunSpec with Matchers :
+class DirectivesTest extends AnyFunSpec with Matchers :
 
   describe(".STRINGZ parser") {
 

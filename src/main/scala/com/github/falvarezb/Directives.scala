@@ -9,7 +9,7 @@ import scala.collection.mutable
 import cats.instances.either
 import cats.syntax.either.*
 
-object Parsers {
+object Directives {
 
   sealed trait Cache[T]:
     val value: mutable.Map[LineMetadata, Either[String, T]] = mutable.Map.empty

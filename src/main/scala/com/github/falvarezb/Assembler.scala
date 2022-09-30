@@ -11,7 +11,7 @@ import cats.syntax.all.toTraverseOps
 import com.github.falvarezb.ControlInstructions.parseJsr
 import com.github.falvarezb.OperateInstructions.parseAdd
 import com.github.falvarezb.Util.parseMemoryAddress
-import com.github.falvarezb.Parsers.*
+import com.github.falvarezb.Directives.*
 import scala.annotation.tailrec
 import scala.util.Using
 
