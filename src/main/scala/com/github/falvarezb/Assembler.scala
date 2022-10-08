@@ -30,12 +30,15 @@ class Assembler:
   def doLexicalAnalysis(asmFileNamePath: String): Either[String, List[LineMetadata]] =
     Using(Source.fromFile(asmFileNamePath)) { source =>
       source.getLines()
-        .map(line => (line, line.split("""[ \t,"]""").filterNot(_.isEmpty).toList)) // line tokenization (empty tokens are discarded)
-        .zipWithIndex // adding line number
-        .filterNot { case ((_, tokenizedLine), _) => tokenizedLine.isEmpty } // removing blank lines
-        .filterNot { case ((_, tokenizedLine), _) => tokenizedLine.head.startsWith(";") } // removing comments
-        .takeWhile { case ((_, tokenizedLine), _) => tokenizedLine.head != ".END" } // discarding lines after '.END' directive
-        .map { case ((line, tokenizedLine), idx) => LineMetadata(line, tokenizedLine, LineNumber(idx + 1)) }
+        .map(_.trim)
+        .map(_.takeWhile(_ != ';')) // discard comments
+        .zipWithIndex // adding line number before filtering lines
+        .filterNot { case (line, _) => line.isEmpty } // removing blank lines
+        .map { case (line, idx) => (line, line.split("""[ \t,"]""").filterNot(_.isEmpty).toList, idx) } // line tokenization (empty tokens are discarded)
+        //.filterNot { case (_, tokenizedLine, _) => tokenizedLine.isEmpty } // removing blank lines
+        //.filterNot { case (_, tokenizedLine, _) => tokenizedLine.head.startsWith(";") } // removing comments
+        .takeWhile { case (_, tokenizedLine, _) => tokenizedLine.head != ".END" } // discarding lines after '.END' directive
+        .map { case (line, tokenizedLine, idx) => LineMetadata(line, tokenizedLine, LineNumber(idx + 1)) }
         .toList
     }.toEither.leftMap(t => s"Error while reading file ${t.getMessage}")
 
@@ -75,7 +78,7 @@ class Assembler:
         case _ =>
           if isLabelLine then
           // two labels in the same line is illegal
-            s"ERROR (line ${line.lineNumber.value}): Invalid opcode ('${line.tokenizedLine.head}')".asLeft[(Int,Boolean)]
+            s"ERROR (line ${line.lineNumber.value}): Invalid opcode ('${line.tokenizedLine.head}')".asLeft[(Int, Boolean)]
           else
             symbolTable += (line.tokenizedLine.head -> instructionLocation)
             if line.tokenizedLine.tail.headOption.exists(!isComment(_)) then
@@ -135,6 +138,8 @@ class Assembler:
           case "BRnp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.NP).map(List(_))
           case "BRzp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.ZP).map(List(_))
           case "BRnzp" | "BR" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.NZP).map(List(_))
+          case "RET" => List(0xc1c0).asRight[String]
+          case "RTI" => List(0x8000).asRight[String]
           // Data movement instructions
           case "LD" => parseLd(instructionMetadata, symbolTable.toMap).map(List(_))
           case "LDR" => parseLdr(instructionMetadata, symbolTable.toMap).map(List(_))
