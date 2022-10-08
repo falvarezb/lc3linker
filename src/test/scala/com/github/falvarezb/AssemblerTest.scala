@@ -44,6 +44,10 @@ class AssemblerTest extends AnyFunSpec with Matchers :
       runAssembledFileTest("t2.asm")
     }
 
+    it("label and instruction are in the same line") {
+      runAssembledFileTest("t3.asm")
+    }
+
     it("t9: .STRINGZ directive") {
       runAssembledFileTest("t9.asm")
     }
@@ -54,6 +58,14 @@ class AssemblerTest extends AnyFunSpec with Matchers :
 
     it("t11: backwards jump") {
       runAssembledFileTest("t11.asm")
+    }
+
+    it("t12: bad string") {
+      runAssembledFileTest("t11.asm")
+    }
+
+    it("abs") {
+      runAssembledFileTest("abs.asm")
     }
   }
 
