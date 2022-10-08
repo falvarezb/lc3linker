@@ -8,8 +8,8 @@ import scala.io.Source
 import cats.instances.either
 import cats.syntax.either.*
 import cats.syntax.all.toTraverseOps
-import com.github.falvarezb.ControlInstructions.{parseBr, parseJmp, parseJsr}
-import com.github.falvarezb.DataMovementInstructions.{parseLd, parseLdr, parseLea, parseSti}
+import com.github.falvarezb.ControlInstructions.{parseBr, parseJmp, parseJmpt, parseJsr, parseJsrr, parseTrap}
+import com.github.falvarezb.DataMovementInstructions.{parseLd, parseLdi, parseLdr, parseLea, parseSt, parseSti, parseStr}
 import com.github.falvarezb.OperateInstructions.{parseAdd, parseAnd, parseNot}
 import com.github.falvarezb.Util.parseMemoryAddress
 import com.github.falvarezb.Directives.*
@@ -124,7 +124,10 @@ class Assembler:
           case "NOT" => parseNot(instructionMetadata.lineMetadata).map(List(_))
           // Control instructions
           case "JSR" => parseJsr(instructionMetadata, symbolTable.toMap).map(List(_))
+          case "JSRR" => parseJsrr(instructionMetadata.lineMetadata).map(List(_))
           case "JMP" => parseJmp(instructionMetadata.lineMetadata).map(List(_))
+          case "JMPT" => parseJmpt(instructionMetadata.lineMetadata).map(List(_))
+          case "TRAP" => parseTrap(instructionMetadata.lineMetadata).map(List(_))
           case "BRn" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.N).map(List(_))
           case "BRz" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.Z).map(List(_))
           case "BRp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.P).map(List(_))
@@ -136,6 +139,9 @@ class Assembler:
           case "LD" => parseLd(instructionMetadata, symbolTable.toMap).map(List(_))
           case "LDR" => parseLdr(instructionMetadata, symbolTable.toMap).map(List(_))
           case "LEA" => parseLea(instructionMetadata, symbolTable.toMap).map(List(_))
+          case "LDI" => parseLdi(instructionMetadata, symbolTable.toMap).map(List(_))
+          case "ST" => parseSt(instructionMetadata, symbolTable.toMap).map(List(_))
+          case "STR" => parseStr(instructionMetadata, symbolTable.toMap).map(List(_))
           case "STI" => parseSti(instructionMetadata, symbolTable.toMap).map(List(_))
           // comments after a label come here
           case _ => Nil.asRight[String]
