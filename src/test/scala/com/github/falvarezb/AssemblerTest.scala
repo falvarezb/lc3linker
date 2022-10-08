@@ -44,7 +44,7 @@ class AssemblerTest extends AnyFunSpec with Matchers :
       runAssembledFileTest("t2.asm")
     }
 
-    it("label and instruction are in the same line") {
+    it("t3: label and instruction are in the same line") {
       runAssembledFileTest("t3.asm")
     }
 
@@ -66,6 +66,10 @@ class AssemblerTest extends AnyFunSpec with Matchers :
 
     it("abs") {
       runAssembledFileTest("abs.asm")
+    }
+
+    it("charcounter") {
+      runAssembledFileTest("charcounter.asm")
     }
   }
 

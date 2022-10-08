@@ -9,7 +9,7 @@ import cats.instances.either
 import cats.syntax.either.*
 import cats.syntax.all.toTraverseOps
 import com.github.falvarezb.ControlInstructions.{parseBr, parseJmp, parseJsr}
-import com.github.falvarezb.DataMovementInstructions.{parseLd, parseLea, parseSti}
+import com.github.falvarezb.DataMovementInstructions.{parseLd, parseLdr, parseLea, parseSti}
 import com.github.falvarezb.OperateInstructions.{parseAdd, parseAnd, parseNot}
 import com.github.falvarezb.Util.parseMemoryAddress
 import com.github.falvarezb.Directives.*
@@ -30,7 +30,7 @@ class Assembler:
   def doLexicalAnalysis(asmFileNamePath: String): Either[String, List[LineMetadata]] =
     Using(Source.fromFile(asmFileNamePath)) { source =>
       source.getLines()
-        .map(line => (line, line.split("""[ ,"]""").filterNot(_.isEmpty).toList)) // line tokenization (empty tokens are discarded)
+        .map(line => (line, line.split("""[ \t,"]""").filterNot(_.isEmpty).toList)) // line tokenization (empty tokens are discarded)
         .zipWithIndex // adding line number
         .filterNot { case ((_, tokenizedLine), _) => tokenizedLine.isEmpty } // removing blank lines
         .filterNot { case ((_, tokenizedLine), _) => tokenizedLine.head.startsWith(";") } // removing comments
@@ -112,6 +112,11 @@ class Assembler:
           case ".STRINGZ" => parseStringz(instructionMetadata.lineMetadata)
           case ".BLKW" => parseBlkw(instructionMetadata.lineMetadata)
           case ".FILL" => parseFill(instructionMetadata.lineMetadata, symbolTable.toMap).map(List(_))
+          case "GETC" => List(0xf020).asRight[String]
+          case "OUT" => List(0xf021).asRight[String]
+          case "PUTS" => List(0xf022).asRight[String]
+          case "IN" => List(0xf023).asRight[String]
+          case "PUTSP" => List(0xf024).asRight[String]
           case "HALT" => List(0xf025).asRight[String]
           // Operate instructions
           case "ADD" => parseAdd(instructionMetadata.lineMetadata).map(List(_))
@@ -121,10 +126,18 @@ class Assembler:
           case "JSR" => parseJsr(instructionMetadata, symbolTable.toMap).map(List(_))
           case "JMP" => parseJmp(instructionMetadata.lineMetadata).map(List(_))
           case "BRn" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.N).map(List(_))
+          case "BRz" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.Z).map(List(_))
+          case "BRp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.P).map(List(_))
+          case "BRnz" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.NZ).map(List(_))
+          case "BRnp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.NP).map(List(_))
+          case "BRzp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.ZP).map(List(_))
+          case "BRnzp" | "BR" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.NZP).map(List(_))
           // Data movement instructions
           case "LD" => parseLd(instructionMetadata, symbolTable.toMap).map(List(_))
+          case "LDR" => parseLdr(instructionMetadata, symbolTable.toMap).map(List(_))
           case "LEA" => parseLea(instructionMetadata, symbolTable.toMap).map(List(_))
           case "STI" => parseSti(instructionMetadata, symbolTable.toMap).map(List(_))
+          // comments after a label come here
           case _ => Nil.asRight[String]
       }
       l.sequence.map(_.flatten)

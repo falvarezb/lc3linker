@@ -27,7 +27,7 @@ enum OpCode:
   case ADD, AND, NOT, JSR, JSRR, JMP, JMPT, LDR, STR, LD, ST, LDI, STI, LEA, BR, BRp, BRz, BRn, BRzp, BRnp, BRnz, BRnzp, TRAP
 
 enum Directive:
-  case `.ORIG`, HALT, `.STRINGZ`, `.BLKW`, `.FILL`
+  case `.ORIG`, HALT, `.STRINGZ`, `.BLKW`, `.FILL`, GETC, OUT, PUTS, IN, PUTSP
 
 enum ConditionCode(val value: Int):
   case N extends ConditionCode(4) //100
@@ -37,8 +37,6 @@ enum ConditionCode(val value: Int):
   case NP extends ConditionCode(5) //101
   case ZP extends ConditionCode(3) //011
   case NZP extends ConditionCode(7) //111
-
-
 
 
 def isComment(str: String) = str.startsWith(";")
