@@ -1,8 +1,7 @@
 package com.github.falvarezb
 
-import com.github.falvarezb.Util.{interpretEscapeSequence, parseBlockOfWordsSize, parseNumericValue, parseMemoryAddress, parseOffset, parseRegister, validateNumberRange, parseNumericValueWithAlternativeParser}
 import com.github.falvarezb.OpCode.*
-
+import com.github.falvarezb.Util.*
 import scala.collection.mutable
 //import cats.*
 //import cats.implicits.*

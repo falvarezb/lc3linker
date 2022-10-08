@@ -14,7 +14,7 @@ object Util:
    *
    * - hex values prefixed by 'x'
    */
-  def parseNumericValue(token: String, lineNumber: LineNumber): Either[String, Int] =
+  private def parseNumericValue(token: String, lineNumber: LineNumber): Either[String, Int] =
     Either.catchOnly[NumberFormatException] {
       token(0) match
         case '#' =>
@@ -28,7 +28,7 @@ object Util:
           Integer.parseInt(token)
     }.leftMap(_ => s"ERROR (line ${lineNumber.value}): Immediate $token is not a numeric value")
 
-  def validateNumberRange(token: String, value: Int, lineNumber: LineNumber, lowerBound: Int, upperBound: Int): Either[String, Unit] =
+  private def validateNumberRange(token: String, value: Int, lineNumber: LineNumber, lowerBound: Int, upperBound: Int): Either[String, Unit] =
     Either.cond(value >= lowerBound && value <= upperBound, (), s"ERROR (line ${lineNumber.value}): Immediate operand ($token) out of range ($lowerBound to $upperBound)")
 
   /**
@@ -125,6 +125,9 @@ object Util:
   /**
    * Parse token as a numeric value, validating that it is in the range [lowerBound,upperBound]
    */
-  def parseNumericValue(token: String, lineNumber: LineNumber, lowerBound: Int, upperBound: Int): Either[String, Int] =
+  private def parseNumericValue(token: String, lineNumber: LineNumber, lowerBound: Int, upperBound: Int): Either[String, Int] =
     parseNumericValueWithAlternativeParser(token, lineNumber, lowerBound, upperBound)(None)
+
+  def parseImmediate(token: String, lineNumber: LineNumber, immediateNumBits: Int): Either[String, Int] =
+    parseNumericValue(token, lineNumber, -(1 << (immediateNumBits - 1)), (1 << (immediateNumBits - 1)) - 1)
 

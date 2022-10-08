@@ -44,3 +44,12 @@ object ControlInstructions:
       offset <- parseOffset(tokens(1), lineNumber, instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
     yield (conditionCode.value << 9) + offset
 
+
+//  def parseTrap(lineMetadata: LineMetadata): Either[String, Int] =
+//    val tokens = lineMetadata.tokenizedLine
+//    val lineNumber = lineMetadata.lineNumber
+//
+//    for
+//      _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): missing operands")
+//      baseRegister <- parseRegister(tokens(1), lineNumber).map(_ << 6)
+//    yield (if opCode == JSRR then 4 << 12 else 12 << 12) + baseRegister + (if opCode == JMPT then 1 else 0)
