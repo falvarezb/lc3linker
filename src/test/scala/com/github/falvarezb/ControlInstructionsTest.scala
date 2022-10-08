@@ -125,3 +125,20 @@ class ControlInstructionsTest extends AnyFunSpec with Matchers:
       parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.NZP) shouldBe Left("ERROR (line 1): Symbol not found ('NON_EXISTENT_LABEL')")
     }
   }
+
+  describe("TRAP parser") {
+    it("successful parse") {
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List("TRAP", "1"), LineNumber(1))
+      parseTrap(lineMetadata) shouldBe Right(0xf001)
+    }
+
+    it("trapvector too big") {
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List("TRAP", "300"), LineNumber(1))
+      parseTrap(lineMetadata) shouldBe Left("ERROR (line 1): Immediate operand (300) out of range (0 to 255)")
+    }
+
+    it("trapvector too small") {
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List("TRAP", "-1"), LineNumber(1))
+      parseTrap(lineMetadata) shouldBe Left("ERROR (line 1): Immediate operand (-1) out of range (0 to 255)")
+    }
+  }

@@ -131,3 +131,6 @@ object Util:
   def parseImmediate(token: String, lineNumber: LineNumber, immediateNumBits: Int): Either[String, Int] =
     parseNumericValue(token, lineNumber, -(1 << (immediateNumBits - 1)), (1 << (immediateNumBits - 1)) - 1)
 
+  def parseTrapVector(token: String, lineNumber: LineNumber): Either[String, Int] =
+    parseNumericValue(token, lineNumber, 0, 0xFF)
+
