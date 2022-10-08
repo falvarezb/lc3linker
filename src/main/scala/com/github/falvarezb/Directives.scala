@@ -1,6 +1,6 @@
 package com.github.falvarezb
 
-import com.github.falvarezb.Util.{interpretEscapeSequence, parseBlockOfWordsSize, parseInteger, parseMemoryAddress, parseNumericValue, parseOffset, parseRegister, validateNumberRange, withAlternativeParser}
+import com.github.falvarezb.Util.{interpretEscapeSequence, parseBlockOfWordsSize, parseNumericValue, parseMemoryAddress, parseOffset, parseRegister, validateNumberRange, parseNumericValueWithAlternativeParser}
 import com.github.falvarezb.OpCode.*
 
 import scala.collection.mutable
@@ -47,12 +47,14 @@ object Directives {
       _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): Immediate expected")
       operand = tokens(1)
       //is token a label or a number?
-      num <- withAlternativeParser(operand, lineNumber, -32768, 65535) {
-        Either.catchOnly[NoSuchElementException] {
-          symbolTable(operand)
-        }
-          .map(_.value)
-          .leftMap(_ => s"ERROR (line ${lineNumber.value}): Symbol not found ('$operand')")
+      num <- parseNumericValueWithAlternativeParser(operand, lineNumber, -32768, 65535) {
+        Some(
+          Either.catchOnly[NoSuchElementException] {
+            symbolTable(operand)
+          }
+            .map(_.value)
+            .leftMap(_ => s"ERROR (line ${lineNumber.value}): Symbol not found ('$operand')")
+        )
       }
     yield num
 
@@ -108,5 +110,5 @@ object Directives {
       instructions <- List.fill(block_size)(0).asRight[String]
     yield instructions
   }
-  
+
 }

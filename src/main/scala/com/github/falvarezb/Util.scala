@@ -9,7 +9,9 @@ object Util:
 
   /**
    * Integer literals in LC-3 assembly language can be represented as:
+   *
    * - decimal values, either prefixed by '#' or without prefix
+   *
    * - hex values prefixed by 'x'
    */
   def parseNumericValue(token: String, lineNumber: LineNumber): Either[String, Int] =
@@ -30,11 +32,14 @@ object Util:
     Either.cond(value >= lowerBound && value <= upperBound, (), s"ERROR (line ${lineNumber.value}): Immediate operand ($token) out of range ($lowerBound to $upperBound)")
 
   /**
-   * Transforms the given token in a valid memory address, namely: an integer in the range [0, 0xFFFF]
+   * Parse token to obtain a memory address, that is, a numeric value in the range [0, 0xFFFF]
    */
   def parseMemoryAddress(token: String, lineNumber: LineNumber): Either[String, Int] =
-    parseInteger(token, lineNumber, 0, 0xFFFF)
+    parseNumericValue(token, lineNumber, 0, 0xFFFF)
 
+  /**
+   * Parse token corresponding to the size specified by a .BLKW directive
+   */
   def parseBlockOfWordsSize(token: String, lineNumber: LineNumber): Either[String, Int] =
   // same validation as memory address
     parseMemoryAddress(token, lineNumber)
@@ -51,12 +56,14 @@ object Util:
    * - calculate 2's complement
    */
   def parseOffset(token: String, lineNumber: LineNumber, instructionMemoryAddress: InstructionLocation, offsetNumBits: Int, symbolTable: SymbolTable): Either[String, Int] =
-    withAlternativeParser(token, lineNumber, -(1 << (offsetNumBits - 1)), (1 << (offsetNumBits - 1)) - 1) {
-      Either.catchOnly[NoSuchElementException] {
-        symbolTable(token)
-      }
-        .map(symbolicNameValue => (symbolicNameValue - instructionMemoryAddress) ∇- 1)
-        .leftMap(_ => s"ERROR (line ${lineNumber.value}): Symbol not found ('$token')")
+    parseNumericValueWithAlternativeParser(token, lineNumber, -(1 << (offsetNumBits - 1)), (1 << (offsetNumBits - 1)) - 1) {
+      Some(
+        Either.catchOnly[NoSuchElementException] {
+          symbolTable(token)
+        }
+          .map(symbolicNameValue => (symbolicNameValue - instructionMemoryAddress) ∇- 1)
+          .leftMap(_ => s"ERROR (line ${lineNumber.value}): Symbol not found ('$token')")
+      )
     }.map(offset => twosComplement(offset, offsetNumBits))
 
   /**
@@ -93,20 +100,31 @@ object Util:
 
     loop(str.toList, false, Nil).map(_.reverse.mkString)
 
-
+  /**
+   * Parse token as a register, returning the corresponding numeric value:
+   *
+   * R0, R1, R2, R3, R4, R5, R6, R7 correspond to 0, 1, 2, 3, 4, 5, 6, 7 respectively
+   */
   def parseRegister(token: String, lineNumber: LineNumber): Either[String, Int] =
     Either.cond(token.length == 2 && token.head == 'R' && token(1) >= '0' && token(1) <= '7', token(1).toString.toInt, s"ERROR (line ${lineNumber.value}): Expected register but found $token")
 
-  def withAlternativeParser(token: String, lineNumber: LineNumber, lowerBound: Int, upperBound: Int)(altParser: => Either[String, Int]): Either[String, Int] =
-    val parsedValue = parseNumericValue(token, lineNumber)
+  /**
+   * Parse token as a numeric value, validating that it is in the range [lowerBound,upperBound]
+   *
+   * If default parser fails, the alternative parser 'altParser' is applied
+   */
+  def parseNumericValueWithAlternativeParser(token: String, lineNumber: LineNumber, lowerBound: Int, upperBound: Int)(altParser: => Option[Either[String, Int]]): Either[String, Int] =
+    val parsedValue: Either[String, Int] = parseNumericValue(token, lineNumber)
     for
-      num <- parsedValue.orElse(altParser)
+      num <- altParser match
+        case Some(altp) => parsedValue.orElse(altp)
+        case None => parsedValue
       _ <- validateNumberRange(token, num, lineNumber, lowerBound, upperBound)
     yield num
 
-  def parseInteger(token: String, lineNumber: LineNumber, lowerBound: Int, upperBound: Int): Either[String, Int] =
-    for
-      num <- parseNumericValue(token, lineNumber)
-      _ <- validateNumberRange(token, num, lineNumber, lowerBound, upperBound)
-    yield num
+  /**
+   * Parse token as a numeric value, validating that it is in the range [lowerBound,upperBound]
+   */
+  def parseNumericValue(token: String, lineNumber: LineNumber, lowerBound: Int, upperBound: Int): Either[String, Int] =
+    parseNumericValueWithAlternativeParser(token, lineNumber, lowerBound, upperBound)(None)
 

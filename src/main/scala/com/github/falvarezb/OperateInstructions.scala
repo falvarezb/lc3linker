@@ -1,7 +1,7 @@
 package com.github.falvarezb
 
 import com.github.falvarezb.OpCode.{ADD, AND}
-import com.github.falvarezb.Util.{parseInteger, parseRegister}
+import com.github.falvarezb.Util.{parseNumericValue, parseRegister}
 
 object OperateInstructions:
   def parseAdd(lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(lineMetadata, ADD)
@@ -30,7 +30,7 @@ object OperateInstructions:
       SR1 <- parseRegister(tokens(2), lineNumber).map(_ << 6)
       // register or immediate value?
       operand <- parseRegister(tokens(3), lineNumber).orElse {
-        parseInteger(tokens(3), lineNumber, -(1 << (immediateNumBits - 1)), (1 << (immediateNumBits - 1)) - 1).map { num =>
+        parseNumericValue(tokens(3), lineNumber, -(1 << (immediateNumBits - 1)), (1 << (immediateNumBits - 1)) - 1).map { num =>
           (1 << 5) + twosComplement(num, immediateNumBits)
         }
       }
