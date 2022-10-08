@@ -31,7 +31,7 @@ class Assembler:
     Using(Source.fromFile(asmFileNamePath)) { source =>
       source.getLines()
         .map(_.trim)
-        .map(_.takeWhile(_ != ';')) // discard comments
+        .map(line => if line.contains(".STRINGZ") then line else line.takeWhile(_ != ';')) // discard comments
         .zipWithIndex // adding line number before filtering lines
         .filterNot { case (line, _) => line.isEmpty } // removing blank lines
         .map { case (line, idx) => (line, line.split("""[ \t,"]""").filterNot(_.isEmpty).toList, idx) } // line tokenization (empty tokens are discarded)

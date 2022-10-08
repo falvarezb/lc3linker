@@ -79,6 +79,14 @@ class AssemblerTest extends AnyFunSpec with Matchers :
     it("or") {
       runAssembledFileTest("or.asm")
     }
+
+    it("lc3os") {
+      runAssembledFileTest("lc3os.asm")
+    }
+
+    it("2048") {
+      runAssembledFileTest("2048.asm")
+    }
   }
 
   describe("error conditions") {
