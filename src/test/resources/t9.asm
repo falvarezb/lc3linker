@@ -4,6 +4,7 @@
     .ORIG x3000
     JSR LABEL
     .STRINGZ   ";a\n'\\\t\e\"b;" ; comment
+    .STRINGZ   ""
     ADD R0,R0,#1
     HALT
 
