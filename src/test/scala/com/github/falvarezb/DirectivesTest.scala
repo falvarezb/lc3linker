@@ -19,6 +19,11 @@ class DirectivesTest extends AnyFunSpec with Matchers :
       parseStringz(lineMetadata) shouldBe Left("ERROR (line 1): Bad string ('.STRINGZ \"string content\" a')")
     }
 
+    it("comment at the end of the line") {
+      val lineMetadata = LineMetadata(".STRINGZ \"a\" ;comment", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1))
+      parseStringz(lineMetadata) shouldBe Right(List(0x61, 0))
+    }
+
     it("one quotations mark missing") {
       val lineMetadata = LineMetadata(".STRINGZ  a \"string content", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1))
       parseStringz(lineMetadata) shouldBe Left("ERROR (line 1): Bad string ('.STRINGZ  a \"string content')")

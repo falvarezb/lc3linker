@@ -89,7 +89,7 @@ object Directives {
       stringzIdx = line.indexOfSlice(".STRINGZ")
       contentOutsideQuotationMark =
         line.substring(stringzIdx + ".STRINGZ".length, firstQuotationMarkIdx).trim.nonEmpty ||
-          line.substring(secondQuotationMarkIdx + 1).headOption.exists(_ != ';')
+          line.substring(secondQuotationMarkIdx + 1).takeWhile(_ != ';').trim.nonEmpty
       _ <- Either.cond(!contentOutsideQuotationMark, Nil, s"ERROR (line ${lineNumber.value}): Bad string ('$line')")
       str <- interpretEscapeSequence(quotedContent, lineNumber)
       _ <- Either.cond(str.forall(isAsciiChar), Nil, s"ERROR (line ${lineNumber.value}): Bad string, non-ascii char ('$line')")
