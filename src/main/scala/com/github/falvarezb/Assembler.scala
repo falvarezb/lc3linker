@@ -70,11 +70,12 @@ class Assembler:
      */
     @tailrec
     def processLine(line: LineMetadata, instructionLocation: InstructionLocation, isLabelLine: Boolean = false): Either[String, (Int, Boolean)] =
+      val firstToken = line.tokenizedLine.head
       line match
-        case _ if line.tokenizedLine.head.contains(".ORIG") => parseOrig(line).map((_, isLabelLine))
-        case _ if line.tokenizedLine.head.contains(".STRINGZ") => stringzAllocatedMemory(line).map((_, isLabelLine))
-        case _ if line.tokenizedLine.head.contains(".BLKW") => blkwAllocatedMemory(line).map((_, isLabelLine))
-        case _ if line.tokenizedLine.head.contains(".EXTERNAL") => parseExternal(line) match
+        case _ if firstToken.contains(".ORIG") => parseOrig(line).map((_, isLabelLine))
+        case _ if firstToken.contains(".STRINGZ") => stringzAllocatedMemory(line).map((_, isLabelLine))
+        case _ if firstToken.contains(".BLKW") => blkwAllocatedMemory(line).map((_, isLabelLine))
+        case _ if firstToken.contains(".EXTERNAL") => parseExternal(line) match
           case Right(symbol) =>
             symbolTable += (symbol -> InstructionLocation(-1))
             Right((0, isLabelLine))
@@ -83,15 +84,17 @@ class Assembler:
         case _ =>
           if isLabelLine then
           // two labels in the same line is illegal
-            s"ERROR (line ${line.lineNumber.value}): Invalid opcode ('${line.tokenizedLine.head}')".asLeft[(Int, Boolean)]
+            s"ERROR (line ${line.lineNumber.value}): Invalid opcode ('${firstToken}')".asLeft[(Int, Boolean)]
           else
-            symbolTable += (line.tokenizedLine.head -> instructionLocation)
-            if line.tokenizedLine.tail.headOption.exists(!isComment(_)) then
-            // process the rest of the line after removing the label
-              processLine(line.copy(tokenizedLine = line.tokenizedLine.drop(1)), instructionLocation, true)
-            else
-            // ignore rest of the line as it is a comment
-              0.asRight[String].map((_, isLabelLine))
+            symbolTable += (firstToken -> instructionLocation)
+            line.tokenizedLine.tail match
+              case Nil =>
+                // standalone label, there is nothing else in this line
+                0.asRight[String].map((_, isLabelLine))
+              case tail =>
+                // process the rest of the line after the label
+                processLine(line.copy(tokenizedLine = tail), instructionLocation, true)
+
 
     @tailrec
     def nextLine(lines: List[LineMetadata], instructions: List[InstructionMetadata], instructionLocation: InstructionLocation): Either[String, List[InstructionMetadata]] =
