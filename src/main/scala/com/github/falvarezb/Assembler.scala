@@ -75,11 +75,10 @@ class Assembler:
         case _ if firstToken.contains(".ORIG") => parseOrig(line).map((_, isLabelLine))
         case _ if firstToken.contains(".STRINGZ") => stringzAllocatedMemory(line).map((_, isLabelLine))
         case _ if firstToken.contains(".BLKW") => blkwAllocatedMemory(line).map((_, isLabelLine))
-        case _ if firstToken.contains(".EXTERNAL") => parseExternal(line) match
-          case Right(symbol) =>
-            symbolTable += (symbol -> InstructionLocation(-1))
-            Right((0, isLabelLine))
-          case Left(error) => error.asLeft[(Int, Boolean)]
+        case _ if firstToken.contains(".EXTERNAL") => parseExternal(line).map{ symbol =>
+          symbolTable += (symbol -> InstructionLocation(-1))
+          (0, isLabelLine)
+        }
         case _ if line.isOpCode || line.isDirective => 1.asRight[String].map((_, isLabelLine))
         case _ =>
           if isLabelLine then
