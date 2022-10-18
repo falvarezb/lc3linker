@@ -156,17 +156,16 @@ class Assembler:
 
   def serializeInstructions(instructions: List[Int], asmFileNamePath: String): Unit =
     val asmFileNameWithoutExtension = asmFileNamePath.split('.')(0)
-    val objFile = new FileOutputStream(s"$asmFileNameWithoutExtension.obj")
-
-    instructions.foreach { instr =>
-      println(instr.toHexString)
-      //JVM's big-endian representation
-      //(1 << n) - 1 = 2^n - 1 = 111.. (n times) ..111
-      val (mostSignificantByte, leastSignificantByte) = (instr >> 8, instr & ((1 << 8) - 1))
-      objFile.write(mostSignificantByte)
-      objFile.write(leastSignificantByte)
+    Using(FileOutputStream(s"$asmFileNameWithoutExtension.obj")) { objFile =>
+      instructions.foreach { instr =>
+        println(instr.toHexString)
+        //JVM's big-endian representation
+        //(1 << n) - 1 = 2^n - 1 = 111.. (n times) ..111
+        val (mostSignificantByte, leastSignificantByte) = (instr >> 8, instr & ((1 << 8) - 1))
+        objFile.write(mostSignificantByte)
+        objFile.write(leastSignificantByte)
+      }
     }
-    objFile.close()
 
 
 
