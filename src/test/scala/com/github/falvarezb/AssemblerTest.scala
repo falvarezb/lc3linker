@@ -60,8 +60,8 @@ class AssemblerTest extends AnyFunSpec with Matchers :
       runAssembledFileTest("t11.asm")
     }
 
-    it("t12: bad string") {
-      runAssembledFileTest("t11.asm")
+    it("t12: .EXTERNAL directive") {
+      runAssembledFileTest("t12.asm")
     }
 
     it("abs") {
@@ -111,6 +111,12 @@ class AssemblerTest extends AnyFunSpec with Matchers :
       val (result, symbolTable) = runSymbolTableTest("t3.asm")
       result shouldBe Right(())
       symbolTable should contain("LABEL" -> InstructionLocation(0x3003))
+    }
+
+    it(".EXTERNAL directive") {
+      val (result, symbolTable) = runSymbolTableTest("t12.asm")
+      result shouldBe Right(())
+      symbolTable should contain("SYMBOL_ON_OTHER_MODULE" -> InstructionLocation(-1))
     }
 
     it("multiple labels associated to the same instruction") {

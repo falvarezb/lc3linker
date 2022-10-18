@@ -32,6 +32,12 @@ object Directives {
     else parseMemoryAddress(tokens(1), lineNumber)
   }
 
+  def parseExternal(lineMetadata: LineMetadata): Either[String, String] =
+    val tokens = lineMetadata.tokenizedLine
+    val lineNumber = lineMetadata.lineNumber
+    if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Symbol expected")
+    else Right(tokens(1))
+
   /**
    * .FILL operand may be an integer [-32768, 32767] or a label of a memory address [0, 65535]
    *
