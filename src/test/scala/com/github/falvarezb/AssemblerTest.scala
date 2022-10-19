@@ -104,6 +104,16 @@ class AssemblerTest extends AnyFunSpec with Matchers :
       val result = runErrorConditionTest("t8.asm")
       result shouldBe Left("ERROR (line 4): Immediate expected")
     }
+
+    it("duplicate label") {
+      val result = runErrorConditionTest("t13.asm")
+      result shouldBe Left("ERROR (line 8): duplicate symbol ('LABEL')")
+    }
+
+    it("duplicate external label") {
+      val result = runErrorConditionTest("t14.asm")
+      result shouldBe Left("ERROR (line 6): duplicate symbol ('SYMBOL_ON_OTHER_MODULE')")
+    }
   }
 
   describe("symbol table") {

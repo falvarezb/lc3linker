@@ -79,24 +79,32 @@ class Assembler:
         case _ if firstToken.contains(".ORIG") => parseOrig(line).map((_, isLabelLine))
         case _ if firstToken.contains(".STRINGZ") => stringzAllocatedMemory(line).map((_, isLabelLine))
         case _ if firstToken.contains(".BLKW") => blkwAllocatedMemory(line).map((_, isLabelLine))
-        case _ if firstToken.contains(".EXTERNAL") => parseExternal(line).map{ symbol =>
-          symbolTable += (symbol -> InstructionLocation(-1))
-          (0, isLabelLine)
+        case _ if firstToken.contains(".EXTERNAL") => parseExternal(line).flatMap{ symbol =>
+          symbolTable.get(symbol) match
+            case Some(_) =>
+              s"ERROR (line ${line.lineNumber.value}): duplicate symbol ('${symbol}')".asLeft[(Int, Boolean)]
+            case None =>
+              symbolTable += (symbol -> InstructionLocation(-1))
+              (0, isLabelLine).asRight[String]
         }
         case _ if line.isOpCode || line.isDirective => 1.asRight[String].map((_, isLabelLine))
         case _ =>
           if isLabelLine then
-          // two labels in the same line is illegal
+            // two labels in the same line is illegal
             s"ERROR (line ${line.lineNumber.value}): Invalid opcode ('${firstToken}')".asLeft[(Int, Boolean)]
           else
-            symbolTable += (firstToken -> instructionLocation)
-            line.tokenizedLine.tail match
-              case Nil =>
-                // standalone label, there is nothing else in this line
-                0.asRight[String].map((_, isLabelLine))
-              case tail =>
-                // process the rest of the line after the label
-                processLine(line.copy(tokenizedLine = tail), instructionLocation, true)
+            symbolTable.get(firstToken) match
+              case Some(_) =>
+                s"ERROR (line ${line.lineNumber.value}): duplicate symbol ('${firstToken}')".asLeft[(Int, Boolean)]
+              case None =>
+                symbolTable += (firstToken -> instructionLocation)
+                line.tokenizedLine.tail match
+                  case Nil =>
+                    // standalone label, there is nothing else in this line
+                    0.asRight[String].map((_, isLabelLine))
+                  case tail =>
+                    // process the rest of the line after the label
+                    processLine(line.copy(tokenizedLine = tail), instructionLocation, true)
 
 
     @tailrec
