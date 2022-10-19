@@ -80,6 +80,8 @@ class Assembler:
         case _ if firstToken.contains(".STRINGZ") => stringzAllocatedMemory(line).map((_, isLabelLine))
         case _ if firstToken.contains(".BLKW") => blkwAllocatedMemory(line).map((_, isLabelLine))
         case _ if firstToken.contains(".EXTERNAL") => parseExternal(line).flatMap{ symbol =>
+          // rewriting this flatMap as for-comprehension does not work as there seems to be a bug
+          // when Right is a tuple, https://github.com/scala/bug/issues/5589
           Either.cond(!symbolTable.contains(symbol), {
             symbolTable += (symbol -> InstructionLocation(-1))
             (0, isLabelLine)
@@ -104,6 +106,7 @@ class Assembler:
                     0.asRight[String].map((_, isLabelLine))
                   case tail =>
                     // process the rest of the line after the label
+                    // NOTE: if we use Either.cond, processLine won't be tail recursive
                     processLine(line.copy(tokenizedLine = tail), instructionLocation, true)
 
 
