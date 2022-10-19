@@ -75,11 +75,11 @@ class Assembler:
     @tailrec
     def processLine(line: LineMetadata, instructionLocation: InstructionLocation, isLabelLine: Boolean = false): Either[String, (Int, Boolean)] =
       val firstToken = line.tokenizedLine.head
-      line match
-        case _ if firstToken.contains(".ORIG") => parseOrig(line).map((_, isLabelLine))
-        case _ if firstToken.contains(".STRINGZ") => stringzAllocatedMemory(line).map((_, isLabelLine))
-        case _ if firstToken.contains(".BLKW") => blkwAllocatedMemory(line).map((_, isLabelLine))
-        case _ if firstToken.contains(".EXTERNAL") => parseExternal(line).flatMap{ symbol =>
+      firstToken match
+        case ".ORIG" => parseOrig(line).map((_, isLabelLine))
+        case ".STRINGZ" => stringzAllocatedMemory(line).map((_, isLabelLine))
+        case ".BLKW" => blkwAllocatedMemory(line).map((_, isLabelLine))
+        case ".EXTERNAL" => parseExternal(line).flatMap{ symbol =>
           // rewriting this flatMap as for-comprehension does not work as there seems to be a bug
           // when Right is a tuple, https://github.com/scala/bug/issues/5589
           Either.cond(!symbolTable.contains(symbol), {
@@ -90,16 +90,16 @@ class Assembler:
           })
         }
         case _ if line.isOpCode || line.isDirective => 1.asRight[String].map((_, isLabelLine))
-        case _ =>
+        case label =>
           if isLabelLine then
             // two labels in the same line is illegal
-            s"ERROR (line ${line.lineNumber.value}): Invalid opcode ('${firstToken}')".asLeft[(Int, Boolean)]
+            s"ERROR (line ${line.lineNumber.value}): Invalid opcode ('$label')".asLeft[(Int, Boolean)]
           else
-            symbolTable.get(firstToken) match
+            symbolTable.get(label) match
               case Some(_) =>
-                s"ERROR (line ${line.lineNumber.value}): duplicate symbol ('${firstToken}')".asLeft[(Int, Boolean)]
+                s"ERROR (line ${line.lineNumber.value}): duplicate symbol ('$label')".asLeft[(Int, Boolean)]
               case None =>
-                symbolTable += (firstToken -> instructionLocation)
+                symbolTable += (label -> instructionLocation)
                 line.tokenizedLine.tail match
                   case Nil =>
                     // standalone label, there is nothing else in this line
