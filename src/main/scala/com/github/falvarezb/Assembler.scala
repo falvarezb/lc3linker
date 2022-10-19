@@ -27,7 +27,7 @@ class Assembler:
       instructions <- doSyntaxAnalysis(instructionsMetadata)
     yield serializeInstructions(instructions, asmFileNamePath)
 
-  def doLexicalAnalysis(asmFileNamePath: String): Either[String, List[LineMetadata]] =
+  private def doLexicalAnalysis(asmFileNamePath: String): Either[String, List[LineMetadata]] =
     Using(Source.fromFile(asmFileNamePath)) { source =>
       source.getLines()
         .map(_.trim)
@@ -52,7 +52,7 @@ class Assembler:
    * @param linesMetadata lines and metadata
    * @return lines with the instruction location
    */
-  def createSymbolTable(linesMetadata: List[LineMetadata]): Either[String, List[InstructionMetadata]] =
+  private def createSymbolTable(linesMetadata: List[LineMetadata]): Either[String, List[InstructionMetadata]] =
 
     /**
      * Process given line to calculate and return the distance to the next instruction in memory, e.g.
@@ -125,7 +125,7 @@ class Assembler:
     nextLine(linesMetadata, Nil, InstructionLocation(0)).map(_.reverse)
 
 
-  def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata]): Either[String, List[Int]] =
+  private def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata]): Either[String, List[Int]] =
     if instructionsMetadata.head.lineMetadata.tokenizedLine.head != ".ORIG" then
       s"ERROR (line ${instructionsMetadata.head.lineMetadata.lineNumber.value}): Instruction not preceeded by a .orig directive".asLeft[List[Int]]
     else
@@ -176,7 +176,7 @@ class Assembler:
       l.sequence.map(_.flatten)
 
 
-  def serializeInstructions(instructions: List[Int], asmFileNamePath: String): Unit =
+  private def serializeInstructions(instructions: List[Int], asmFileNamePath: String): Unit =
     val asmFileNameWithoutExtension = asmFileNamePath.split('.')(0)
     Using(FileOutputStream(s"$asmFileNameWithoutExtension.obj")) { objFile =>
       instructions.foreach { instr =>
