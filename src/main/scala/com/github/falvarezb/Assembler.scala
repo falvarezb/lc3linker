@@ -80,12 +80,12 @@ class Assembler:
         case _ if firstToken.contains(".STRINGZ") => stringzAllocatedMemory(line).map((_, isLabelLine))
         case _ if firstToken.contains(".BLKW") => blkwAllocatedMemory(line).map((_, isLabelLine))
         case _ if firstToken.contains(".EXTERNAL") => parseExternal(line).flatMap{ symbol =>
-          symbolTable.get(symbol) match
-            case Some(_) =>
-              s"ERROR (line ${line.lineNumber.value}): duplicate symbol ('${symbol}')".asLeft[(Int, Boolean)]
-            case None =>
-              symbolTable += (symbol -> InstructionLocation(-1))
-              (0, isLabelLine).asRight[String]
+          Either.cond(!symbolTable.contains(symbol), {
+            symbolTable += (symbol -> InstructionLocation(-1))
+            (0, isLabelLine)
+          }, {
+            s"ERROR (line ${line.lineNumber.value}): duplicate symbol ('$symbol')"
+          })
         }
         case _ if line.isOpCode || line.isDirective => 1.asRight[String].map((_, isLabelLine))
         case _ =>
