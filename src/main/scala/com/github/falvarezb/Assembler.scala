@@ -55,10 +55,14 @@ class Assembler:
   def createSymbolTable(linesMetadata: List[LineMetadata]): Either[String, List[InstructionMetadata]] =
 
     /**
-     * Process given line to calculate and return the memory address delta to the next instruction, e.g.
+     * Process given line to calculate and return the distance to the next instruction in memory, e.g.
+     *
      * - comments, labels and directives .ORIG and .END do not increment instruction counter
+     *
      * - instructions increase instruction counter by 1
+     *
      * - directive .BLKW increases instruction counter by the number of words that needs to allocate
+     *
      * - directive .STRINGZ increase instruction counter by the number of chars of the corresponding string
      *
      * As a side effect, found labels are stored in the symbol table
@@ -66,7 +70,7 @@ class Assembler:
      * @param line                line and metadata
      * @param instructionLocation instruction location corresponding to the given line; needed to build the symbol table
      * @param isLabelLine         flag used to help process lines containing label and instruction at the same time
-     * @return delta to the next instruction
+     * @return distance to the next instruction in memory
      */
     @tailrec
     def processLine(line: LineMetadata, instructionLocation: InstructionLocation, isLabelLine: Boolean = false): Either[String, (Int, Boolean)] =
@@ -155,7 +159,7 @@ class Assembler:
           case "ST" => parseSt(instructionMetadata, symbolTable.toMap).map(List(_))
           case "STR" => parseStr(instructionMetadata, symbolTable.toMap).map(List(_))
           case "STI" => parseSti(instructionMetadata, symbolTable.toMap).map(List(_))
-          // comments after a label come here
+          // labels and .EXTERN directives come here
           case _ => Nil.asRight[String]
       }
       l.sequence.map(_.flatten)
