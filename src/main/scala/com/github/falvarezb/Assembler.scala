@@ -20,12 +20,36 @@ class Assembler:
 
   protected val symbolTable: mutable.Map[String, InstructionLocation] = mutable.Map.empty
 
+  def link(asmFiles: Seq[String], objFile: String): Either[String, Unit] =
+    @tailrec
+    def nextFile(asmFiles: Seq[String], instructionMetadataList: List[Either[String, List[InstructionMetadata]]], instructionOffset: Option[InstructionLocation]): List[Either[String, List[InstructionMetadata]]] =
+      asmFiles match
+        case Nil => instructionMetadataList
+        case firstFile :: rest =>
+          val instructionsMetadata: Either[String, List[InstructionMetadata]] = for
+            linesMetadata <- doLexicalAnalysis(firstFile)
+            instructionsMetadata <- createSymbolTable(linesMetadata, instructionOffset)
+          yield
+            instructionOffset match
+              case None => instructionsMetadata
+              case Some(_) => instructionsMetadata.drop(1) // drop .ORIG directive
+          instructionsMetadata match
+            case Left(_) => instructionsMetadata :: instructionMetadataList
+            case Right(_) =>
+              val newInstructionOffset = instructionsMetadata.map(_.last.instructionLocation ∆+ 1).toOption
+              nextFile(rest, instructionsMetadata :: instructionMetadataList, newInstructionOffset)
+
+    for
+      instructionsMetadata <- nextFile(asmFiles, Nil, None).reverse.sequence.map(_.flatten)
+      instructions <- doSyntaxAnalysis(instructionsMetadata)
+    yield serializeInstructions(instructions, objFile)
+
   def assemble(asmFileNamePath: String): Either[String, Unit] =
     for
       linesMetadata <- doLexicalAnalysis(asmFileNamePath)
-      instructionsMetadata <- createSymbolTable(linesMetadata)
+      instructionsMetadata <- createSymbolTable(linesMetadata, None)
       instructions <- doSyntaxAnalysis(instructionsMetadata)
-    yield serializeInstructions(instructions, asmFileNamePath)
+    yield serializeInstructions(instructions, asmFileNamePath.split('.')(0))
 
   private def doLexicalAnalysis(asmFileNamePath: String): Either[String, List[LineMetadata]] =
     Using(Source.fromFile(asmFileNamePath)) { source =>
@@ -52,7 +76,7 @@ class Assembler:
    * @param linesMetadata lines and metadata
    * @return lines with the instruction location
    */
-  private def createSymbolTable(linesMetadata: List[LineMetadata]): Either[String, List[InstructionMetadata]] =
+  private def createSymbolTable(linesMetadata: List[LineMetadata], instructionOffset: Option[InstructionLocation]): Either[String, List[InstructionMetadata]] =
 
     /**
      * Process given line to calculate and return the distance to the next instruction in memory, e.g.
@@ -76,10 +100,10 @@ class Assembler:
     def processLine(line: LineMetadata, instructionLocation: InstructionLocation, isLabelLine: Boolean = false): Either[String, (Int, Boolean)] =
       val firstToken = line.tokenizedLine.head
       firstToken match
-        case ".ORIG" => parseOrig(line).map((_, isLabelLine))
+        case ".ORIG" if instructionOffset.isEmpty => parseOrig(line).map((_, isLabelLine))
         case ".STRINGZ" => stringzAllocatedMemory(line).map((_, isLabelLine))
         case ".BLKW" => blkwAllocatedMemory(line).map((_, isLabelLine))
-        case ".EXTERNAL" => parseExternal(line).flatMap{ symbol =>
+        case ".EXTERNAL" => parseExternal(line).flatMap { symbol =>
           // rewriting this flatMap as for-comprehension does not work as there seems to be a bug
           // when Right is a tuple, https://github.com/scala/bug/issues/5589
           Either.cond(!symbolTable.contains(symbol), {
@@ -92,7 +116,7 @@ class Assembler:
         case _ if line.isOpCode || line.isDirective => 1.asRight[String].map((_, isLabelLine))
         case label =>
           if isLabelLine then
-            // two labels in the same line is illegal
+          // two labels in the same line is illegal
             s"ERROR (line ${line.lineNumber.value}): Invalid opcode ('$label')".asLeft[(Int, Boolean)]
           else
             symbolTable.get(label) match
@@ -122,7 +146,7 @@ class Assembler:
               val updatedLine = if isLabelLine then firstLine.copy(tokenizedLine = firstLine.tokenizedLine.drop(1)) else firstLine
               nextLine(remainingLines, InstructionMetadata(updatedLine, instructionLocation) :: instructions, nextInstructionLocation)
 
-    nextLine(linesMetadata, Nil, InstructionLocation(0)).map(_.reverse)
+    nextLine(linesMetadata, Nil, instructionOffset.getOrElse(InstructionLocation(0))).map(_.reverse)
 
 
   private def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata]): Either[String, List[Int]] =
@@ -176,9 +200,8 @@ class Assembler:
       l.sequence.map(_.flatten)
 
 
-  private def serializeInstructions(instructions: List[Int], asmFileNamePath: String): Unit =
-    val asmFileNameWithoutExtension = asmFileNamePath.split('.')(0)
-    Using(FileOutputStream(s"$asmFileNameWithoutExtension.obj")) { objFile =>
+  private def serializeInstructions(instructions: List[Int], objFileName: String): Unit =
+    Using(FileOutputStream(s"$objFileName.obj")) { objFile =>
       instructions.foreach { instr =>
         println(instr.toHexString)
         //JVM's big-endian representation

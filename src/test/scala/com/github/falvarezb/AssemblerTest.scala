@@ -11,6 +11,17 @@ import scala.io.Source
 
 class AssemblerTest extends AnyFunSpec with Matchers :
 
+  def runLinkedFilesTest(asmFileNames: List[String], objFileName: String): Any =
+    val path = "src/test/resources"
+    new Assembler().link(asmFileNames.map(asmFileName => s"$path/$asmFileName"), s"$path/$objFileName")
+
+    val expectedFile = new FileInputStream(s"$path/$objFileName.expected.obj")
+    val actualFile = new FileInputStream(s"$path/$objFileName.obj")
+
+    util.Arrays.compare(expectedFile.readAllBytes(), actualFile.readAllBytes()) shouldBe 0
+    expectedFile.close()
+    actualFile.close()
+
   def runAssembledFileTest(asmFileName: String): Unit =
     val path = "src/test/resources"
     new Assembler().assemble(s"$path/$asmFileName") shouldBe Right(())
@@ -34,6 +45,12 @@ class AssemblerTest extends AnyFunSpec with Matchers :
   def runErrorConditionTest(asmFileName: String) =
     val path = "src/test/resources"
     new Assembler().assemble(s"$path/$asmFileName")
+
+  describe("link process") {
+    it("linking without symbols") {
+      runLinkedFilesTest(List("t1.asm", "t1.asm"), "duplicate_t1")
+    }
+  }
 
   describe("assembly process") {
     it("t1: assembly file without labels") {
