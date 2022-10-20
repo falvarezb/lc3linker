@@ -48,7 +48,11 @@ class AssemblerTest extends AnyFunSpec with Matchers :
 
   describe("link process") {
     it("linking without symbols") {
-      runLinkedFilesTest(List("t1.asm", "t1.asm"), "duplicate_t1")
+      runLinkedFilesTest(List("t1.asm", "t1.asm"), "t1_t1")
+    }
+
+    it("linking with symbols") {
+      runLinkedFilesTest(List("t2.asm", "t4.asm"), "t2_t4")
     }
   }
 
