@@ -1,8 +1,8 @@
 
     .ORIG x3000
     ADD R0, R0,#1 ; comment
-    .EXTERNAL SYMBOL_ON_OTHER_MODULE
+    LABEL
     HALT
-    .EXTERNAL SYMBOL_ON_OTHER_MODULE
+    LABEL
     .END
     ADD R0, R0,#1 ; comment

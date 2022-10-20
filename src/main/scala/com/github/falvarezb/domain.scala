@@ -27,7 +27,7 @@ enum OpCode:
   case ADD, AND, NOT, JSR, JSRR, JMP, JMPT, LDR, STR, LD, ST, LDI, STI, LEA, BR, BRp, BRz, BRn, BRzp, BRnp, BRnz, BRnzp, TRAP, RET, RTI
 
 enum Directive:
-  case `.ORIG`, HALT, `.STRINGZ`, `.BLKW`, `.FILL`, GETC, OUT, PUTS, IN, PUTSP, `.EXTERNAL`
+  case `.ORIG`, HALT, `.STRINGZ`, `.BLKW`, `.FILL`, GETC, OUT, PUTS, IN, PUTSP
 
 enum ConditionCode(val value: Int):
   case N extends ConditionCode(4) //100

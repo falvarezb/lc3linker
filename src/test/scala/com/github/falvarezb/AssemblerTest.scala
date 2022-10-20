@@ -13,7 +13,8 @@ class AssemblerTest extends AnyFunSpec with Matchers :
 
   def runLinkedFilesTest(asmFileNames: List[String], objFileName: String): Any =
     val path = "src/test/resources"
-    new Assembler().link(asmFileNames.map(asmFileName => s"$path/$asmFileName"), s"$path/$objFileName")
+    val result = new Assembler().link(asmFileNames.map(asmFileName => s"$path/$asmFileName"), s"$path/$objFileName")
+    result shouldBe Right(())
 
     val expectedFile = new FileInputStream(s"$path/$objFileName.expected.obj")
     val actualFile = new FileInputStream(s"$path/$objFileName.obj")
@@ -24,7 +25,8 @@ class AssemblerTest extends AnyFunSpec with Matchers :
 
   def runAssembledFileTest(asmFileName: String): Unit =
     val path = "src/test/resources"
-    new Assembler().assemble(s"$path/$asmFileName") shouldBe Right(())
+    val result = new Assembler().assemble(s"$path/$asmFileName")
+    result shouldBe Right(())
 
     val asmFileNameWithoutExtension = asmFileName.split('.')(0)
     val expectedFile = new FileInputStream(s"$path/$asmFileNameWithoutExtension.expected.obj")
@@ -54,6 +56,10 @@ class AssemblerTest extends AnyFunSpec with Matchers :
     it("linking with symbols") {
       runLinkedFilesTest(List("t2.asm", "t4.asm"), "t2_t4")
     }
+
+    it("linking external symbols") {
+      runLinkedFilesTest(List("t2_external.asm", "t2.asm"), "t2_external")
+    }
   }
 
   describe("assembly process") {
@@ -79,10 +85,6 @@ class AssemblerTest extends AnyFunSpec with Matchers :
 
     it("t11: backwards jump") {
       runAssembledFileTest("t11.asm")
-    }
-
-    it("t12: .EXTERNAL directive") {
-      runAssembledFileTest("t12.asm")
     }
 
     it("abs") {
@@ -133,7 +135,7 @@ class AssemblerTest extends AnyFunSpec with Matchers :
 
     it("duplicate external label") {
       val result = runErrorConditionTest("t14.asm")
-      result shouldBe Left("ERROR (line 6): duplicate symbol ('SYMBOL_ON_OTHER_MODULE')")
+      result shouldBe Left("ERROR (line 6): duplicate symbol ('LABEL')")
     }
   }
 
@@ -142,12 +144,6 @@ class AssemblerTest extends AnyFunSpec with Matchers :
       val (result, symbolTable) = runSymbolTableTest("t3.asm")
       result shouldBe Right(())
       symbolTable should contain("LABEL" -> InstructionLocation(0x3003))
-    }
-
-    it(".EXTERNAL directive") {
-      val (result, symbolTable) = runSymbolTableTest("t12.asm")
-      result shouldBe Right(())
-      symbolTable should contain("SYMBOL_ON_OTHER_MODULE" -> InstructionLocation(-1))
     }
 
     it("multiple labels associated to the same instruction") {

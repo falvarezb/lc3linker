@@ -101,18 +101,19 @@ class Assembler:
       val firstToken = line.tokenizedLine.head
       firstToken match
         case ".ORIG" if instructionOffset.isEmpty => parseOrig(line).map((_, isLabelLine))
+        case ".ORIG" => 0.asRight[String].map((_, isLabelLine))
         case ".STRINGZ" => stringzAllocatedMemory(line).map((_, isLabelLine))
         case ".BLKW" => blkwAllocatedMemory(line).map((_, isLabelLine))
-        case ".EXTERNAL" => parseExternal(line).flatMap { symbol =>
-          // rewriting this flatMap as for-comprehension does not work as there seems to be a bug
-          // when Right is a tuple, https://github.com/scala/bug/issues/5589
-          Either.cond(!symbolTable.contains(symbol), {
-            symbolTable += (symbol -> InstructionLocation(-1))
-            (0, isLabelLine)
-          }, {
-            s"ERROR (line ${line.lineNumber.value}): duplicate symbol ('$symbol')"
-          })
-        }
+//        case ".EXTERNAL" => parseExternal(line).flatMap { symbol =>
+//          // rewriting this flatMap as for-comprehension does not work as there seems to be a bug
+//          // when Right is a tuple, https://github.com/scala/bug/issues/5589
+//          Either.cond(!symbolTable.contains(symbol), {
+//            symbolTable += (symbol -> InstructionLocation(-1))
+//            (0, isLabelLine)
+//          }, {
+//            s"ERROR (line ${line.lineNumber.value}): duplicate symbol ('$symbol')"
+//          })
+//        }
         case _ if line.isOpCode || line.isDirective => 1.asRight[String].map((_, isLabelLine))
         case label =>
           if isLabelLine then
@@ -122,7 +123,7 @@ class Assembler:
             symbolTable.get(label) match
               case Some(_) =>
                 s"ERROR (line ${line.lineNumber.value}): duplicate symbol ('$label')".asLeft[(Int, Boolean)]
-              case None =>
+              case _ =>
                 symbolTable += (label -> instructionLocation)
                 line.tokenizedLine.tail match
                   case Nil =>
