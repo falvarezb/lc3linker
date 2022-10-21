@@ -21,34 +21,53 @@ class Assembler:
   protected val symbolTable: mutable.Map[String, InstructionLocation] = mutable.Map.empty
 
   def link(asmFiles: Seq[String], objFile: String): Either[String, Unit] =
+    /**
+     * Recursive function that iterates over all files passed as an argument to the linker, on each iteration
+     * the instructions' metadata of the file is calculated and accummulated to the result of the previous files.
+     *
+     * Additionally, the symbol table of each file is created, with each file taking as offset the memory address
+     * of the last instruction of the previous file:
+     *
+     * 1. the location in memory of the first instruction of the first file is given by the ".ORIG" directive.
+     *
+     * 2. the ".ORIG" directive of the rest of the files is ignored and, instead, the value of instruction counter
+     * of the previous file is used as offset for the next file.
+     *
+     * Returns a list with the instructions' metadata of all files
+     *
+     * @param asmFiles
+     * @param accummulatedInstructionMetadataList
+     * @param instructionOffset Value to use instead of .ORIG directive's operand
+     * @return
+     */
     @tailrec
-    def nextFile(asmFiles: Seq[String], instructionMetadataList: List[Either[String, List[InstructionMetadata]]], instructionOffset: Option[InstructionLocation]): List[Either[String, List[InstructionMetadata]]] =
+    def nextFile(asmFiles: Seq[String], accummulatedInstructionMetadataList: List[Either[String, List[InstructionMetadata]]], instructionOffset: Option[InstructionLocation]): List[Either[String, List[InstructionMetadata]]] =
       asmFiles match
-        case Nil => instructionMetadataList
+        case Nil => accummulatedInstructionMetadataList
         case firstFile :: rest =>
-          val instructionsMetadata: Either[String, List[InstructionMetadata]] = for
+          val fileInstructionMetadataList: Either[String, List[InstructionMetadata]] = for
             linesMetadata <- doLexicalAnalysis(firstFile)
-            instructionsMetadata <- createSymbolTable(linesMetadata, instructionOffset)
+            instructionMetadata <- createSymbolTable(linesMetadata, instructionOffset)
           yield
             instructionOffset match
-              case None => instructionsMetadata
-              case Some(_) => instructionsMetadata.drop(1) // drop .ORIG directive
-          instructionsMetadata match
-            case Left(_) => instructionsMetadata :: instructionMetadataList
+              case None => instructionMetadata
+              case Some(_) => instructionMetadata.drop(1) // drop .ORIG directive
+          fileInstructionMetadataList match
+            case Left(_) => fileInstructionMetadataList :: accummulatedInstructionMetadataList
             case Right(_) =>
-              val newInstructionOffset = instructionsMetadata.map(_.last.instructionLocation ∆+ 1).toOption
-              nextFile(rest, instructionsMetadata :: instructionMetadataList, newInstructionOffset)
+              val nextFileInstructionOffset = fileInstructionMetadataList.map(_.last.instructionLocation).toOption
+              nextFile(rest, fileInstructionMetadataList :: accummulatedInstructionMetadataList, nextFileInstructionOffset)
 
     for
-      instructionsMetadata <- nextFile(asmFiles, Nil, None).reverse.sequence.map(_.flatten)
-      instructions <- doSyntaxAnalysis(instructionsMetadata)
+      instructionMetadataList <- nextFile(asmFiles, Nil, None).reverse.sequence.map(_.flatten)
+      instructions <- doSyntaxAnalysis(instructionMetadataList)
     yield serializeInstructions(instructions, objFile)
 
   def assemble(asmFileNamePath: String): Either[String, Unit] =
     for
       linesMetadata <- doLexicalAnalysis(asmFileNamePath)
-      instructionsMetadata <- createSymbolTable(linesMetadata, None)
-      instructions <- doSyntaxAnalysis(instructionsMetadata)
+      instructionMetadataList <- createSymbolTable(linesMetadata, None)
+      instructions <- doSyntaxAnalysis(instructionMetadataList)
     yield serializeInstructions(instructions, asmFileNamePath.split('.')(0))
 
   private def doLexicalAnalysis(asmFileNamePath: String): Either[String, List[LineMetadata]] =
@@ -69,11 +88,13 @@ class Assembler:
 
   /**
    * Calculate the instruction location in memory corresponding to each line and with that information create
-   * the symbol table.
+   * the symbol table. The offset to calculate instructions' address is given by the corresponding parameter.
+   * If no offset is provided, the offset is the one given by the '.ORIG' directive
    *
    * Lines corresponding to labels contain the instruction location of the next instruction
    *
    * @param linesMetadata lines and metadata
+   * @param instructionOffset
    * @return lines with the instruction location
    */
   private def createSymbolTable(linesMetadata: List[LineMetadata], instructionOffset: Option[InstructionLocation]): Either[String, List[InstructionMetadata]] =
@@ -81,13 +102,16 @@ class Assembler:
     /**
      * Process given line to calculate and return the distance to the next instruction in memory, e.g.
      *
-     * - comments, labels and directives .ORIG and .END do not increment instruction counter
+     * - comments, labels and directive .END do not increment instruction counter
      *
      * - instructions increase instruction counter by 1
      *
      * - directive .BLKW increases instruction counter by the number of words that needs to allocate
      *
      * - directive .STRINGZ increase instruction counter by the number of chars of the corresponding string
+     *
+     * - directive .ORIG increase instruction counter by the value of its operand unless an instruction offset is
+     * provided, in which case the instruction counter is increased by 1
      *
      * As a side effect, found labels are stored in the symbol table
      *
@@ -101,19 +125,9 @@ class Assembler:
       val firstToken = line.tokenizedLine.head
       firstToken match
         case ".ORIG" if instructionOffset.isEmpty => parseOrig(line).map((_, isLabelLine))
-        case ".ORIG" => 0.asRight[String].map((_, isLabelLine))
+        case ".ORIG" => 1.asRight[String].map((_, isLabelLine))
         case ".STRINGZ" => stringzAllocatedMemory(line).map((_, isLabelLine))
         case ".BLKW" => blkwAllocatedMemory(line).map((_, isLabelLine))
-//        case ".EXTERNAL" => parseExternal(line).flatMap { symbol =>
-//          // rewriting this flatMap as for-comprehension does not work as there seems to be a bug
-//          // when Right is a tuple, https://github.com/scala/bug/issues/5589
-//          Either.cond(!symbolTable.contains(symbol), {
-//            symbolTable += (symbol -> InstructionLocation(-1))
-//            (0, isLabelLine)
-//          }, {
-//            s"ERROR (line ${line.lineNumber.value}): duplicate symbol ('$symbol')"
-//          })
-//        }
         case _ if line.isOpCode || line.isDirective => 1.asRight[String].map((_, isLabelLine))
         case label =>
           if isLabelLine then
