@@ -44,6 +44,21 @@ class AssemblerTest extends AnyFunSpec with Matchers :
     }.assemble(s"$path/$asmFileName")
     (result, symbolTableMock)
 
+  def runSymbolTableSerializationTest(asmFileNames: List[String], symFileName: String) =
+    val path = "src/test/resources"
+    val symbolTableMock = mutable.HashMap.empty[String, InstructionLocation]
+    val result = new Assembler {
+      override protected val symbolTable: mutable.Map[String, InstructionLocation] = symbolTableMock
+    }.link(asmFileNames.map(asmFileName => s"$path/$asmFileName"), s"$path/$symFileName")
+    result shouldBe Right(())
+
+    val expectedFile = Source.fromFile(s"$path/$symFileName.expected.sym")
+    val actualFile = Source.fromFile(s"$path/$symFileName.sym")
+
+    expectedFile.getLines().toList shouldBe actualFile.getLines().toList
+    expectedFile.close()
+    actualFile.close()
+
   def runErrorConditionTest(asmFileName: String) =
     val path = "src/test/resources"
     new Assembler().assemble(s"$path/$asmFileName")
@@ -159,6 +174,17 @@ class AssemblerTest extends AnyFunSpec with Matchers :
     it("two labels in the same line is illegal") {
       val (result, _) = runSymbolTableTest("t5.asm")
       result shouldBe Left("ERROR (line 10): Invalid opcode ('LABEL2')")
+    }
+  }
+
+  describe("symbol table serialization") {
+
+    it("without external symbols") {
+      runSymbolTableSerializationTest(List("t2.asm"), "t2")
+    }
+
+    it("with external symbols") {
+      runSymbolTableSerializationTest(List("t2_external.asm", "t2.asm"), "t2_external")
     }
   }
 

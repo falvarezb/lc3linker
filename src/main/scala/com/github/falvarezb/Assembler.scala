@@ -1,6 +1,6 @@
 package com.github.falvarezb
 
-import java.io.FileOutputStream
+import java.io.{FileOutputStream, FileWriter}
 import scala.collection.immutable.{AbstractSeq, LinearSeq}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -61,14 +61,19 @@ class Assembler:
     for
       instructionMetadataList <- nextFile(asmFiles, Nil, None).reverse.sequence.map(_.flatten)
       instructions <- doSyntaxAnalysis(instructionMetadataList)
-    yield serializeInstructions(instructions, objFile)
+    yield
+      serializeInstructions(instructions, objFile)
+      serializeSymbolTable(objFile)
 
   def assemble(asmFileNamePath: String): Either[String, Unit] =
     for
       linesMetadata <- doLexicalAnalysis(asmFileNamePath)
       instructionMetadataList <- createSymbolTable(linesMetadata, None)
       instructions <- doSyntaxAnalysis(instructionMetadataList)
-    yield serializeInstructions(instructions, asmFileNamePath.split('.')(0))
+    yield
+      val filePrefix = asmFileNamePath.split('.')(0)
+      serializeInstructions(instructions, filePrefix)
+      serializeSymbolTable(filePrefix)
 
   private def doLexicalAnalysis(asmFileNamePath: String): Either[String, List[LineMetadata]] =
     Using(Source.fromFile(asmFileNamePath)) { source =>
@@ -225,6 +230,12 @@ class Assembler:
         objFile.write(mostSignificantByte)
         objFile.write(leastSignificantByte)
       }
+    }
+
+  private def serializeSymbolTable(objFileName: String): Unit =
+    Using(FileWriter(s"$objFileName.sym")) { symFile =>
+      symFile.write("// Symbol table\n// Scope level 0:\n//	Symbol Name       Page Address\n//	----------------  ------------\n")
+      symbolTable.keys.foreach { key => symFile.write(s"//	$key             ${Integer.toHexString(symbolTable(key).value)}\n")}
     }
 
 
