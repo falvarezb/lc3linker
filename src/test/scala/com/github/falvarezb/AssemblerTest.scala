@@ -16,8 +16,8 @@ class AssemblerTest extends AnyFunSpec with Matchers :
     val result = new Assembler().link(asmFileNames.map(asmFileName => s"$path/$asmFileName"), s"$path/$objFileName")
     result shouldBe Right(())
 
-    val expectedFile = new FileInputStream(s"$path/$objFileName.expected.obj")
-    val actualFile = new FileInputStream(s"$path/$objFileName.obj")
+    val expectedFile = new FileInputStream(s"$path/${objFileName.split('.')(0)}.expected.obj")
+    val actualFile = new FileInputStream(s"$path/$objFileName")
 
     util.Arrays.compare(expectedFile.readAllBytes(), actualFile.readAllBytes()) shouldBe 0
     expectedFile.close()
@@ -44,16 +44,16 @@ class AssemblerTest extends AnyFunSpec with Matchers :
     }.assemble(s"$path/$asmFileName")
     (result, symbolTableMock)
 
-  def runSymbolTableSerializationTest(asmFileNames: List[String], symFileName: String) =
+  def runSymbolTableSerializationTest(asmFileNames: List[String], objFileName: String) =
     val path = "src/test/resources"
     val symbolTableMock = mutable.HashMap.empty[String, InstructionLocation]
     val result = new Assembler {
       override protected val symbolTable: mutable.Map[String, InstructionLocation] = symbolTableMock
-    }.link(asmFileNames.map(asmFileName => s"$path/$asmFileName"), s"$path/$symFileName")
+    }.link(asmFileNames.map(asmFileName => s"$path/$asmFileName"), s"$path/$objFileName")
     result shouldBe Right(())
 
-    val expectedFile = Source.fromFile(s"$path/$symFileName.expected.sym")
-    val actualFile = Source.fromFile(s"$path/$symFileName.sym")
+    val expectedFile = Source.fromFile(s"$path/${objFileName.split('.')(0)}.expected.sym")
+    val actualFile = Source.fromFile(s"$path/${objFileName.split('.')(0)}.sym")
 
     expectedFile.getLines().toList shouldBe actualFile.getLines().toList
     expectedFile.close()
@@ -65,15 +65,15 @@ class AssemblerTest extends AnyFunSpec with Matchers :
 
   describe("link process") {
     it("linking without symbols") {
-      runLinkedFilesTest(List("t1.asm", "t1.asm"), "t1_t1")
+      runLinkedFilesTest(List("t1.asm", "t1.asm"), "t1_t1.obj")
     }
 
     it("linking with symbols") {
-      runLinkedFilesTest(List("t2.asm", "t4.asm"), "t2_t4")
+      runLinkedFilesTest(List("t2.asm", "t4.asm"), "t2_t4.obj")
     }
 
     it("linking external symbols") {
-      runLinkedFilesTest(List("t2_external.asm", "t2.asm"), "t2_external")
+      runLinkedFilesTest(List("t2_external.asm", "t2.asm"), "t2_external.obj")
     }
   }
 
@@ -180,11 +180,11 @@ class AssemblerTest extends AnyFunSpec with Matchers :
   describe("symbol table serialization") {
 
     it("without external symbols") {
-      runSymbolTableSerializationTest(List("t2.asm"), "t2")
+      runSymbolTableSerializationTest(List("t2.asm"), "t2.obj")
     }
 
     it("with external symbols") {
-      runSymbolTableSerializationTest(List("t2_external.asm", "t2.asm"), "t2_external")
+      runSymbolTableSerializationTest(List("t2_external.asm", "t2.asm"), "t2_external.obj")
     }
   }
 

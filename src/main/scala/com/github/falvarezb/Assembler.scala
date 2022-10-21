@@ -72,8 +72,8 @@ class Assembler:
       instructions <- doSyntaxAnalysis(instructionMetadataList)
     yield
       val filePrefix = asmFileNamePath.split('.')(0)
-      serializeInstructions(instructions, filePrefix)
-      serializeSymbolTable(filePrefix)
+      serializeInstructions(instructions, s"$filePrefix.obj")
+      serializeSymbolTable(s"$filePrefix.sym")
 
   private def doLexicalAnalysis(asmFileNamePath: String): Either[String, List[LineMetadata]] =
     Using(Source.fromFile(asmFileNamePath)) { source =>
@@ -221,7 +221,7 @@ class Assembler:
 
 
   private def serializeInstructions(instructions: List[Int], objFileName: String): Unit =
-    Using(FileOutputStream(s"$objFileName.obj")) { objFile =>
+    Using(FileOutputStream(s"$objFileName")) { objFile =>
       instructions.foreach { instr =>
         println(instr.toHexString)
         //JVM's big-endian representation
@@ -233,7 +233,7 @@ class Assembler:
     }
 
   private def serializeSymbolTable(objFileName: String): Unit =
-    Using(FileWriter(s"$objFileName.sym")) { symFile =>
+    Using(FileWriter(s"${objFileName.split('.')(0)}.sym")) { symFile =>
       symFile.write("// Symbol table\n// Scope level 0:\n//	Symbol Name       Page Address\n//	----------------  ------------\n")
       symbolTable.keys.foreach { key => symFile.write(s"//	$key             ${Integer.toHexString(symbolTable(key).value)}\n")}
     }

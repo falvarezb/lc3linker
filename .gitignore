@@ -57,3 +57,4 @@ fabric.properties
 #operating system
 !lc3os.obj
 !lc3os.sym
+examples/
