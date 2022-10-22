@@ -170,6 +170,8 @@ class Assembler:
     else
       val l: List[Either[String, List[Int]]] = instructionsMetadata.map { instructionMetadata =>
         given lineMetadata: LineMetadata = instructionMetadata.lineMetadata
+        given givenInstructionMetadata: InstructionMetadata = instructionMetadata
+        given givenSymbolTable: SymbolTable = symbolTable.toMap
         val firstToken = instructionMetadata.lineMetadata.tokenizedLine.head
         val instructions: Either[String, Int | List[Int]] = firstToken match
           // Directives
@@ -188,7 +190,7 @@ class Assembler:
           case "AND" => parseAnd
           case "NOT" => parseNot
           // Control instructions
-          case "JSR" => parseJsr(instructionMetadata, symbolTable.toMap)
+          case "JSR" => parseJsr
           case "JSRR" => parseJsrr
           case "JMP" => parseJmp
           case "JMPT" => parseJmpt

@@ -4,7 +4,7 @@ import com.github.falvarezb.OpCode.{JMP, JMPT, JSRR}
 import com.github.falvarezb.Util.{interpretEscapeSequence, parseOffset, parseRegister, parseTrapVector}
 
 object ControlInstructions:
-  def parseJsr(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
+  def parseJsr(using instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
     given lineMetadata: LineMetadata = instructionMetadata.lineMetadata
     val offsetNumBits = 11
     val tokens = instructionMetadata.lineMetadata.tokenizedLine
