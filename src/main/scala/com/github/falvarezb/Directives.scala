@@ -25,12 +25,12 @@ object Directives {
         cache.value(lineMetadata)
 
 
-  def parseOrig(lineMetadata: LineMetadata): Either[String, Int] = withCache(IntCache, lineMetadata) {
+  def parseOrig(using lineMetadata: LineMetadata): Either[String, Int] = withCache(IntCache, lineMetadata) {
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
     val fileName = lineMetadata.fileName
     if tokens.length < 2 then Left(s"ERROR ($fileName - line ${lineNumber.value}): Immediate expected")
-    else parseMemoryAddress(tokens(1), lineNumber, fileName)
+    else parseMemoryAddress(tokens(1))
   }
 
   def parseExternal(lineMetadata: LineMetadata): Either[String, String] =
@@ -47,7 +47,7 @@ object Directives {
    * @param symbolTable
    * @return
    */
-  def parseFill(lineMetadata: LineMetadata, symbolTable: SymbolTable): Either[String, Int] =
+  def parseFill(symbolTable: SymbolTable)(using lineMetadata: LineMetadata): Either[String, Int] =
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
     val fileName = lineMetadata.fileName
@@ -106,17 +106,17 @@ object Directives {
     yield str.toList.map(_.toInt)
   }
 
-  def blkwAllocatedMemory(lineMetadata: LineMetadata): Either[String, Int] =
-    parseBlkw(lineMetadata).map(_.length)
+  def blkwAllocatedMemory(using lineMetadata: LineMetadata): Either[String, Int] =
+    parseBlkw.map(_.length)
 
-  def parseBlkw(lineMetadata: LineMetadata): Either[String, List[Int]] = withCache(IntListCache, lineMetadata) {
+  def parseBlkw(using lineMetadata: LineMetadata): Either[String, List[Int]] = withCache(IntListCache, lineMetadata) {
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
     val fileName = lineMetadata.fileName
 
     for
       _ <- Either.cond(tokens.length >= 2, (), s"ERROR ($fileName - line ${lineNumber.value}): Immediate expected")
-      block_size <- parseBlockOfWordsSize(tokens(1), lineMetadata.lineNumber, fileName)
+      block_size <- parseBlockOfWordsSize(tokens(1))
       instructions <- List.fill(block_size)(0).asRight[String]
     yield instructions
   }

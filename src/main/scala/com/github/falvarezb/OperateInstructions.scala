@@ -4,9 +4,9 @@ import com.github.falvarezb.OpCode.{ADD, AND}
 import com.github.falvarezb.Util.{parseImmediate, parseNumericValue, parseRegister}
 
 object OperateInstructions:
-  def parseAdd(lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(lineMetadata, ADD)
+  def parseAdd(using lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(ADD)
 
-  def parseAnd(lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(lineMetadata, AND)
+  def parseAnd(using lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(AND)
 
   def parseNot(lineMetadata: LineMetadata): Either[String, Int] =
     val tokens = lineMetadata.tokenizedLine
@@ -19,7 +19,7 @@ object OperateInstructions:
       SR <- parseRegister(tokens(2), lineNumber, fileName).map(_ << 6)
     yield (9 << 12) + DR + SR + 63
 
-  private def parseAddAnd(lineMetadata: LineMetadata, opCode: OpCode): Either[String, Int] =
+  private def parseAddAnd(opCode: OpCode)(using lineMetadata: LineMetadata): Either[String, Int] =
     assert(opCode == ADD || opCode == AND)
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber

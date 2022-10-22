@@ -117,15 +117,15 @@ class Assembler:
      * @return distance to the next instruction in memory
      */
     @tailrec
-    def processLine(line: LineMetadata, instructionLocation: InstructionLocation, isLabelLine: Boolean = false): Either[String, (Int, Boolean)] =
+    def processLine(instructionLocation: InstructionLocation, isLabelLine: Boolean = false)(using line: LineMetadata): Either[String, (Int, Boolean)] =
       val firstToken = line.tokenizedLine.head
       val lineNumber = line.lineNumber
       val fileName = line.fileName
       firstToken match
-        case ".ORIG" if instructionOffset.isEmpty => parseOrig(line).map((_, isLabelLine))
+        case ".ORIG" if instructionOffset.isEmpty => parseOrig.map((_, isLabelLine))
         case ".ORIG" => s"ERROR ($fileName - line ${lineNumber.value}): Invalid .ORIG directive in subroutine".asLeft[(Int, Boolean)]
         case ".STRINGZ" => stringzAllocatedMemory(line).map((_, isLabelLine))
-        case ".BLKW" => blkwAllocatedMemory(line).map((_, isLabelLine))
+        case ".BLKW" => blkwAllocatedMemory.map((_, isLabelLine))
         case _ if line.isOpCode || line.isDirective => 1.asRight[String].map((_, isLabelLine))
         case label =>
           if isLabelLine then
@@ -144,7 +144,7 @@ class Assembler:
                   case tail =>
                     // process the rest of the line after the label
                     // NOTE: if we use Either.cond, processLine won't be tail recursive
-                    processLine(line.copy(tokenizedLine = tail), instructionLocation, true)
+                    processLine(instructionLocation, true)(using line.copy(tokenizedLine = tail))
 
 
     @tailrec
@@ -152,7 +152,7 @@ class Assembler:
       lines match
         case Nil => (instructions, instructionLocation).asRight[String]
         case firstLine :: remainingLines =>
-          processLine(firstLine, instructionLocation) match
+          processLine(instructionLocation)(using firstLine) match
             case Left(str) => str.asLeft[(List[InstructionMetadata], InstructionLocation)]
             case Right((nextInstructionLocationIncrement, isLabelLine)) =>
               val nextInstructionLocation = instructionLocation ∆+ nextInstructionLocationIncrement
@@ -169,13 +169,14 @@ class Assembler:
       s"ERROR (${instructionsMetadata.head.lineMetadata.fileName} - line ${instructionsMetadata.head.lineMetadata.lineNumber.value}): Instruction not preceeded by a .orig directive".asLeft[List[Int]]
     else
       val l: List[Either[String, List[Int]]] = instructionsMetadata.map { instructionMetadata =>
+        given lineMetadata: LineMetadata = instructionMetadata.lineMetadata
         val firstToken = instructionMetadata.lineMetadata.tokenizedLine.head
         firstToken match
           // Directives
-          case ".ORIG" => parseOrig(instructionMetadata.lineMetadata).map(List(_))
+          case ".ORIG" => parseOrig.map(List(_))
           case ".STRINGZ" => parseStringz(instructionMetadata.lineMetadata)
-          case ".BLKW" => parseBlkw(instructionMetadata.lineMetadata)
-          case ".FILL" => parseFill(instructionMetadata.lineMetadata, symbolTable.toMap).map(List(_))
+          case ".BLKW" => parseBlkw
+          case ".FILL" => parseFill(symbolTable.toMap).map(List(_))
           case "GETC" => List(0xf020).asRight[String]
           case "OUT" => List(0xf021).asRight[String]
           case "PUTS" => List(0xf022).asRight[String]
@@ -183,15 +184,15 @@ class Assembler:
           case "PUTSP" => List(0xf024).asRight[String]
           case "HALT" => List(0xf025).asRight[String]
           // Operate instructions
-          case "ADD" => parseAdd(instructionMetadata.lineMetadata).map(List(_))
-          case "AND" => parseAnd(instructionMetadata.lineMetadata).map(List(_))
+          case "ADD" => parseAdd.map(List(_))
+          case "AND" => parseAnd.map(List(_))
           case "NOT" => parseNot(instructionMetadata.lineMetadata).map(List(_))
           // Control instructions
           case "JSR" => parseJsr(instructionMetadata, symbolTable.toMap).map(List(_))
           case "JSRR" => parseJsrr(instructionMetadata.lineMetadata).map(List(_))
           case "JMP" => parseJmp(instructionMetadata.lineMetadata).map(List(_))
           case "JMPT" => parseJmpt(instructionMetadata.lineMetadata).map(List(_))
-          case "TRAP" => parseTrap(instructionMetadata.lineMetadata).map(List(_))
+          case "TRAP" => parseTrap.map(List(_))
           case "BRn" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.N).map(List(_))
           case "BRz" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.Z).map(List(_))
           case "BRp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.P).map(List(_))

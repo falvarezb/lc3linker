@@ -5,6 +5,7 @@ import com.github.falvarezb.Util.{interpretEscapeSequence, parseOffset, parseReg
 
 object ControlInstructions:
   def parseJsr(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
+    given lineMetadata: LineMetadata = instructionMetadata.lineMetadata
     val offsetNumBits = 11
     val tokens = instructionMetadata.lineMetadata.tokenizedLine
     val lineNumber = instructionMetadata.lineMetadata.lineNumber
@@ -36,6 +37,7 @@ object ControlInstructions:
     yield (if opCode == JSRR then 4 << 12 else 12 << 12) + baseRegister + (if opCode == JMPT then 1 else 0)
 
   def parseBr(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable, conditionCode: ConditionCode): Either[String, Int] =
+    given lineMetadata: LineMetadata = instructionMetadata.lineMetadata
     val tokens = instructionMetadata.lineMetadata.tokenizedLine
     val lineNumber = instructionMetadata.lineMetadata.lineNumber
     val fileName = instructionMetadata.lineMetadata.fileName
@@ -48,7 +50,7 @@ object ControlInstructions:
     yield (conditionCode.value << 9) + offset
 
 
-  def parseTrap(lineMetadata: LineMetadata): Either[String, Int] =
+  def parseTrap(using lineMetadata: LineMetadata): Either[String, Int] =
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
     val fileName = lineMetadata.fileName

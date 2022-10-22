@@ -27,6 +27,7 @@ object DataMovementInstructions:
 
   private def baseRegisterPlusOffsetAddressingMode(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable, opCode: OpCode) =
     assert(opCode == LDR || opCode == STR)
+    given lineMetadata: LineMetadata = instructionMetadata.lineMetadata
     val tokens = instructionMetadata.lineMetadata.tokenizedLine
     val lineNumber = instructionMetadata.lineMetadata.lineNumber
     val fileName = instructionMetadata.lineMetadata.fileName
@@ -43,6 +44,7 @@ object DataMovementInstructions:
 
   private def pcRelativeAddressingMode(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable, opCode: OpCode) =
     assert(opCode == LD || opCode == ST || opCode == LDI || opCode == STI || opCode == ST || opCode == LEA)
+    given lineMetadata: LineMetadata = instructionMetadata.lineMetadata
     val tokens = instructionMetadata.lineMetadata.tokenizedLine
     val lineNumber = instructionMetadata.lineMetadata.lineNumber
     val fileName = instructionMetadata.lineMetadata.fileName
