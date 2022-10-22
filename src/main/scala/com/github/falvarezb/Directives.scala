@@ -38,7 +38,7 @@ object Directives {
    * @param symbolTable
    * @return
    */
-  def parseFill(symbolTable: SymbolTable)(using lineMetadata: LineMetadata): Either[String, Int] =
+  def parseFill(using lineMetadata: LineMetadata, symbolTable: SymbolTable): Either[String, Int] =
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
     val fileName = lineMetadata.fileName

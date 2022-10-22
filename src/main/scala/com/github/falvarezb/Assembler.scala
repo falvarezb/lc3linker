@@ -178,7 +178,7 @@ class Assembler:
           case ".ORIG" => parseOrig
           case ".STRINGZ" => parseStringz
           case ".BLKW" => parseBlkw
-          case ".FILL" => parseFill(symbolTable.toMap)
+          case ".FILL" => parseFill
           case "GETC" => Right(0xf020)
           case "OUT" => Right(0xf021)
           case "PUTS" => Right(0xf022)
