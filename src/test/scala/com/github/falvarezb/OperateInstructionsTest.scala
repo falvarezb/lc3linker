@@ -42,28 +42,28 @@ class OperateInstructionsTest extends AnyFunSpec with Matchers:
     }
 
     it("decimal immediate too big") {
-      val lineMetadata = LineMetadata("DOES NOT MATTER", List("ADD", "R0", "R1", "#16"), LineNumber(1), "")
-      parseAdd(lineMetadata) shouldBe Left("ERROR (line 1): Immediate operand (#16) out of range (-16 to 15)")
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List("ADD", "R0", "R1", "#16"), LineNumber(1), "file")
+      parseAdd(lineMetadata) shouldBe Left("ERROR (file - line 1): Immediate operand (#16) out of range (-16 to 15)")
     }
 
     it("decimal immediate too small") {
-      val lineMetadata = LineMetadata("DOES NOT MATTER", List("ADD", "R0", "R1", "#-17"), LineNumber(1), "")
-      parseAdd(lineMetadata) shouldBe Left("ERROR (line 1): Immediate operand (#-17) out of range (-16 to 15)")
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List("ADD", "R0", "R1", "#-17"), LineNumber(1), "file")
+      parseAdd(lineMetadata) shouldBe Left("ERROR (file - line 1): Immediate operand (#-17) out of range (-16 to 15)")
     }
 
     it("hex immediate too big") {
-      val lineMetadata = LineMetadata("DOES NOT MATTER", List("ADD", "R0", "R1", "xf1"), LineNumber(1), "")
-      parseAdd(lineMetadata) shouldBe Left("ERROR (line 1): Immediate operand (xf1) out of range (-16 to 15)")
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List("ADD", "R0", "R1", "xf1"), LineNumber(1), "file")
+      parseAdd(lineMetadata) shouldBe Left("ERROR (file - line 1): Immediate operand (xf1) out of range (-16 to 15)")
     }
 
     it("hex immediate too small") {
-      val lineMetadata = LineMetadata("DOES NOT MATTER", List("ADD", "R0", "R1", "x-f2"), LineNumber(1), "")
-      parseAdd(lineMetadata) shouldBe Left("ERROR (line 1): Immediate operand (x-f2) out of range (-16 to 15)")
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List("ADD", "R0", "R1", "x-f2"), LineNumber(1), "file")
+      parseAdd(lineMetadata) shouldBe Left("ERROR (file - line 1): Immediate operand (x-f2) out of range (-16 to 15)")
     }
 
     it("wrong immediate") {
-      val lineMetadata = LineMetadata("DOES NOT MATTER", List("ADD", "R0", "R1", "#y"), LineNumber(1), "")
-      parseAdd(lineMetadata) shouldBe Left("ERROR (line 1): Immediate #y is not a numeric value")
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List("ADD", "R0", "R1", "#y"), LineNumber(1), "file")
+      parseAdd(lineMetadata) shouldBe Left("ERROR (file - line 1): Immediate #y is not a numeric value")
     }
   }
 

@@ -59,15 +59,15 @@ class DirectivesTest extends AnyFunSpec with Matchers :
     }
 
     it("immediate too big") {
-      val lineMetadata = LineMetadata("DOES NOT MATTER", List(".FILL", "#70000"), LineNumber(1), "")
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List(".FILL", "#70000"), LineNumber(1), "file")
       val symbolTable = Map[String, InstructionLocation]()
-      parseFill(lineMetadata, symbolTable) shouldBe Left("ERROR (line 1): Immediate operand (#70000) out of range (-32768 to 65535)")
+      parseFill(lineMetadata, symbolTable) shouldBe Left("ERROR (file - line 1): Immediate operand (#70000) out of range (-32768 to 65535)")
     }
 
     it("immediate too small") {
-      val lineMetadata = LineMetadata("DOES NOT MATTER", List(".FILL", "#-33000"), LineNumber(1), "")
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List(".FILL", "#-33000"), LineNumber(1), "file")
       val symbolTable = Map[String, InstructionLocation]()
-      parseFill(lineMetadata, symbolTable) shouldBe Left("ERROR (line 1): Immediate operand (#-33000) out of range (-32768 to 65535)")
+      parseFill(lineMetadata, symbolTable) shouldBe Left("ERROR (file - line 1): Immediate operand (#-33000) out of range (-32768 to 65535)")
     }
   }
 

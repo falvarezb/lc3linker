@@ -51,8 +51,9 @@ object ControlInstructions:
   def parseTrap(lineMetadata: LineMetadata): Either[String, Int] =
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
+    val fileName = lineMetadata.fileName
 
     for
       _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): missing operands")
-      trapVector <- parseTrapVector(tokens(1), lineNumber)
+      trapVector <- parseTrapVector(tokens(1), lineNumber, fileName)
     yield (15 << 12) + trapVector

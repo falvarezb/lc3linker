@@ -28,8 +28,9 @@ object Directives {
   def parseOrig(lineMetadata: LineMetadata): Either[String, Int] = withCache(IntCache, lineMetadata) {
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
+    val fileName = lineMetadata.fileName
     if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
-    else parseMemoryAddress(tokens(1), lineNumber)
+    else parseMemoryAddress(tokens(1), lineNumber, fileName)
   }
 
   def parseExternal(lineMetadata: LineMetadata): Either[String, String] =
@@ -48,17 +49,18 @@ object Directives {
   def parseFill(lineMetadata: LineMetadata, symbolTable: SymbolTable): Either[String, Int] =
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
+    val fileName = lineMetadata.fileName
     for
-      _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): Immediate expected")
+      _ <- Either.cond(tokens.length >= 2, (), s"ERROR ($fileName - line ${lineNumber.value}): Immediate expected")
       operand = tokens(1)
       //is token a label or a number?
-      num <- parseNumericValueWithAlternativeParser(operand, lineNumber, -32768, 65535) {
+      num <- parseNumericValueWithAlternativeParser(operand, lineNumber, fileName, -32768, 65535) {
         Some(
           Either.catchOnly[NoSuchElementException] {
             symbolTable(operand)
           }
             .map(_.value)
-            .leftMap(_ => s"ERROR (line ${lineNumber.value}): Symbol not found ('$operand')")
+            .leftMap(_ => s"ERROR ($fileName - line ${lineNumber.value}): Symbol not found ('$operand')")
         )
       }
     yield num
@@ -108,10 +110,11 @@ object Directives {
   def parseBlkw(lineMetadata: LineMetadata): Either[String, List[Int]] = withCache(IntListCache, lineMetadata) {
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
+    val fileName = lineMetadata.fileName
 
     for
-      _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): Immediate expected")
-      block_size <- parseBlockOfWordsSize(tokens(1), lineMetadata.lineNumber)
+      _ <- Either.cond(tokens.length >= 2, (), s"ERROR ($fileName - line ${lineNumber.value}): Immediate expected")
+      block_size <- parseBlockOfWordsSize(tokens(1), lineMetadata.lineNumber, fileName)
       instructions <- List.fill(block_size)(0).asRight[String]
     yield instructions
   }

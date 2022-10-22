@@ -29,13 +29,13 @@ class ControlInstructionsTest extends AnyFunSpec with Matchers:
     }
 
     it("immediate too big") {
-      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("JSR", "2000"), LineNumber(1), ""), InstructionLocation(0))
-      parseJsr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (line 1): Immediate operand (2000) out of range (-1024 to 1023)")
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("JSR", "2000"), LineNumber(1), "file"), InstructionLocation(0))
+      parseJsr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (file - line 1): Immediate operand (2000) out of range (-1024 to 1023)")
     }
 
     it("immediate too small") {
-      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("JSR", "-2000"), LineNumber(1), ""), InstructionLocation(0))
-      parseJsr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (line 1): Immediate operand (-2000) out of range (-1024 to 1023)")
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("JSR", "-2000"), LineNumber(1), "file"), InstructionLocation(0))
+      parseJsr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (file - line 1): Immediate operand (-2000) out of range (-1024 to 1023)")
     }
 
     it("symbolic name not found") {
@@ -105,13 +105,13 @@ class ControlInstructionsTest extends AnyFunSpec with Matchers:
     }
 
     it("offset too big") {
-      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BR", "300"), LineNumber(1), ""), InstructionLocation(0))
-      parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.NZP) shouldBe Left("ERROR (line 1): Immediate operand (300) out of range (-256 to 255)")
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BR", "300"), LineNumber(1), "file"), InstructionLocation(0))
+      parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.NZP) shouldBe Left("ERROR (file - line 1): Immediate operand (300) out of range (-256 to 255)")
     }
 
     it("offset too small") {
-      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BR", "-300"), LineNumber(1), ""), InstructionLocation(0))
-      parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.NZP) shouldBe Left("ERROR (line 1): Immediate operand (-300) out of range (-256 to 255)")
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BR", "-300"), LineNumber(1), "file"), InstructionLocation(0))
+      parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.NZP) shouldBe Left("ERROR (file - line 1): Immediate operand (-300) out of range (-256 to 255)")
     }
 
     it("successful parse when operand is a symbolic name") {
@@ -133,12 +133,12 @@ class ControlInstructionsTest extends AnyFunSpec with Matchers:
     }
 
     it("trapvector too big") {
-      val lineMetadata = LineMetadata("DOES NOT MATTER", List("TRAP", "300"), LineNumber(1), "")
-      parseTrap(lineMetadata) shouldBe Left("ERROR (line 1): Immediate operand (300) out of range (0 to 255)")
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List("TRAP", "300"), LineNumber(1), "file")
+      parseTrap(lineMetadata) shouldBe Left("ERROR (file - line 1): Immediate operand (300) out of range (0 to 255)")
     }
 
     it("trapvector too small") {
-      val lineMetadata = LineMetadata("DOES NOT MATTER", List("TRAP", "-1"), LineNumber(1), "")
-      parseTrap(lineMetadata) shouldBe Left("ERROR (line 1): Immediate operand (-1) out of range (0 to 255)")
+      val lineMetadata = LineMetadata("DOES NOT MATTER", List("TRAP", "-1"), LineNumber(1), "file")
+      parseTrap(lineMetadata) shouldBe Left("ERROR (file - line 1): Immediate operand (-1) out of range (0 to 255)")
     }
   }

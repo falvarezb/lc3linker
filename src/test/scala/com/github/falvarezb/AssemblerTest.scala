@@ -119,7 +119,7 @@ class AssemblerTest extends AnyFunSpec with Matchers :
   describe("error conditions") {
     it("wrong .ORIG operand") {
       val result = runErrorConditionTest("t6.asm")
-      result shouldBe Left("ERROR (line 4): Immediate operand (#545677767) out of range (0 to 65535)")
+      result shouldBe Left("ERROR (src/test/resources/t6.asm - line 4): Immediate operand (#545677767) out of range (0 to 65535)")
     }
 
     it("asm file without .ORIG directive") {

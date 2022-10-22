@@ -22,13 +22,13 @@ class DataMovementInstructionsTest extends AnyFunSpec with Matchers:
     }
 
     it("offset too big") {
-      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LDR", "R0", "R1", "40"), LineNumber(1), ""), InstructionLocation(0))
-      parseLdr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (line 1): Immediate operand (40) out of range (-32 to 31)")
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LDR", "R0", "R1", "40"), LineNumber(1), "file"), InstructionLocation(0))
+      parseLdr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (file - line 1): Immediate operand (40) out of range (-32 to 31)")
     }
 
     it("offset too small") {
-      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LDR", "R0", "R1", "-40"), LineNumber(1), ""), InstructionLocation(0))
-      parseLdr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (line 1): Immediate operand (-40) out of range (-32 to 31)")
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LDR", "R0", "R1", "-40"), LineNumber(1), "file"), InstructionLocation(0))
+      parseLdr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (file - line 1): Immediate operand (-40) out of range (-32 to 31)")
     }
 
     it("symbolic name not found") {
@@ -56,13 +56,13 @@ class DataMovementInstructionsTest extends AnyFunSpec with Matchers:
     }
 
     it("offset too big") {
-      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LD", "R0", "300"), LineNumber(1), ""), InstructionLocation(0))
-      parseLd(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (line 1): Immediate operand (300) out of range (-256 to 255)")
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LD", "R0", "300"), LineNumber(1), "file"), InstructionLocation(0))
+      parseLd(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (file - line 1): Immediate operand (300) out of range (-256 to 255)")
     }
 
     it("offset too small") {
-      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LD", "R0", "-300"), LineNumber(1), ""), InstructionLocation(0))
-      parseLd(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (line 1): Immediate operand (-300) out of range (-256 to 255)")
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LD", "R0", "-300"), LineNumber(1), "file"), InstructionLocation(0))
+      parseLd(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (file - line 1): Immediate operand (-300) out of range (-256 to 255)")
     }
 
     it("symbolic name not found") {
