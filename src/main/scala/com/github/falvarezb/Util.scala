@@ -28,8 +28,8 @@ object Util:
           Integer.parseInt(token)
     }.leftMap(_ => s"ERROR (${lineMetadata.fileName} - line ${lineMetadata.lineNumber.value}): Immediate $token is not a numeric value")
 
-  private def validateNumberRange(token: String, value: Int, lineNumber: LineNumber, fileName: String, lowerBound: Int, upperBound: Int): Either[String, Unit] =
-    Either.cond(value >= lowerBound && value <= upperBound, (), s"ERROR ($fileName - line ${lineNumber.value}): Immediate operand ($token) out of range ($lowerBound to $upperBound)")
+  private def validateNumberRange(token: String, value: Int, lowerBound: Int, upperBound: Int)(using lineMetadata: LineMetadata): Either[String, Unit] =
+    Either.cond(value >= lowerBound && value <= upperBound, (), s"ERROR (${lineMetadata.fileName} - line ${lineMetadata.lineNumber.value}): Immediate operand ($token) out of range ($lowerBound to $upperBound)")
 
   /**
    * Parse token to obtain a memory address, that is, a numeric value in the range [0, 0xFFFF]
@@ -119,7 +119,7 @@ object Util:
       num <- altParser match
         case Some(altp) => parsedValue.orElse(altp)
         case None => parsedValue
-      _ <- validateNumberRange(token, num, lineMetadata.lineNumber, lineMetadata.fileName, lowerBound, upperBound)
+      _ <- validateNumberRange(token, num, lowerBound, upperBound)
     yield num
 
   /**
