@@ -10,38 +10,38 @@ class DirectivesTest extends AnyFunSpec with Matchers :
   describe(".STRINGZ parser") {
 
     it("chars before the quotations marks") {
-      val lineMetadata = LineMetadata(".STRINGZ  a \"string content\"", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1), "file")
-      parseStringz(lineMetadata) shouldBe Left("ERROR (file - line 1): Bad string ('.STRINGZ  a \"string content\"')")
+      given lineMetadata:LineMetadata = LineMetadata(".STRINGZ  a \"string content\"", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1), "file")
+      parseStringz shouldBe Left("ERROR (file - line 1): Bad string ('.STRINGZ  a \"string content\"')")
     }
 
     it("chars after the quotations marks") {
-      val lineMetadata = LineMetadata(".STRINGZ \"string content\" a", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1), "file")
-      parseStringz(lineMetadata) shouldBe Left("ERROR (file - line 1): Bad string ('.STRINGZ \"string content\" a')")
+      given lineMetadata:LineMetadata = LineMetadata(".STRINGZ \"string content\" a", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1), "file")
+      parseStringz shouldBe Left("ERROR (file - line 1): Bad string ('.STRINGZ \"string content\" a')")
     }
 
     it("comment at the end of the line") {
-      val lineMetadata = LineMetadata(".STRINGZ \"a\" ;comment", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1), "")
-      parseStringz(lineMetadata) shouldBe Right(List(0x61, 0))
+      given lineMetadata:LineMetadata= LineMetadata(".STRINGZ \"a\" ;comment", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1), "")
+      parseStringz shouldBe Right(List(0x61, 0))
     }
 
     it("one quotations mark missing") {
-      val lineMetadata = LineMetadata(".STRINGZ  a \"string content", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1), "file")
-      parseStringz(lineMetadata) shouldBe Left("ERROR (file - line 1): Bad string ('.STRINGZ  a \"string content')")
+      given lineMetadata:LineMetadata = LineMetadata(".STRINGZ  a \"string content", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1), "file")
+      parseStringz shouldBe Left("ERROR (file - line 1): Bad string ('.STRINGZ  a \"string content')")
     }
 
     it("both quotations marks missing") {
-      val lineMetadata = LineMetadata(".STRINGZ  a string content", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1), "file")
-      parseStringz(lineMetadata) shouldBe Left("ERROR (file - line 1): Bad string ('.STRINGZ  a string content')")
+      given lineMetadata:LineMetadata = LineMetadata(".STRINGZ  a string content", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1), "file")
+      parseStringz shouldBe Left("ERROR (file - line 1): Bad string ('.STRINGZ  a string content')")
     }
 
     it("invalid escape sequence") {
-      val lineMetadata = LineMetadata(".STRINGZ  \"hi\\gbye\"", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1), "file")
-      parseStringz(lineMetadata) shouldBe Left("ERROR (file - line 1): Unrecognised escape sequence ('hi\\gbye')")
+      given lineMetadata:LineMetadata = LineMetadata(".STRINGZ  \"hi\\gbye\"", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1), "file")
+      parseStringz shouldBe Left("ERROR (file - line 1): Unrecognised escape sequence ('hi\\gbye')")
     }
 
     it("non-ASCII char") {
-      val lineMetadata = LineMetadata(".STRINGZ  \"dπ\"", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1), "file")
-      parseStringz(lineMetadata) shouldBe Left("ERROR (file - line 1): Bad string, non-ascii char ('.STRINGZ  \"dπ\"')")
+      given lineMetadata:LineMetadata = LineMetadata(".STRINGZ  \"dπ\"", List(".STRINGZ", "DOES NOT MATTER"), LineNumber(1), "file")
+      parseStringz shouldBe Left("ERROR (file - line 1): Bad string, non-ascii char ('.STRINGZ  \"dπ\"')")
     }
   }
 

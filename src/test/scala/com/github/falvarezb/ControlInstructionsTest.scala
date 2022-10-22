@@ -46,25 +46,25 @@ class ControlInstructionsTest extends AnyFunSpec with Matchers:
 
   describe("JSRR parser") {
     it("successful parse") {
-      val lineMetadata = LineMetadata("DOES NOT MATTER", List("JSRR", "R0"), LineNumber(1), "")
-      parseJsrr(lineMetadata) shouldBe Right(0x4000)
+      given lineMetadata:LineMetadata = LineMetadata("DOES NOT MATTER", List("JSRR", "R0"), LineNumber(1), "")
+      parseJsrr shouldBe Right(0x4000)
     }
 
     it("base register is wrong") {
-      val lineMetadata = LineMetadata("DOES NOT MATTER", List("JSRR", "R8"), LineNumber(1), "file")
-      parseJsrr(lineMetadata) shouldBe Left("ERROR (file - line 1): Expected register but found R8")
+      given lineMetadata:LineMetadata = LineMetadata("DOES NOT MATTER", List("JSRR", "R8"), LineNumber(1), "file")
+      parseJsrr shouldBe Left("ERROR (file - line 1): Expected register but found R8")
     }
   }
 
   describe("JMP parser") {
     it("successful parse") {
-      val lineMetadata = LineMetadata("DOES NOT MATTER", List("JMP", "R6"), LineNumber(1), "")
-      parseJmp(lineMetadata) shouldBe Right(0xC180)
+      given lineMetadata:LineMetadata = LineMetadata("DOES NOT MATTER", List("JMP", "R6"), LineNumber(1), "")
+      parseJmp shouldBe Right(0xC180)
     }
 
     it("base register is wrong") {
-      val lineMetadata = LineMetadata("DOES NOT MATTER", List("JMP", "R8"), LineNumber(1), "file")
-      parseJmp(lineMetadata) shouldBe Left("ERROR (file - line 1): Expected register but found R8")
+      given lineMetadata:LineMetadata = LineMetadata("DOES NOT MATTER", List("JMP", "R8"), LineNumber(1), "file")
+      parseJmp shouldBe Left("ERROR (file - line 1): Expected register but found R8")
     }
   }
 
@@ -128,17 +128,17 @@ class ControlInstructionsTest extends AnyFunSpec with Matchers:
 
   describe("TRAP parser") {
     it("successful parse") {
-      val lineMetadata = LineMetadata("DOES NOT MATTER", List("TRAP", "1"), LineNumber(1), "")
-      parseTrap(lineMetadata) shouldBe Right(0xf001)
+      given lineMetadata:LineMetadata = LineMetadata("DOES NOT MATTER", List("TRAP", "1"), LineNumber(1), "")
+      parseTrap shouldBe Right(0xf001)
     }
 
     it("trapvector too big") {
-      val lineMetadata = LineMetadata("DOES NOT MATTER", List("TRAP", "300"), LineNumber(1), "file")
-      parseTrap(lineMetadata) shouldBe Left("ERROR (file - line 1): Immediate operand (300) out of range (0 to 255)")
+      given lineMetadata:LineMetadata = LineMetadata("DOES NOT MATTER", List("TRAP", "300"), LineNumber(1), "file")
+      parseTrap shouldBe Left("ERROR (file - line 1): Immediate operand (300) out of range (0 to 255)")
     }
 
     it("trapvector too small") {
-      val lineMetadata = LineMetadata("DOES NOT MATTER", List("TRAP", "-1"), LineNumber(1), "file")
-      parseTrap(lineMetadata) shouldBe Left("ERROR (file - line 1): Immediate operand (-1) out of range (0 to 255)")
+      given lineMetadata:LineMetadata = LineMetadata("DOES NOT MATTER", List("TRAP", "-1"), LineNumber(1), "file")
+      parseTrap shouldBe Left("ERROR (file - line 1): Immediate operand (-1) out of range (0 to 255)")
     }
   }

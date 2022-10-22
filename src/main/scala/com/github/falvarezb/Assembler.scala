@@ -124,7 +124,7 @@ class Assembler:
       firstToken match
         case ".ORIG" if instructionOffset.isEmpty => parseOrig.map((_, isLabelLine))
         case ".ORIG" => s"ERROR ($fileName - line ${lineNumber.value}): Invalid .ORIG directive in subroutine".asLeft[(Int, Boolean)]
-        case ".STRINGZ" => stringzAllocatedMemory(line).map((_, isLabelLine))
+        case ".STRINGZ" => stringzAllocatedMemory.map((_, isLabelLine))
         case ".BLKW" => blkwAllocatedMemory.map((_, isLabelLine))
         case _ if line.isOpCode || line.isDirective => 1.asRight[String].map((_, isLabelLine))
         case label =>
@@ -174,7 +174,7 @@ class Assembler:
         firstToken match
           // Directives
           case ".ORIG" => parseOrig.map(List(_))
-          case ".STRINGZ" => parseStringz(instructionMetadata.lineMetadata)
+          case ".STRINGZ" => parseStringz
           case ".BLKW" => parseBlkw
           case ".FILL" => parseFill(symbolTable.toMap).map(List(_))
           case "GETC" => List(0xf020).asRight[String]
@@ -186,12 +186,12 @@ class Assembler:
           // Operate instructions
           case "ADD" => parseAdd.map(List(_))
           case "AND" => parseAnd.map(List(_))
-          case "NOT" => parseNot(instructionMetadata.lineMetadata).map(List(_))
+          case "NOT" => parseNot.map(List(_))
           // Control instructions
           case "JSR" => parseJsr(instructionMetadata, symbolTable.toMap).map(List(_))
-          case "JSRR" => parseJsrr(instructionMetadata.lineMetadata).map(List(_))
-          case "JMP" => parseJmp(instructionMetadata.lineMetadata).map(List(_))
-          case "JMPT" => parseJmpt(instructionMetadata.lineMetadata).map(List(_))
+          case "JSRR" => parseJsrr.map(List(_))
+          case "JMP" => parseJmp.map(List(_))
+          case "JMPT" => parseJmpt.map(List(_))
           case "TRAP" => parseTrap.map(List(_))
           case "BRn" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.N).map(List(_))
           case "BRz" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.Z).map(List(_))
