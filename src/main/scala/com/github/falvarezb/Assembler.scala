@@ -121,20 +121,22 @@ class Assembler:
     @tailrec
     def processLine(line: LineMetadata, instructionLocation: InstructionLocation, isLabelLine: Boolean = false): Either[String, (Int, Boolean)] =
       val firstToken = line.tokenizedLine.head
+      val lineNumber = line.lineNumber
+      val fileName = line.fileName
       firstToken match
         case ".ORIG" if instructionOffset.isEmpty => parseOrig(line).map((_, isLabelLine))
-        case ".ORIG" => s"ERROR (line ${line.lineNumber.value}): Invalid .ORIG directive in subroutine".asLeft[(Int, Boolean)]
+        case ".ORIG" => s"ERROR ($fileName - line ${lineNumber.value}): Invalid .ORIG directive in subroutine".asLeft[(Int, Boolean)]
         case ".STRINGZ" => stringzAllocatedMemory(line).map((_, isLabelLine))
         case ".BLKW" => blkwAllocatedMemory(line).map((_, isLabelLine))
         case _ if line.isOpCode || line.isDirective => 1.asRight[String].map((_, isLabelLine))
         case label =>
           if isLabelLine then
           // two labels in the same line is illegal
-            s"ERROR (line ${line.lineNumber.value}): Invalid opcode ('$label')".asLeft[(Int, Boolean)]
+            s"ERROR ($fileName - line ${lineNumber.value}): Invalid opcode ('$label')".asLeft[(Int, Boolean)]
           else
             symbolTable.get(label) match
               case Some(_) =>
-                s"ERROR (line ${line.lineNumber.value}): duplicate symbol ('$label')".asLeft[(Int, Boolean)]
+                s"ERROR ($fileName - line ${lineNumber.value}): duplicate symbol ('$label')".asLeft[(Int, Boolean)]
               case _ =>
                 symbolTable += (label -> instructionLocation)
                 line.tokenizedLine.tail match

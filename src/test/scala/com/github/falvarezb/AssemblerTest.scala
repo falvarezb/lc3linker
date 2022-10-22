@@ -134,12 +134,12 @@ class AssemblerTest extends AnyFunSpec with Matchers :
 
     it("duplicate label") {
       val result = runErrorConditionTest("t13.asm")
-      result shouldBe Left("ERROR (line 8): duplicate symbol ('LABEL')")
+      result shouldBe Left("ERROR (src/test/resources/t13.asm - line 8): duplicate symbol ('LABEL')")
     }
 
     it("duplicate external label") {
       val result = runErrorConditionTest("t14.asm")
-      result shouldBe Left("ERROR (line 6): duplicate symbol ('LABEL')")
+      result shouldBe Left("ERROR (src/test/resources/t14.asm - line 6): duplicate symbol ('LABEL')")
     }
   }
 
@@ -162,7 +162,7 @@ class AssemblerTest extends AnyFunSpec with Matchers :
 
     it("two labels in the same line is illegal") {
       val (result, _) = runSymbolTableTest("t5.asm")
-      result shouldBe Left("ERROR (line 10): Invalid opcode ('LABEL2')")
+      result shouldBe Left("ERROR (src/test/resources/t5.asm - line 10): Invalid opcode ('LABEL2')")
     }
   }
 
@@ -176,7 +176,7 @@ class AssemblerTest extends AnyFunSpec with Matchers :
       val asmFileNames = List("t2.asm", "t2.asm")
       val path = "src/test/resources"
       val result = new Assembler().link(asmFileNames.map(asmFileName => s"$path/$asmFileName"), s"$path/t2.obj")
-      result shouldBe Left("ERROR (line 4): Invalid .ORIG directive in subroutine")
+      result shouldBe Left("ERROR (src/test/resources/t2.asm - line 4): Invalid .ORIG directive in subroutine")
     }
 
     it("day_week + ascii_to_binary") {
