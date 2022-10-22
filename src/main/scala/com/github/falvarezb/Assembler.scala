@@ -30,7 +30,7 @@ class Assembler:
      *
      * 1. the location in memory of the first instruction of the first file is given by the ".ORIG" directive.
      *
-     * 2. the ".ORIG" directive of the rest of the files is ignored and, instead, the value of instruction counter
+     * 2. the rest of the files must not have an .ORIG directive, instead, the value of instruction counter
      * of the previous file is used as offset for the next file.
      *
      * Returns a list with the instructions' metadata of all files
