@@ -37,26 +37,21 @@ class Assembler:
      *
      * @param asmFiles
      * @param accummulatedInstructionMetadataList
-     * @param instructionOffset Value to use instead of .ORIG directive's operand
+     * @param fileInstructionOffset Value to use instead of .ORIG directive's operand
      * @return
      */
     @tailrec
-    def nextFile(asmFiles: Seq[String], accummulatedInstructionMetadataList: List[Either[String, List[InstructionMetadata]]], instructionOffset: Option[InstructionLocation]): List[Either[String, List[InstructionMetadata]]] =
+    def nextFile(asmFiles: Seq[String], accummulatedInstructionMetadataList: List[Either[String, List[InstructionMetadata]]], fileInstructionOffset: Option[InstructionLocation]): List[Either[String, List[InstructionMetadata]]] =
       asmFiles match
         case Nil => accummulatedInstructionMetadataList
         case firstFile :: rest =>
-          val fileInstructionMetadataList: Either[String, List[InstructionMetadata]] = for
-            linesMetadata <- doLexicalAnalysis(firstFile)
-            instructionMetadata <- createSymbolTable(linesMetadata, instructionOffset)
-          yield
-            instructionOffset match
-              case None => instructionMetadata
-              case Some(_) => instructionMetadata.drop(1) // drop .ORIG directive
-          fileInstructionMetadataList match
-            case Left(_) => fileInstructionMetadataList :: accummulatedInstructionMetadataList
-            case Right(_) =>
-              val nextFileInstructionOffset = fileInstructionMetadataList.map(_.last.instructionLocation).toOption
-              nextFile(rest, fileInstructionMetadataList :: accummulatedInstructionMetadataList, nextFileInstructionOffset)
+          val fileResult: Either[String, (List[InstructionMetadata], InstructionLocation)] = doLexicalAnalysis(firstFile).flatMap { linesMetadata =>
+            createSymbolTable(linesMetadata, fileInstructionOffset)
+          }
+
+          fileResult match
+            case Left(str) => str.asLeft[List[InstructionMetadata]] :: accummulatedInstructionMetadataList
+            case Right((fileInstructionMetadataList, nextFileInstructionOffset)) => nextFile(rest, fileInstructionMetadataList.asRight[String] :: accummulatedInstructionMetadataList, Some(nextFileInstructionOffset))
 
     for
       instructionMetadataList <- nextFile(asmFiles, Nil, None).reverse.sequence.map(_.flatten)
@@ -69,7 +64,7 @@ class Assembler:
     for
       linesMetadata <- doLexicalAnalysis(asmFileNamePath)
       instructionMetadataList <- createSymbolTable(linesMetadata, None)
-      instructions <- doSyntaxAnalysis(instructionMetadataList)
+      instructions <- doSyntaxAnalysis(instructionMetadataList._1)
     yield
       val filePrefix = asmFileNamePath.split('.')(0)
       serializeInstructions(instructions, s"$filePrefix.obj")
@@ -102,7 +97,7 @@ class Assembler:
    * @param instructionOffset
    * @return lines with the instruction location
    */
-  private def createSymbolTable(linesMetadata: List[LineMetadata], instructionOffset: Option[InstructionLocation]): Either[String, List[InstructionMetadata]] =
+  private def createSymbolTable(linesMetadata: List[LineMetadata], instructionOffset: Option[InstructionLocation]): Either[String, (List[InstructionMetadata], InstructionLocation)] =
 
     /**
      * Process given line to calculate and return the distance to the next instruction in memory, e.g.
@@ -130,7 +125,7 @@ class Assembler:
       val firstToken = line.tokenizedLine.head
       firstToken match
         case ".ORIG" if instructionOffset.isEmpty => parseOrig(line).map((_, isLabelLine))
-        case ".ORIG" => 1.asRight[String].map((_, isLabelLine))
+        case ".ORIG" => s"ERROR (line ${line.lineNumber.value}): Invalid .ORIG directive in subroutine".asLeft[(Int, Boolean)]
         case ".STRINGZ" => stringzAllocatedMemory(line).map((_, isLabelLine))
         case ".BLKW" => blkwAllocatedMemory(line).map((_, isLabelLine))
         case _ if line.isOpCode || line.isDirective => 1.asRight[String].map((_, isLabelLine))
@@ -155,18 +150,20 @@ class Assembler:
 
 
     @tailrec
-    def nextLine(lines: List[LineMetadata], instructions: List[InstructionMetadata], instructionLocation: InstructionLocation): Either[String, List[InstructionMetadata]] =
+    def nextLine(lines: List[LineMetadata], instructions: List[InstructionMetadata], instructionLocation: InstructionLocation): Either[String, (List[InstructionMetadata], InstructionLocation)] =
       lines match
-        case Nil => instructions.asRight[String]
+        case Nil => (instructions, instructionLocation).asRight[String]
         case firstLine :: remainingLines =>
           processLine(firstLine, instructionLocation) match
-            case Left(str) => str.asLeft[List[InstructionMetadata]]
+            case Left(str) => str.asLeft[(List[InstructionMetadata], InstructionLocation)]
             case Right((nextInstructionLocationIncrement, isLabelLine)) =>
               val nextInstructionLocation = instructionLocation ∆+ nextInstructionLocationIncrement
               val updatedLine = if isLabelLine then firstLine.copy(tokenizedLine = firstLine.tokenizedLine.drop(1)) else firstLine
               nextLine(remainingLines, InstructionMetadata(updatedLine, instructionLocation) :: instructions, nextInstructionLocation)
 
-    nextLine(linesMetadata, Nil, instructionOffset.getOrElse(InstructionLocation(0))).map(_.reverse)
+    nextLine(linesMetadata, Nil, instructionOffset.getOrElse(InstructionLocation(0))).map { case (instructionMetadataList, nextInstructionLocation) =>
+      (instructionMetadataList.reverse, nextInstructionLocation)
+    }
 
 
   private def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata]): Either[String, List[Int]] =
@@ -214,7 +211,7 @@ class Assembler:
           case "ST" => parseSt(instructionMetadata, symbolTable.toMap).map(List(_))
           case "STR" => parseStr(instructionMetadata, symbolTable.toMap).map(List(_))
           case "STI" => parseSti(instructionMetadata, symbolTable.toMap).map(List(_))
-          // labels and .EXTERN directives come here
+          // labels come here
           case _ => Nil.asRight[String]
       }
       l.sequence.map(_.flatten)

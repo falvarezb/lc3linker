@@ -46,10 +46,7 @@ class AssemblerTest extends AnyFunSpec with Matchers :
 
   def runSymbolTableSerializationTest(asmFileNames: List[String], objFileName: String) =
     val path = "src/test/resources"
-    val symbolTableMock = mutable.HashMap.empty[String, InstructionLocation]
-    val result = new Assembler {
-      override protected val symbolTable: mutable.Map[String, InstructionLocation] = symbolTableMock
-    }.link(asmFileNames.map(asmFileName => s"$path/$asmFileName"), s"$path/$objFileName")
+    val result = new Assembler().link(asmFileNames.map(asmFileName => s"$path/$asmFileName"), s"$path/$objFileName")
     result shouldBe Right(())
 
     val expectedFile = Source.fromFile(s"$path/${objFileName.split('.')(0)}.expected.sym")
@@ -64,16 +61,8 @@ class AssemblerTest extends AnyFunSpec with Matchers :
     new Assembler().assemble(s"$path/$asmFileName")
 
   describe("link process") {
-    it("linking without symbols") {
-      runLinkedFilesTest(List("t1.asm", "t1.asm"), "t1_t1.obj")
-    }
-
-    it("linking with symbols") {
-      runLinkedFilesTest(List("t2.asm", "t4.asm"), "t2_t4.obj")
-    }
-
-    it("linking external symbols") {
-      runLinkedFilesTest(List("t2_external.asm", "t2.asm"), "t2_external.obj")
+    it("day_week + ascii_to_binary") {
+      runLinkedFilesTest(List("day_week.asm", "ascii_to_binary.asm"), "day_week.obj")
     }
   }
 
@@ -184,7 +173,14 @@ class AssemblerTest extends AnyFunSpec with Matchers :
     }
 
     it("with external symbols") {
-      runSymbolTableSerializationTest(List("t2_external.asm", "t2.asm"), "t2_external.obj")
+      val asmFileNames = List("t2_external.asm", "t2.asm")
+      val path = "src/test/resources"
+      val result = new Assembler().link(asmFileNames.map(asmFileName => s"$path/$asmFileName"), s"$path/t2_external.obj")
+      result shouldBe Left("ERROR (line 4): Invalid .ORIG directive in subroutine")
+    }
+
+    it("day_week + ascii_to_binary") {
+      runSymbolTableSerializationTest(List("day_week.asm", "ascii_to_binary.asm"), "day_week.obj")
     }
   }
 
