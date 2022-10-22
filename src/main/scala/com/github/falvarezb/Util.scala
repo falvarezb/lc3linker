@@ -56,7 +56,7 @@ object Util:
    * - calculate 2's complement
    */
   def parseOffset(token: String, lineNumber: LineNumber, fileName: String, instructionMemoryAddress: InstructionLocation, offsetNumBits: Int, symbolTable: SymbolTable)(using lineMetadata: LineMetadata): Either[String, Int] =
-    parseNumericValueWithAlternativeParser(token, lineNumber, fileName, -(1 << (offsetNumBits - 1)), (1 << (offsetNumBits - 1)) - 1) {
+    parseNumericValueWithAlternativeParser(token, -(1 << (offsetNumBits - 1)), (1 << (offsetNumBits - 1)) - 1) {
       Some(
         Either.catchOnly[NoSuchElementException] {
           symbolTable(token)
@@ -113,20 +113,20 @@ object Util:
    *
    * If default parser fails, the alternative parser 'altParser' is applied
    */
-  def parseNumericValueWithAlternativeParser(token: String, lineNumber: LineNumber, fileName: String, lowerBound: Int, upperBound: Int)(using lineMetdata: LineMetadata)(altParser: => Option[Either[String, Int]]): Either[String, Int] =
+  def parseNumericValueWithAlternativeParser(token: String, lowerBound: Int, upperBound: Int)(using lineMetadata: LineMetadata)(altParser: => Option[Either[String, Int]]): Either[String, Int] =
     val parsedValue: Either[String, Int] = parseNumericValue(token)
     for
       num <- altParser match
         case Some(altp) => parsedValue.orElse(altp)
         case None => parsedValue
-      _ <- validateNumberRange(token, num, lineNumber, fileName, lowerBound, upperBound)
+      _ <- validateNumberRange(token, num, lineMetadata.lineNumber, lineMetadata.fileName, lowerBound, upperBound)
     yield num
 
   /**
    * Parse token as a numeric value, validating that it is in the range [lowerBound,upperBound]
    */
   private def parseNumericValue(token: String, lowerBound: Int, upperBound: Int)(using lineMetadata: LineMetadata): Either[String, Int] =
-    parseNumericValueWithAlternativeParser(token, lineMetadata.lineNumber, lineMetadata.fileName, lowerBound, upperBound)(None)
+    parseNumericValueWithAlternativeParser(token, lowerBound, upperBound)(None)
 
   def parseImmediate(token: String, lineNumber: LineNumber, fileName: String, immediateNumBits: Int)(using lineMetadata: LineMetadata): Either[String, Int] =
     parseNumericValue(token, -(1 << (immediateNumBits - 1)), (1 << (immediateNumBits - 1)) - 1)

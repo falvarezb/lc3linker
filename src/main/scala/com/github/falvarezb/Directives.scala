@@ -46,7 +46,7 @@ object Directives {
       _ <- Either.cond(tokens.length >= 2, (), s"ERROR ($fileName - line ${lineNumber.value}): Immediate expected")
       operand = tokens(1)
       //is token a label or a number?
-      num <- parseNumericValueWithAlternativeParser(operand, lineNumber, fileName, -32768, 65535) {
+      num <- parseNumericValueWithAlternativeParser(operand, -32768, 65535) {
         Some(
           Either.catchOnly[NoSuchElementException] {
             symbolTable(operand)
