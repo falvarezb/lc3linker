@@ -92,7 +92,7 @@ object Directives {
         line.substring(stringzIdx + ".STRINGZ".length, firstQuotationMarkIdx).trim.nonEmpty ||
           line.substring(secondQuotationMarkIdx + 1).takeWhile(_ != ';').trim.nonEmpty
       _ <- Either.cond(!contentOutsideQuotationMark, Nil, s"ERROR ($fileName - line ${lineNumber.value}): Bad string ('$line')")
-      str <- interpretEscapeSequence(quotedContent, lineNumber, fileName)
+      str <- interpretEscapeSequence(quotedContent)
       _ <- Either.cond(str.forall(isAsciiChar), Nil, s"ERROR ($fileName - line ${lineNumber.value}): Bad string, non-ascii char ('$line')")
     yield str.toList.map(_.toInt)
   }
