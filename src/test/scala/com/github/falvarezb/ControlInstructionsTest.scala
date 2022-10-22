@@ -39,8 +39,8 @@ class ControlInstructionsTest extends AnyFunSpec with Matchers:
     }
 
     it("symbolic name not found") {
-      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("JSR", "NON_EXISTENT_LABEL"), LineNumber(1), ""), InstructionLocation(0))
-      parseJsr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (line 1): Symbol not found ('NON_EXISTENT_LABEL')")
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("JSR", "NON_EXISTENT_LABEL"), LineNumber(1), "file"), InstructionLocation(0))
+      parseJsr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (file - line 1): Symbol not found ('NON_EXISTENT_LABEL')")
     }
   }
 
@@ -121,8 +121,8 @@ class ControlInstructionsTest extends AnyFunSpec with Matchers:
     }
 
     it("symbolic name not found") {
-      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BR", "NON_EXISTENT_LABEL"), LineNumber(1), ""), InstructionLocation(0x3001))
-      parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.NZP) shouldBe Left("ERROR (line 1): Symbol not found ('NON_EXISTENT_LABEL')")
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BR", "NON_EXISTENT_LABEL"), LineNumber(1), "file"), InstructionLocation(0x3001))
+      parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.NZP) shouldBe Left("ERROR (file - line 1): Symbol not found ('NON_EXISTENT_LABEL')")
     }
   }
 

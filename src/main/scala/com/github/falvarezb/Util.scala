@@ -55,14 +55,14 @@ object Util:
    * - validate the result of the previous step is within the range indicated by offsetNumBits
    * - calculate 2's complement
    */
-  def parseOffset(token: String, lineNumber: LineNumber, instructionMemoryAddress: InstructionLocation, offsetNumBits: Int, symbolTable: SymbolTable): Either[String, Int] =
+  def parseOffset(token: String, lineNumber: LineNumber, fileName: String, instructionMemoryAddress: InstructionLocation, offsetNumBits: Int, symbolTable: SymbolTable): Either[String, Int] =
     parseNumericValueWithAlternativeParser(token, lineNumber, -(1 << (offsetNumBits - 1)), (1 << (offsetNumBits - 1)) - 1) {
       Some(
         Either.catchOnly[NoSuchElementException] {
           symbolTable(token)
         }
           .map(symbolicNameValue => (symbolicNameValue - instructionMemoryAddress) ∇- 1)
-          .leftMap(_ => s"ERROR (line ${lineNumber.value}): Symbol not found ('$token')")
+          .leftMap(_ => s"ERROR ($fileName - line ${lineNumber.value}): Symbol not found ('$token')")
       )
     }.map(offset => twosComplement(offset, offsetNumBits))
 

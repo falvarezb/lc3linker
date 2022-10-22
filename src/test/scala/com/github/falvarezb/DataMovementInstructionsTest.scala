@@ -32,8 +32,8 @@ class DataMovementInstructionsTest extends AnyFunSpec with Matchers:
     }
 
     it("symbolic name not found") {
-      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LDR", "R0", "R1", "NON_EXISTENT_LABEL"), LineNumber(1), ""), InstructionLocation(0x3001))
-      parseLdr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (line 1): Symbol not found ('NON_EXISTENT_LABEL')")
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LDR", "R0", "R1", "NON_EXISTENT_LABEL"), LineNumber(1), "file"), InstructionLocation(0x3001))
+      parseLdr(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (file - line 1): Symbol not found ('NON_EXISTENT_LABEL')")
     }
   }
 
@@ -66,8 +66,8 @@ class DataMovementInstructionsTest extends AnyFunSpec with Matchers:
     }
 
     it("symbolic name not found") {
-      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LDR", "R0", "NON_EXISTENT_LABEL"), LineNumber(1), ""), InstructionLocation(0x3001))
-      parseLd(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (line 1): Symbol not found ('NON_EXISTENT_LABEL')")
+      val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("LDR", "R0", "NON_EXISTENT_LABEL"), LineNumber(1), "file"), InstructionLocation(0x3001))
+      parseLd(instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (file - line 1): Symbol not found ('NON_EXISTENT_LABEL')")
     }
   }
 
