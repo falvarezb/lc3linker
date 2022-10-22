@@ -78,10 +78,8 @@ class Assembler:
         .zipWithIndex // adding line number before filtering lines
         .filterNot { case (line, _) => line.isEmpty } // removing blank lines
         .map { case (line, idx) => (line, line.split("""[ \t,]""").filterNot(_.isEmpty).toList, idx) } // line tokenization (empty tokens are discarded)
-        //.filterNot { case (_, tokenizedLine, _) => tokenizedLine.isEmpty } // removing blank lines
-        //.filterNot { case (_, tokenizedLine, _) => tokenizedLine.head.startsWith(";") } // removing comments
         .takeWhile { case (_, tokenizedLine, _) => tokenizedLine.head != ".END" } // discarding lines after '.END' directive
-        .map { case (line, tokenizedLine, idx) => LineMetadata(line, tokenizedLine, LineNumber(idx + 1)) }
+        .map { case (line, tokenizedLine, idx) => LineMetadata(line, tokenizedLine, LineNumber(idx + 1), asmFileNamePath) }
         .toList
     }.toEither.leftMap(t => s"Error while reading file ${t.getMessage}")
 

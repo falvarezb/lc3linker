@@ -29,13 +29,14 @@ object DataMovementInstructions:
     assert(opCode == LDR || opCode == STR)
     val tokens = instructionMetadata.lineMetadata.tokenizedLine
     val lineNumber = instructionMetadata.lineMetadata.lineNumber
+    val fileName = instructionMetadata.lineMetadata.fileName
     val numTokens = 4
     val offsetNumBits = 6
 
     for
-      _ <- Either.cond(tokens.length >= numTokens, (), s"ERROR (line ${lineNumber.value}): missing operands")
-      SR_DR <- parseRegister(tokens(1), lineNumber).map(_ << 9)
-      baseRegister <- parseRegister(tokens(2), lineNumber).map(_ << 6)
+      _ <- Either.cond(tokens.length >= numTokens, (), s"ERROR ($fileName - line ${lineNumber.value}): missing operands")
+      SR_DR <- parseRegister(tokens(1), lineNumber, fileName).map(_ << 9)
+      baseRegister <- parseRegister(tokens(2), lineNumber, fileName).map(_ << 6)
       offset <- parseOffset(tokens(3), lineNumber, instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
     yield (if opCode == LDR then 6 << 12 else 7 << 12) + SR_DR + baseRegister + offset
 
@@ -44,6 +45,7 @@ object DataMovementInstructions:
     assert(opCode == LD || opCode == ST || opCode == LDI || opCode == STI || opCode == ST || opCode == LEA)
     val tokens = instructionMetadata.lineMetadata.tokenizedLine
     val lineNumber = instructionMetadata.lineMetadata.lineNumber
+    val fileName = instructionMetadata.lineMetadata.fileName
     val numTokens = 3
     val offsetNumBits = 9
     val opCodeBinary = (opCode: @unchecked) match
@@ -54,7 +56,7 @@ object DataMovementInstructions:
       case LEA => 14 << 12
 
     for
-      _ <- Either.cond(tokens.length >= numTokens, (), s"ERROR (line ${lineNumber.value}): missing operands")
-      SR_DR <- parseRegister(tokens(1), lineNumber).map(_ << 9)
+      _ <- Either.cond(tokens.length >= numTokens, (), s"ERROR ($fileName - line ${lineNumber.value}): missing operands")
+      SR_DR <- parseRegister(tokens(1), lineNumber, fileName).map(_ << 9)
       offset <- parseOffset(tokens(2), lineNumber, instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
     yield opCodeBinary + SR_DR + offset

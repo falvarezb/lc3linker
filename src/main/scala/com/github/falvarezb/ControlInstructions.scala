@@ -27,10 +27,11 @@ object ControlInstructions:
     assert(opCode == JSRR || opCode == JMP || opCode == JMPT)
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
+    val fileName = lineMetadata.fileName
 
     for
-      _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): Register expected")
-      baseRegister <- parseRegister(tokens(1), lineNumber).map(_ << 6)
+      _ <- Either.cond(tokens.length >= 2, (), s"ERROR ($fileName - line ${lineNumber.value}): Register expected")
+      baseRegister <- parseRegister(tokens(1), lineNumber, fileName).map(_ << 6)
     yield (if opCode == JSRR then 4 << 12 else 12 << 12) + baseRegister + (if opCode == JMPT then 1 else 0)
 
   def parseBr(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable, conditionCode: ConditionCode): Either[String, Int] =

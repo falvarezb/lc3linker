@@ -17,7 +17,7 @@ case class InstructionLocation(value: Int) extends AnyVal :
 
   def ∇-(other: Int): Int = value - other
 
-case class LineMetadata(line: String, tokenizedLine: List[String], lineNumber: LineNumber):
+case class LineMetadata(line: String, tokenizedLine: List[String], lineNumber: LineNumber, fileName: String):
   val isOpCode = OpCode.values.map(_.toString).contains(this.tokenizedLine.headOption.getOrElse(""))
   val isDirective = Directive.values.map(_.toString).contains(this.tokenizedLine.headOption.getOrElse(""))
 
