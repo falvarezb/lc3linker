@@ -45,12 +45,10 @@ class Assembler:
       asmFiles match
         case Nil => accummulatedInstructionMetadataList
         case firstFile :: rest =>
-          val fileResult: Either[String, (List[InstructionMetadata], InstructionLocation)] = doLexicalAnalysis(firstFile).flatMap { linesMetadata =>
+          doLexicalAnalysis(firstFile).flatMap { linesMetadata =>
             createSymbolTable(linesMetadata, fileInstructionOffset)
-          }
-
-          fileResult match
-            case Left(str) => str.asLeft[List[InstructionMetadata]] :: accummulatedInstructionMetadataList
+          } match
+            case Left(str) => List(str.asLeft[List[InstructionMetadata]])
             case Right((fileInstructionMetadataList, nextFileInstructionOffset)) => nextFile(rest, fileInstructionMetadataList.asRight[String] :: accummulatedInstructionMetadataList, Some(nextFileInstructionOffset))
 
     for
@@ -232,7 +230,7 @@ class Assembler:
   private def serializeSymbolTable(objFileName: String): Unit =
     Using(FileWriter(s"${objFileName.split('.')(0)}.sym")) { symFile =>
       symFile.write("// Symbol table\n// Scope level 0:\n//	Symbol Name       Page Address\n//	----------------  ------------\n")
-      symbolTable.keys.foreach { key => symFile.write(s"//	$key             ${Integer.toHexString(symbolTable(key).value)}\n")}
+      symbolTable.keys.foreach { key => symFile.write(s"//	$key             ${Integer.toHexString(symbolTable(key).value)}\n") }
     }
 
 
