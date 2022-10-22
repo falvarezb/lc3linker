@@ -32,7 +32,7 @@ object OperateInstructions:
       SR1 <- parseRegister(tokens(2), lineNumber, fileName).map(_ << 6)
       // register or immediate value?
       operand <- parseRegister(tokens(3), lineNumber, fileName).orElse {
-        parseImmediate(tokens(3), lineNumber, fileName, immediateNumBits).map { num =>
+        parseImmediate(tokens(3), immediateNumBits).map { num =>
           (1 << 5) + twosComplement(num, immediateNumBits)
         }
       }

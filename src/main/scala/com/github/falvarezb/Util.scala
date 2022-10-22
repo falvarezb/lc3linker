@@ -128,9 +128,9 @@ object Util:
   private def parseNumericValue(token: String, lowerBound: Int, upperBound: Int)(using lineMetadata: LineMetadata): Either[String, Int] =
     parseNumericValueWithAlternativeParser(token, lowerBound, upperBound)(None)
 
-  def parseImmediate(token: String, lineNumber: LineNumber, fileName: String, immediateNumBits: Int)(using lineMetadata: LineMetadata): Either[String, Int] =
+  def parseImmediate(token: String, immediateNumBits: Int)(using lineMetadata: LineMetadata): Either[String, Int] =
     parseNumericValue(token, -(1 << (immediateNumBits - 1)), (1 << (immediateNumBits - 1)) - 1)
 
-  def parseTrapVector(token: String, lineNumber: LineNumber, fileName: String)(using lineMetadata: LineMetadata): Either[String, Int] =
+  def parseTrapVector(token: String)(using lineMetadata: LineMetadata): Either[String, Int] =
     parseNumericValue(token, 0, 0xFF)
 
