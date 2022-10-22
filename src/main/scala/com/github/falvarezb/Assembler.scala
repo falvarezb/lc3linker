@@ -177,12 +177,12 @@ class Assembler:
           case ".STRINGZ" => parseStringz
           case ".BLKW" => parseBlkw
           case ".FILL" => parseFill(symbolTable.toMap)
-          case "GETC" => List(0xf020).asRight[String]
-          case "OUT" => List(0xf021).asRight[String]
-          case "PUTS" => List(0xf022).asRight[String]
-          case "IN" => List(0xf023).asRight[String]
-          case "PUTSP" => List(0xf024).asRight[String]
-          case "HALT" => List(0xf025).asRight[String]
+          case "GETC" => Right(0xf020)
+          case "OUT" => Right(0xf021)
+          case "PUTS" => Right(0xf022)
+          case "IN" => Right(0xf023)
+          case "PUTSP" => Right(0xf024)
+          case "HALT" => Right(0xf025)
           // Operate instructions
           case "ADD" => parseAdd
           case "AND" => parseAnd
@@ -200,8 +200,8 @@ class Assembler:
           case "BRnp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.NP)
           case "BRzp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.ZP)
           case "BRnzp" | "BR" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.NZP)
-          case "RET" => List(0xc1c0).asRight[String]
-          case "RTI" => List(0x8000).asRight[String]
+          case "RET" => Right(0xc1c0)
+          case "RTI" => Right(0x8000)
           // Data movement instructions
           case "LD" => parseLd(instructionMetadata, symbolTable.toMap)
           case "LDR" => parseLdr(instructionMetadata, symbolTable.toMap)
@@ -211,7 +211,7 @@ class Assembler:
           case "STR" => parseStr(instructionMetadata, symbolTable.toMap)
           case "STI" => parseSti(instructionMetadata, symbolTable.toMap)
           // labels come here
-          case _ => Nil.asRight[String]
+          case _ => Right(Nil)
 
         instructions.map {
           case x: Int => List(x)
