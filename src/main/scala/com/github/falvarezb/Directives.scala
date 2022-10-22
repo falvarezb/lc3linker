@@ -27,18 +27,9 @@ object Directives {
 
   def parseOrig(using lineMetadata: LineMetadata): Either[String, Int] = withCache(IntCache, lineMetadata) {
     val tokens = lineMetadata.tokenizedLine
-    val lineNumber = lineMetadata.lineNumber
-    val fileName = lineMetadata.fileName
-    if tokens.length < 2 then Left(s"ERROR ($fileName - line ${lineNumber.value}): Immediate expected")
+    if tokens.length < 2 then Left(s"ERROR (${lineMetadata.fileName} - line ${lineMetadata.lineNumber.value}): Immediate expected")
     else parseMemoryAddress(tokens(1))
   }
-
-  def parseExternal(lineMetadata: LineMetadata): Either[String, String] =
-    val tokens = lineMetadata.tokenizedLine
-    val lineNumber = lineMetadata.lineNumber
-    val fileName = lineMetadata.fileName
-    if tokens.length < 2 then Left(s"ERROR ($fileName - line ${lineNumber.value}): Symbol expected")
-    else Right(tokens(1))
 
   /**
    * .FILL operand may be an integer [-32768, 32767] or a label of a memory address [0, 65535]
@@ -66,8 +57,8 @@ object Directives {
       }
     yield num
 
-  def stringzAllocatedMemory(lineMetadata: LineMetadata): Either[String, Int] =
-    parseStringz(lineMetadata).map(_.length)
+  def stringzAllocatedMemory(using lineMetadata: LineMetadata): Either[String, Int] =
+    parseStringz.map(_.length)
 
   /**
    * Parse .STRINGZ directive to store the ASCII representation of each of the chars of the string
@@ -84,7 +75,7 @@ object Directives {
    * @param lineMetadata
    * @return
    */
-  def parseStringz(lineMetadata: LineMetadata): Either[String, List[Int]] = withCache(IntListCache, lineMetadata) {
+  def parseStringz(using lineMetadata: LineMetadata): Either[String, List[Int]] = withCache(IntListCache, lineMetadata) {
     def isAsciiChar(ch: Char) = ch < 128
 
     val lineNumber = lineMetadata.lineNumber
