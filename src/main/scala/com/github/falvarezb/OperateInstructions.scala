@@ -10,11 +10,8 @@ object OperateInstructions:
 
   def parseNot(using lineMetadata: LineMetadata): Either[String, Int] =
     val tokens = lineMetadata.tokenizedLine
-    val lineNumber = lineMetadata.lineNumber
-    val fileName = lineMetadata.fileName
-
     for
-      _ <- Either.cond(tokens.length >= 3, (), s"ERROR ($fileName - line ${lineNumber.value}): missing operands")
+      _ <- Either.cond(tokens.length >= 3, (), s"ERROR (${lineMetadata.fileName} - line ${lineMetadata.lineNumber.value}): missing operands")
       DR <- parseRegister(tokens(1)).map(_ << 9)
       SR <- parseRegister(tokens(2)).map(_ << 6)
     yield (9 << 12) + DR + SR + 63
@@ -22,12 +19,10 @@ object OperateInstructions:
   private def parseAddAnd(opCode: OpCode)(using lineMetadata: LineMetadata): Either[String, Int] =
     assert(opCode == ADD || opCode == AND)
     val tokens = lineMetadata.tokenizedLine
-    val lineNumber = lineMetadata.lineNumber
-    val fileName = lineMetadata.fileName
     val immediateNumBits = 5
 
     for
-      _ <- Either.cond(tokens.length >= 4, (), s"ERROR ($fileName - line ${lineNumber.value}): missing operands")
+      _ <- Either.cond(tokens.length >= 4, (), s"ERROR (${lineMetadata.fileName} - line ${lineMetadata.lineNumber.value}): missing operands")
       DR <- parseRegister(tokens(1)).map(_ << 9)
       SR1 <- parseRegister(tokens(2)).map(_ << 6)
       // register or immediate value?

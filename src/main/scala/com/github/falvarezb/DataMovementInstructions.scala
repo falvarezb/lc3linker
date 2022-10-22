@@ -29,13 +29,11 @@ object DataMovementInstructions:
     assert(opCode == LDR || opCode == STR)
     given lineMetadata: LineMetadata = instructionMetadata.lineMetadata
     val tokens = instructionMetadata.lineMetadata.tokenizedLine
-    val lineNumber = instructionMetadata.lineMetadata.lineNumber
-    val fileName = instructionMetadata.lineMetadata.fileName
     val numTokens = 4
     val offsetNumBits = 6
 
     for
-      _ <- Either.cond(tokens.length >= numTokens, (), s"ERROR ($fileName - line ${lineNumber.value}): missing operands")
+      _ <- Either.cond(tokens.length >= numTokens, (), s"ERROR (${lineMetadata.fileName} - line ${lineMetadata.lineNumber.value}): missing operands")
       SR_DR <- parseRegister(tokens(1)).map(_ << 9)
       baseRegister <- parseRegister(tokens(2)).map(_ << 6)
       offset <- parseOffset(tokens(3), instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
@@ -46,8 +44,6 @@ object DataMovementInstructions:
     assert(opCode == LD || opCode == ST || opCode == LDI || opCode == STI || opCode == ST || opCode == LEA)
     given lineMetadata: LineMetadata = instructionMetadata.lineMetadata
     val tokens = instructionMetadata.lineMetadata.tokenizedLine
-    val lineNumber = instructionMetadata.lineMetadata.lineNumber
-    val fileName = instructionMetadata.lineMetadata.fileName
     val numTokens = 3
     val offsetNumBits = 9
     val opCodeBinary = (opCode: @unchecked) match
@@ -58,7 +54,7 @@ object DataMovementInstructions:
       case LEA => 14 << 12
 
     for
-      _ <- Either.cond(tokens.length >= numTokens, (), s"ERROR ($fileName - line ${lineNumber.value}): missing operands")
+      _ <- Either.cond(tokens.length >= numTokens, (), s"ERROR (${lineMetadata.fileName} - line ${lineMetadata.lineNumber.value}): missing operands")
       SR_DR <- parseRegister(tokens(1)).map(_ << 9)
       offset <- parseOffset(tokens(2), instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
     yield opCodeBinary + SR_DR + offset
