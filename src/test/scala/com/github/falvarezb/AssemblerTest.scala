@@ -64,6 +64,10 @@ class AssemblerTest extends AnyFunSpec with Matchers :
     it("day_week + ascii_to_binary") {
       runLinkedFilesTest(List("day_week.asm", "ascii_to_binary.asm"), "day_week.obj")
     }
+
+    it("day_of_week + multiplication + division") {
+      runLinkedFilesTest(List("day_of_week.asm", "multiplication_routine.asm", "division_routine.asm"), "day_of_week.obj")
+    }
   }
 
   describe("assembly process") {
