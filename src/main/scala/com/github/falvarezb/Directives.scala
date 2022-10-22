@@ -29,14 +29,15 @@ object Directives {
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
     val fileName = lineMetadata.fileName
-    if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Immediate expected")
+    if tokens.length < 2 then Left(s"ERROR ($fileName - line ${lineNumber.value}): Immediate expected")
     else parseMemoryAddress(tokens(1), lineNumber, fileName)
   }
 
   def parseExternal(lineMetadata: LineMetadata): Either[String, String] =
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
-    if tokens.length < 2 then Left(s"ERROR (line ${lineNumber.value}): Symbol expected")
+    val fileName = lineMetadata.fileName
+    if tokens.length < 2 then Left(s"ERROR ($fileName - line ${lineNumber.value}): Symbol expected")
     else Right(tokens(1))
 
   /**
@@ -87,20 +88,21 @@ object Directives {
     def isAsciiChar(ch: Char) = ch < 128
 
     val lineNumber = lineMetadata.lineNumber
+    val fileName = lineMetadata.fileName
     val line = lineMetadata.line
     val firstQuotationMarkIdx = line.indexOf('"')
     val secondQuotationMarkIdx = line.lastIndexOf('"')
 
     for
-      _ <- Either.cond(!(firstQuotationMarkIdx == -1 || secondQuotationMarkIdx == firstQuotationMarkIdx), (), s"ERROR (line ${lineNumber.value}): Bad string ('$line')")
+      _ <- Either.cond(!(firstQuotationMarkIdx == -1 || secondQuotationMarkIdx == firstQuotationMarkIdx), (), s"ERROR ($fileName - line ${lineNumber.value}): Bad string ('$line')")
       quotedContent = line.substring(firstQuotationMarkIdx + 1, secondQuotationMarkIdx)
       stringzIdx = line.indexOfSlice(".STRINGZ")
       contentOutsideQuotationMark =
         line.substring(stringzIdx + ".STRINGZ".length, firstQuotationMarkIdx).trim.nonEmpty ||
           line.substring(secondQuotationMarkIdx + 1).takeWhile(_ != ';').trim.nonEmpty
-      _ <- Either.cond(!contentOutsideQuotationMark, Nil, s"ERROR (line ${lineNumber.value}): Bad string ('$line')")
-      str <- interpretEscapeSequence(quotedContent, lineNumber)
-      _ <- Either.cond(str.forall(isAsciiChar), Nil, s"ERROR (line ${lineNumber.value}): Bad string, non-ascii char ('$line')")
+      _ <- Either.cond(!contentOutsideQuotationMark, Nil, s"ERROR ($fileName - line ${lineNumber.value}): Bad string ('$line')")
+      str <- interpretEscapeSequence(quotedContent, lineNumber, fileName)
+      _ <- Either.cond(str.forall(isAsciiChar), Nil, s"ERROR ($fileName - line ${lineNumber.value}): Bad string, non-ascii char ('$line')")
     yield str.toList.map(_.toInt)
   }
 

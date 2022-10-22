@@ -168,7 +168,7 @@ class Assembler:
 
   private def doSyntaxAnalysis(instructionsMetadata: List[InstructionMetadata]): Either[String, List[Int]] =
     if instructionsMetadata.head.lineMetadata.tokenizedLine.head != ".ORIG" then
-      s"ERROR (line ${instructionsMetadata.head.lineMetadata.lineNumber.value}): Instruction not preceeded by a .orig directive".asLeft[List[Int]]
+      s"ERROR (${instructionsMetadata.head.lineMetadata.fileName} - line ${instructionsMetadata.head.lineMetadata.lineNumber.value}): Instruction not preceeded by a .orig directive".asLeft[List[Int]]
     else
       val l: List[Either[String, List[Int]]] = instructionsMetadata.map { instructionMetadata =>
         val firstToken = instructionMetadata.lineMetadata.tokenizedLine.head

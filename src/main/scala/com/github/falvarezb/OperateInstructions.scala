@@ -14,7 +14,7 @@ object OperateInstructions:
     val fileName = lineMetadata.fileName
 
     for
-      _ <- Either.cond(tokens.length >= 3, (), s"ERROR (line ${lineNumber.value}): missing operands")
+      _ <- Either.cond(tokens.length >= 3, (), s"ERROR ($fileName - line ${lineNumber.value}): missing operands")
       DR <- parseRegister(tokens(1), lineNumber, fileName).map(_ << 9)
       SR <- parseRegister(tokens(2), lineNumber, fileName).map(_ << 6)
     yield (9 << 12) + DR + SR + 63

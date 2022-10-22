@@ -71,7 +71,7 @@ object Util:
    * "hi\\nbye" = ['h','i','\\','n','b','y','e'] is transformed into
    * "hi\nbye" = ['h','i','\n','b','y','e']
    */
-  def interpretEscapeSequence(str: String, lineNumber: LineNumber): Either[String, String] =
+  def interpretEscapeSequence(str: String, lineNumber: LineNumber, fileName: String): Either[String, String] =
     def loop(loopStr: List[Char], escapeSequenceMode: Boolean, newStr: List[Char]): Either[String, List[Char]] = loopStr match
       case Nil =>
         // adding null character
@@ -92,7 +92,7 @@ object Util:
             case '"' => '"'.asRight[String]
             case _ => ().asLeft[Char]
           replacementEither match
-            case Left(_) => s"ERROR (line ${lineNumber.value}): Unrecognised escape sequence ('$str')".asLeft[List[Char]]
+            case Left(_) => s"ERROR ($fileName - line ${lineNumber.value}): Unrecognised escape sequence ('$str')".asLeft[List[Char]]
             case Right(replacement) =>
               loop(remainingChars, false, replacement :: newStr)
               else if ch == '\\' then loop(remainingChars, true, newStr)

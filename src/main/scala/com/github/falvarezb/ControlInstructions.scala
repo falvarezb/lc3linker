@@ -54,6 +54,6 @@ object ControlInstructions:
     val fileName = lineMetadata.fileName
 
     for
-      _ <- Either.cond(tokens.length >= 2, (), s"ERROR (line ${lineNumber.value}): missing operands")
+      _ <- Either.cond(tokens.length >= 2, (), s"ERROR ($fileName - line ${lineNumber.value}): missing operands")
       trapVector <- parseTrapVector(tokens(1), lineNumber, fileName)
     yield (15 << 12) + trapVector

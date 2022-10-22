@@ -8,11 +8,11 @@ class UtilTest extends AnyFunSpec with Matchers :
 
   describe("interpret characters") {
     it("valid escape sequence is replaced") {
-      interpretEscapeSequence("hi\\nbye", LineNumber(1)) shouldBe Right("hi\nbye\u0000")
+      interpretEscapeSequence("hi\\nbye", LineNumber(1), "") shouldBe Right("hi\nbye\u0000")
     }
 
     it("multiple valid escape sequences are replaced") {
-      interpretEscapeSequence("hi\\nbye\\\"he\\ello\\\"", LineNumber(1)) shouldBe Right("hi\nbye\"he\u001bllo\"\u0000")
+      interpretEscapeSequence("hi\\nbye\\\"he\\ello\\\"", LineNumber(1), "") shouldBe Right("hi\nbye\"he\u001bllo\"\u0000")
     }
   }
 

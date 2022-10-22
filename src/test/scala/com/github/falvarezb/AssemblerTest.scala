@@ -124,12 +124,12 @@ class AssemblerTest extends AnyFunSpec with Matchers :
 
     it("asm file without .ORIG directive") {
       val result = runErrorConditionTest("t7.asm")
-      result shouldBe Left("ERROR (line 4): Instruction not preceeded by a .orig directive")
+      result shouldBe Left("ERROR (src/test/resources/t7.asm - line 4): Instruction not preceeded by a .orig directive")
     }
 
     it("missing .ORIG operand") {
       val result = runErrorConditionTest("t8.asm")
-      result shouldBe Left("ERROR (line 4): Immediate expected")
+      result shouldBe Left("ERROR (src/test/resources/t8.asm - line 4): Immediate expected")
     }
 
     it("duplicate label") {
