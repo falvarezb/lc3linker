@@ -171,7 +171,7 @@ class Assembler:
       val l: List[Either[String, List[Int]]] = instructionsMetadata.map { instructionMetadata =>
         given lineMetadata: LineMetadata = instructionMetadata.lineMetadata
         val firstToken = instructionMetadata.lineMetadata.tokenizedLine.head
-        (firstToken match
+        val instructions: Either[String, Int | List[Int]] = firstToken match
           // Directives
           case ".ORIG" => parseOrig
           case ".STRINGZ" => parseStringz
@@ -211,9 +211,11 @@ class Assembler:
           case "STR" => parseStr(instructionMetadata, symbolTable.toMap)
           case "STI" => parseSti(instructionMetadata, symbolTable.toMap)
           // labels come here
-          case _ => Nil.asRight[String]).map {
-            case x: Int => List(x)
-            case x: List[Int] => x
+          case _ => Nil.asRight[String]
+
+        instructions.map {
+          case x: Int => List(x)
+          case x: List[Int] => x
         }
       }
       l.sequence.map(_.flatten)
