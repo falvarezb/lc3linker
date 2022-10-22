@@ -13,7 +13,7 @@ object ControlInstructions:
 
     for
       _ <- Either.cond(tokens.length >= 2, (), s"ERROR ($fileName - line ${lineNumber.value}): Immediate expected")
-      offset <- parseOffset(tokens(1), lineNumber, fileName, instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
+      offset <- parseOffset(tokens(1), instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
     yield (4 << 12) + (1 << 11) + offset
 
   def parseJsrr(using lineMetadata: LineMetadata): Either[String, Int] =
@@ -46,7 +46,7 @@ object ControlInstructions:
 
     for
       _ <- Either.cond(tokens.length >= numTokens, (), s"ERROR ($fileName - line ${lineNumber.value}): missing operands")
-      offset <- parseOffset(tokens(1), lineNumber, fileName, instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
+      offset <- parseOffset(tokens(1), instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
     yield (conditionCode.value << 9) + offset
 
 
