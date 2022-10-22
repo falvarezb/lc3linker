@@ -172,10 +172,10 @@ class AssemblerTest extends AnyFunSpec with Matchers :
       runSymbolTableSerializationTest(List("t2.asm"), "t2.obj")
     }
 
-    it("with external symbols") {
-      val asmFileNames = List("t2_external.asm", "t2.asm")
+    it("invalid .ORIG in subroutine") {
+      val asmFileNames = List("t2.asm", "t2.asm")
       val path = "src/test/resources"
-      val result = new Assembler().link(asmFileNames.map(asmFileName => s"$path/$asmFileName"), s"$path/t2_external.obj")
+      val result = new Assembler().link(asmFileNames.map(asmFileName => s"$path/$asmFileName"), s"$path/t2.obj")
       result shouldBe Left("ERROR (line 4): Invalid .ORIG directive in subroutine")
     }
 
