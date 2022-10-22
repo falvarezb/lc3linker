@@ -171,12 +171,12 @@ class Assembler:
       val l: List[Either[String, List[Int]]] = instructionsMetadata.map { instructionMetadata =>
         given lineMetadata: LineMetadata = instructionMetadata.lineMetadata
         val firstToken = instructionMetadata.lineMetadata.tokenizedLine.head
-        firstToken match
+        (firstToken match
           // Directives
-          case ".ORIG" => parseOrig.map(List(_))
+          case ".ORIG" => parseOrig
           case ".STRINGZ" => parseStringz
           case ".BLKW" => parseBlkw
-          case ".FILL" => parseFill(symbolTable.toMap).map(List(_))
+          case ".FILL" => parseFill(symbolTable.toMap)
           case "GETC" => List(0xf020).asRight[String]
           case "OUT" => List(0xf021).asRight[String]
           case "PUTS" => List(0xf022).asRight[String]
@@ -184,34 +184,37 @@ class Assembler:
           case "PUTSP" => List(0xf024).asRight[String]
           case "HALT" => List(0xf025).asRight[String]
           // Operate instructions
-          case "ADD" => parseAdd.map(List(_))
-          case "AND" => parseAnd.map(List(_))
-          case "NOT" => parseNot.map(List(_))
+          case "ADD" => parseAdd
+          case "AND" => parseAnd
+          case "NOT" => parseNot
           // Control instructions
-          case "JSR" => parseJsr(instructionMetadata, symbolTable.toMap).map(List(_))
-          case "JSRR" => parseJsrr.map(List(_))
-          case "JMP" => parseJmp.map(List(_))
-          case "JMPT" => parseJmpt.map(List(_))
-          case "TRAP" => parseTrap.map(List(_))
-          case "BRn" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.N).map(List(_))
-          case "BRz" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.Z).map(List(_))
-          case "BRp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.P).map(List(_))
-          case "BRnz" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.NZ).map(List(_))
-          case "BRnp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.NP).map(List(_))
-          case "BRzp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.ZP).map(List(_))
-          case "BRnzp" | "BR" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.NZP).map(List(_))
+          case "JSR" => parseJsr(instructionMetadata, symbolTable.toMap)
+          case "JSRR" => parseJsrr
+          case "JMP" => parseJmp
+          case "JMPT" => parseJmpt
+          case "TRAP" => parseTrap
+          case "BRn" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.N)
+          case "BRz" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.Z)
+          case "BRp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.P)
+          case "BRnz" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.NZ)
+          case "BRnp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.NP)
+          case "BRzp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.ZP)
+          case "BRnzp" | "BR" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.NZP)
           case "RET" => List(0xc1c0).asRight[String]
           case "RTI" => List(0x8000).asRight[String]
           // Data movement instructions
-          case "LD" => parseLd(instructionMetadata, symbolTable.toMap).map(List(_))
-          case "LDR" => parseLdr(instructionMetadata, symbolTable.toMap).map(List(_))
-          case "LEA" => parseLea(instructionMetadata, symbolTable.toMap).map(List(_))
-          case "LDI" => parseLdi(instructionMetadata, symbolTable.toMap).map(List(_))
-          case "ST" => parseSt(instructionMetadata, symbolTable.toMap).map(List(_))
-          case "STR" => parseStr(instructionMetadata, symbolTable.toMap).map(List(_))
-          case "STI" => parseSti(instructionMetadata, symbolTable.toMap).map(List(_))
+          case "LD" => parseLd(instructionMetadata, symbolTable.toMap)
+          case "LDR" => parseLdr(instructionMetadata, symbolTable.toMap)
+          case "LEA" => parseLea(instructionMetadata, symbolTable.toMap)
+          case "LDI" => parseLdi(instructionMetadata, symbolTable.toMap)
+          case "ST" => parseSt(instructionMetadata, symbolTable.toMap)
+          case "STR" => parseStr(instructionMetadata, symbolTable.toMap)
+          case "STI" => parseSti(instructionMetadata, symbolTable.toMap)
           // labels come here
-          case _ => Nil.asRight[String]
+          case _ => Nil.asRight[String]).map {
+            case x: Int => List(x)
+            case x: List[Int] => x
+        }
       }
       l.sequence.map(_.flatten)
 
