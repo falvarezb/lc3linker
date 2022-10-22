@@ -4,25 +4,25 @@ import com.github.falvarezb.OpCode.{LD, LDI, LDR, LEA, ST, STI, STR}
 import com.github.falvarezb.Util.{parseOffset, parseRegister}
 
 object DataMovementInstructions:
-  def parseLdr(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
+  def parseLdr(using instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
     baseRegisterPlusOffsetAddressingMode(instructionMetadata, symbolTable, LDR)
 
-  def parseStr(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
+  def parseStr(using instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
     baseRegisterPlusOffsetAddressingMode(instructionMetadata, symbolTable, STR)
 
-  def parseLd(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
+  def parseLd(using instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
     pcRelativeAddressingMode(instructionMetadata, symbolTable, LD)
 
-  def parseSt(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
+  def parseSt(using instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
     pcRelativeAddressingMode(instructionMetadata, symbolTable, ST)
 
-  def parseLdi(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
+  def parseLdi(using instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
     pcRelativeAddressingMode(instructionMetadata, symbolTable, LDI)
 
-  def parseLea(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
+  def parseLea(using instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
     pcRelativeAddressingMode(instructionMetadata, symbolTable, LEA)
 
-  def parseSti(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
+  def parseSti(using instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
     pcRelativeAddressingMode(instructionMetadata, symbolTable, STI)
 
   private def baseRegisterPlusOffsetAddressingMode(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable, opCode: OpCode) =

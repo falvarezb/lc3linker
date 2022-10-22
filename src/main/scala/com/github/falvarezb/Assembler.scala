@@ -205,13 +205,13 @@ class Assembler:
           case "RET" => Right(0xc1c0)
           case "RTI" => Right(0x8000)
           // Data movement instructions
-          case "LD" => parseLd(instructionMetadata, symbolTable.toMap)
-          case "LDR" => parseLdr(instructionMetadata, symbolTable.toMap)
-          case "LEA" => parseLea(instructionMetadata, symbolTable.toMap)
-          case "LDI" => parseLdi(instructionMetadata, symbolTable.toMap)
-          case "ST" => parseSt(instructionMetadata, symbolTable.toMap)
-          case "STR" => parseStr(instructionMetadata, symbolTable.toMap)
-          case "STI" => parseSti(instructionMetadata, symbolTable.toMap)
+          case "LD" => parseLd
+          case "LDR" => parseLdr
+          case "LEA" => parseLea
+          case "LDI" => parseLdi
+          case "ST" => parseSt
+          case "STR" => parseStr
+          case "STI" => parseSti
           // labels come here
           case _ => Right(Nil)
 
