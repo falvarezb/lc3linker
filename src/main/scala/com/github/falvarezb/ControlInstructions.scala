@@ -36,7 +36,7 @@ object ControlInstructions:
       baseRegister <- parseRegister(tokens(1)).map(_ << 6)
     yield (if opCode == JSRR then 4 << 12 else 12 << 12) + baseRegister + (if opCode == JMPT then 1 else 0)
 
-  def parseBr(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable, conditionCode: ConditionCode): Either[String, Int] =
+  def parseBr(conditionCode: ConditionCode)(using instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =
     given lineMetadata: LineMetadata = instructionMetadata.lineMetadata
     val tokens = instructionMetadata.lineMetadata.tokenizedLine
     val lineNumber = instructionMetadata.lineMetadata.lineNumber

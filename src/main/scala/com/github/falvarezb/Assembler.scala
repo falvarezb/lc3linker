@@ -195,13 +195,13 @@ class Assembler:
           case "JMP" => parseJmp
           case "JMPT" => parseJmpt
           case "TRAP" => parseTrap
-          case "BRn" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.N)
-          case "BRz" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.Z)
-          case "BRp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.P)
-          case "BRnz" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.NZ)
-          case "BRnp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.NP)
-          case "BRzp" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.ZP)
-          case "BRnzp" | "BR" => parseBr(instructionMetadata, symbolTable.toMap, ConditionCode.NZP)
+          case "BRn" => parseBr(ConditionCode.N)
+          case "BRz" => parseBr(ConditionCode.Z)
+          case "BRp" => parseBr(ConditionCode.P)
+          case "BRnz" => parseBr(ConditionCode.NZ)
+          case "BRnp" => parseBr(ConditionCode.NP)
+          case "BRzp" => parseBr(ConditionCode.ZP)
+          case "BRnzp" | "BR" => parseBr(ConditionCode.NZP)
           case "RET" => Right(0xc1c0)
           case "RTI" => Right(0x8000)
           // Data movement instructions

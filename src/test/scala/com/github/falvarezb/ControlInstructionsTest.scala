@@ -71,58 +71,58 @@ class ControlInstructionsTest extends AnyFunSpec with Matchers:
   describe("BR parser") {
     it("successful BR/BRnzp") {
       val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BR", "1"), LineNumber(1), ""), InstructionLocation(0))
-      parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.NZP) shouldBe Right(0x0e01)
+      parseBr(ConditionCode.NZP)(using instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Right(0x0e01)
     }
 
     it("successful BRp") {
       val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BRp", "1"), LineNumber(1), ""), InstructionLocation(0))
-      parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.P) shouldBe Right(0x0201)
+      parseBr(ConditionCode.P)(using instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Right(0x0201)
     }
 
     it("successful BRz") {
       val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BRz", "1"), LineNumber(1), ""), InstructionLocation(0))
-      parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.Z) shouldBe Right(0x0401)
+      parseBr(ConditionCode.Z)(using instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Right(0x0401)
     }
 
     it("successful BRn") {
       val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BRn", "1"), LineNumber(1), ""), InstructionLocation(0))
-      parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.N) shouldBe Right(0x0801)
+      parseBr(ConditionCode.N)(using instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Right(0x0801)
     }
 
     it("successful BRzp") {
       val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BRzp", "1"), LineNumber(1), ""), InstructionLocation(0))
-      parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.ZP) shouldBe Right(0x0601)
+      parseBr(ConditionCode.ZP)(using instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Right(0x0601)
     }
 
     it("successful BRnp") {
       val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BRnp", "1"), LineNumber(1), ""), InstructionLocation(0))
-      parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.NP) shouldBe Right(0x0a01)
+      parseBr(ConditionCode.NP)(using instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Right(0x0a01)
     }
 
     it("successful BRnz") {
       val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BRnz", "1"), LineNumber(1), ""), InstructionLocation(0))
-      parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.NZ) shouldBe Right(0x0c01)
+      parseBr(ConditionCode.NZ)(using instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Right(0x0c01)
     }
 
     it("offset too big") {
       val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BR", "300"), LineNumber(1), "file"), InstructionLocation(0))
-      parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.NZP) shouldBe Left("ERROR (file - line 1): Immediate operand (300) out of range (-256 to 255)")
+      parseBr(ConditionCode.NZP)(using instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (file - line 1): Immediate operand (300) out of range (-256 to 255)")
     }
 
     it("offset too small") {
       val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BR", "-300"), LineNumber(1), "file"), InstructionLocation(0))
-      parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.NZP) shouldBe Left("ERROR (file - line 1): Immediate operand (-300) out of range (-256 to 255)")
+      parseBr(ConditionCode.NZP)(using instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (file - line 1): Immediate operand (-300) out of range (-256 to 255)")
     }
 
     it("successful parse when operand is a symbolic name") {
-      val symbolicTable = Map("LABEL" -> InstructionLocation(0x3003))
+      val symbolTable = Map("LABEL" -> InstructionLocation(0x3003))
       val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BR", "LABEL"), LineNumber(1), ""), InstructionLocation(0x3001))
-      parseBr(instructionMetadata, symbolicTable, ConditionCode.NZP) shouldBe Right(0x0e01)
+      parseBr(ConditionCode.NZP)(using instructionMetadata, symbolTable) shouldBe Right(0x0e01)
     }
 
     it("symbolic name not found") {
       val instructionMetadata = InstructionMetadata(LineMetadata("DOES NOT MATTER", List("BR", "NON_EXISTENT_LABEL"), LineNumber(1), "file"), InstructionLocation(0x3001))
-      parseBr(instructionMetadata, Map.empty[String, InstructionLocation], ConditionCode.NZP) shouldBe Left("ERROR (file - line 1): Symbol not found ('NON_EXISTENT_LABEL')")
+      parseBr(ConditionCode.NZP)(using instructionMetadata, Map.empty[String, InstructionLocation]) shouldBe Left("ERROR (file - line 1): Symbol not found ('NON_EXISTENT_LABEL')")
     }
   }
 
