@@ -105,8 +105,8 @@ object Util:
    *
    * R0, R1, R2, R3, R4, R5, R6, R7 correspond to 0, 1, 2, 3, 4, 5, 6, 7 respectively
    */
-  def parseRegister(token: String, lineNumber: LineNumber, fileName: String): Either[String, Int] =
-    Either.cond(token.length == 2 && token.head == 'R' && token(1) >= '0' && token(1) <= '7', token(1).toString.toInt, s"ERROR ($fileName - line ${lineNumber.value}): Expected register but found $token")
+  def parseRegister(token: String)(using lineMetadata: LineMetadata): Either[String, Int] =
+    Either.cond(token.length == 2 && token.head == 'R' && token(1) >= '0' && token(1) <= '7', token(1).toString.toInt, s"ERROR (${lineMetadata.fileName} - line ${lineMetadata.lineNumber.value}): Expected register but found $token")
 
   /**
    * Parse token as a numeric value, validating that it is in the range [lowerBound,upperBound]

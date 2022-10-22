@@ -8,15 +8,15 @@ object OperateInstructions:
 
   def parseAnd(using lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(AND)
 
-  def parseNot(lineMetadata: LineMetadata): Either[String, Int] =
+  def parseNot(using lineMetadata: LineMetadata): Either[String, Int] =
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
     val fileName = lineMetadata.fileName
 
     for
       _ <- Either.cond(tokens.length >= 3, (), s"ERROR ($fileName - line ${lineNumber.value}): missing operands")
-      DR <- parseRegister(tokens(1), lineNumber, fileName).map(_ << 9)
-      SR <- parseRegister(tokens(2), lineNumber, fileName).map(_ << 6)
+      DR <- parseRegister(tokens(1)).map(_ << 9)
+      SR <- parseRegister(tokens(2)).map(_ << 6)
     yield (9 << 12) + DR + SR + 63
 
   private def parseAddAnd(opCode: OpCode)(using lineMetadata: LineMetadata): Either[String, Int] =
@@ -28,10 +28,10 @@ object OperateInstructions:
 
     for
       _ <- Either.cond(tokens.length >= 4, (), s"ERROR ($fileName - line ${lineNumber.value}): missing operands")
-      DR <- parseRegister(tokens(1), lineNumber, fileName).map(_ << 9)
-      SR1 <- parseRegister(tokens(2), lineNumber, fileName).map(_ << 6)
+      DR <- parseRegister(tokens(1)).map(_ << 9)
+      SR1 <- parseRegister(tokens(2)).map(_ << 6)
       // register or immediate value?
-      operand <- parseRegister(tokens(3), lineNumber, fileName).orElse {
+      operand <- parseRegister(tokens(3)).orElse {
         parseImmediate(tokens(3), immediateNumBits).map { num =>
           (1 << 5) + twosComplement(num, immediateNumBits)
         }

@@ -16,16 +16,16 @@ object ControlInstructions:
       offset <- parseOffset(tokens(1), lineNumber, fileName, instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
     yield (4 << 12) + (1 << 11) + offset
 
-  def parseJsrr(lineMetadata: LineMetadata): Either[String, Int] =
-    jumpInstruction(lineMetadata, JSRR)
+  def parseJsrr(using lineMetadata: LineMetadata): Either[String, Int] =
+    jumpInstruction(JSRR)
 
-  def parseJmp(lineMetadata: LineMetadata): Either[String, Int] =
-    jumpInstruction(lineMetadata, JMP)
+  def parseJmp(using lineMetadata: LineMetadata): Either[String, Int] =
+    jumpInstruction(JMP)
 
-  def parseJmpt(lineMetadata: LineMetadata): Either[String, Int] =
-    jumpInstruction(lineMetadata, JMPT)
+  def parseJmpt(using lineMetadata: LineMetadata): Either[String, Int] =
+    jumpInstruction(JMPT)
 
-  private def jumpInstruction(lineMetadata: LineMetadata, opCode: OpCode): Either[String, Int] =
+  private def jumpInstruction(opCode: OpCode)(using lineMetadata: LineMetadata): Either[String, Int] =
     assert(opCode == JSRR || opCode == JMP || opCode == JMPT)
     val tokens = lineMetadata.tokenizedLine
     val lineNumber = lineMetadata.lineNumber
@@ -33,7 +33,7 @@ object ControlInstructions:
 
     for
       _ <- Either.cond(tokens.length >= 2, (), s"ERROR ($fileName - line ${lineNumber.value}): Register expected")
-      baseRegister <- parseRegister(tokens(1), lineNumber, fileName).map(_ << 6)
+      baseRegister <- parseRegister(tokens(1)).map(_ << 6)
     yield (if opCode == JSRR then 4 << 12 else 12 << 12) + baseRegister + (if opCode == JMPT then 1 else 0)
 
   def parseBr(instructionMetadata: InstructionMetadata, symbolTable: SymbolTable, conditionCode: ConditionCode): Either[String, Int] =

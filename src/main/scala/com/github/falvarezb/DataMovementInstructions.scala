@@ -36,8 +36,8 @@ object DataMovementInstructions:
 
     for
       _ <- Either.cond(tokens.length >= numTokens, (), s"ERROR ($fileName - line ${lineNumber.value}): missing operands")
-      SR_DR <- parseRegister(tokens(1), lineNumber, fileName).map(_ << 9)
-      baseRegister <- parseRegister(tokens(2), lineNumber, fileName).map(_ << 6)
+      SR_DR <- parseRegister(tokens(1)).map(_ << 9)
+      baseRegister <- parseRegister(tokens(2)).map(_ << 6)
       offset <- parseOffset(tokens(3), lineNumber, fileName, instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
     yield (if opCode == LDR then 6 << 12 else 7 << 12) + SR_DR + baseRegister + offset
 
@@ -59,6 +59,6 @@ object DataMovementInstructions:
 
     for
       _ <- Either.cond(tokens.length >= numTokens, (), s"ERROR ($fileName - line ${lineNumber.value}): missing operands")
-      SR_DR <- parseRegister(tokens(1), lineNumber, fileName).map(_ << 9)
+      SR_DR <- parseRegister(tokens(1)).map(_ << 9)
       offset <- parseOffset(tokens(2), lineNumber, fileName, instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
     yield opCodeBinary + SR_DR + offset
