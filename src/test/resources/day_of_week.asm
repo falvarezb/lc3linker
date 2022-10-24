@@ -103,7 +103,7 @@ PRINT_WEEK_DAY
     ADD R1,R1,#0    ; to be able to use condition codes
 LOOP    
     BRz OUTPUT
-    ADD R0,R0,#10   ; go to next day
+    ADD R0,R0,#11   ; go to next day
     ADD R1,R1,#-1   ; decrement loop variable
     BR LOOP
 OUTPUT  
@@ -125,12 +125,12 @@ R5_SAVE             .BLKW 1
 R7_SAVE             .BLKW 1
 
 DAYS    
-    .STRINGZ    "SUNDAY   "
-    .STRINGZ    "MONDAY   "
-    .STRINGZ    "TUESDAY  "
-    .STRINGZ    "WEDNESDAY"
-    .STRINGZ    "THURSDAY "
-    .STRINGZ    "FRIDAY   "
-    .STRINGZ    "SATURDAY "
+    .STRINGZ    "SUNDAY   \n"
+    .STRINGZ    "MONDAY   \n"
+    .STRINGZ    "TUESDAY  \n"
+    .STRINGZ    "WEDNESDAY\n"
+    .STRINGZ    "THURSDAY \n"
+    .STRINGZ    "FRIDAY   \n"
+    .STRINGZ    "SATURDAY \n"
 
     .END
