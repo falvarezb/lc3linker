@@ -11,8 +11,16 @@ libraryDependencies ++=Seq(
     "org.typelevel" %% "cats-core" % "2.7.0"
 )
 
+//Compile / mainClass := Some("com.github.falvarezb.Main")
+Docker / packageName := "fab/lc3linker"
+dockerExposedVolumes := Seq("/data")
+
 lazy val root = project
   .in(file("."))
+  .enablePlugins(
+    JavaAppPackaging,
+    DockerPlugin
+  )
   .settings(commonSettings: _*)
 
 scalacOptions ++= Seq(
