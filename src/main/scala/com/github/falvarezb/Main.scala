@@ -11,7 +11,7 @@ package com.github.falvarezb
 
     result match
       case Left(value) => println(value)
-      case Right(_) => println(s"$files compiled")
+      case Right(_) => println(s"asm files successfully assembled")
 
 
 
