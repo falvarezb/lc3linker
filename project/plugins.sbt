@@ -1,4 +1,5 @@
 ThisBuild / evictionErrorLevel := Level.Info
+addDependencyTreePlugin
 
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.0.4")
 
