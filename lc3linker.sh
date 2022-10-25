@@ -1,5 +1,7 @@
 #!/bin/bash
 
+LINKER_VERSION=1.0.0
+
 ####################################################################################
 ### DESCRIPTION
 # Runs LC-3 linker inside a docker container
@@ -38,8 +40,7 @@ FILE_PATH=$1
 REAL_PATH=$(realpath "$FILE_PATH")
 DIR_PATH=$(dirname "$REAL_PATH")
 
-
 # shellcheck disable=SC2086
 # as we want $PREFIXED_ARGS to split along the whitespaces
-docker run --rm -v "$DIR_PATH":/data --name lc3linker fab/lc3linker:0.1.0 $PREFIXED_ARGS
+docker run --rm -v "$DIR_PATH":/data --name lc3linker fjab76/lc3linker:$LINKER_VERSION $PREFIXED_ARGS
 

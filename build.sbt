@@ -1,8 +1,10 @@
 val scala3Version = "3.2.0"
+val projectVersion = "1.0.0"
+
 
 lazy val commonSettings = Seq(
     name := "lc3linker",
-    version := "0.1.0",
+    version := projectVersion,
     scalaVersion := scala3Version
 )
 
@@ -12,7 +14,9 @@ libraryDependencies ++=Seq(
 )
 
 //Compile / mainClass := Some("com.github.falvarezb.Main")
-Docker / packageName := "fab/lc3linker"
+Docker / packageName := "fjab76/lc3linker"
+Docker / version := projectVersion
+dockerBaseImage := "eclipse-temurin:17-jre"
 dockerExposedVolumes := Seq("/data")
 
 lazy val root = project
