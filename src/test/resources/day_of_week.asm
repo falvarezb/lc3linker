@@ -14,20 +14,41 @@
 ;          
     .ORIG x3000
 
-    LD R6,DAY_OF_THE_MONTH    ; R6 is f
+    ;; Read day of month
+    AND R1, R1, #0
+    ADD R1, R1, #2
+    JSR READ_MULTI_DIGIT
+    ADD R6, R2, #0
+
+
+    ;LD R6,DAY_OF_THE_MONTH    ; R6 is f
 
     ; calculate m and D
-    LD R1,YEAR          
-    LD R2,HUNDRED
-    JSR DIVISION        ; R1 is overwritten with value of D
-                        ; R2 can be discarded
 
-    LD R0,MONTH     ; calculate month m and store in R0
+    ;; Read year
+    AND R1, R1, #0
+    ADD R1, R1, #4
+    JSR READ_MULTI_DIGIT
+    ADD R1, R2, #0
+    ST R1,YEAR          
+    LD R2,HUNDRED
+    JSR DIVISION        ; R1 is overwritten with value of D (R1,R2) -> (R0,R1)
+                        ; R2 can be discarded
+    ST R1,D
+    ;; Read month
+    AND R1, R1, #0
+    ADD R1, R1, #2
+    JSR READ_MULTI_DIGIT
+    ADD R0, R2, #0
+    ;LD R0,MONTH     ; calculate month m and store in R0
     ADD R2,R0,#-2   ; R2 can be discarded
     BRp MONTH_GT_2
     ADD R0,R0,#12
-    ADD R1,R1,#-1   ; using previous year    
-MONTH_GT_2    
+    LD R1,D
+    ADD R1,R1,#-1   ; using previous year   
+    ST R1,D 
+MONTH_GT_2
+    LD R1,D
     ADD R0,R0,#-2   ; m = R0
     ST R1,D         ; R1 can be discarded
 
@@ -86,12 +107,24 @@ MONTH_GT_2
     ADD R6,R6,R0        ; k+(13m−1)/5 + D + D/4 + C/4 - 2C = R6
                         ; R0 can be discarded
     ; f%7
-    ADD R1,R6,#0
+    ADD R5,R6,#0
+    BRzp POSITIVE_F
+    NOT R5,R5
+    ADD R5,R5,#1
+POSITIVE_F
+    ADD R1,R5,#0
     AND R2,R2,#0
     ADD R2,R2,#7
     JSR DIVISION        ; R1 contains remainder
                         ; R0,R2 can be discarded
 
+    ADD R6,R6,#0
+    BRzp POSITIVE_DAY_OF_WEEK
+    NOT R1,R1
+    ADD R1,R1,#1
+    ADD R1,R1,#7
+
+POSITIVE_DAY_OF_WEEK
     ; print day of week
     JSR PRINT_WEEK_DAY
     HALT
@@ -115,7 +148,7 @@ OUTPUT
 
 DAY_OF_THE_MONTH    .FILL #5
 MONTH               .FILL #1
-YEAR                .FILL #2022
+YEAR                .BLKW 1;.FILL #2022
 HUNDRED             .FILL #100
 C                   .BLKW 1
 D                   .BLKW 1

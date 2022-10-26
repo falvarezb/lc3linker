@@ -1,9 +1,8 @@
 ;
+;   R0 -> R1   
+;
 ;   subroutine to convert ASCII code of a char representing a number into
 ;   the binary representation of that number
-;
-;   input: R0
-;   output: R1
 ;
 ASCII_TO_BINARY
         LD R1,ASCII
