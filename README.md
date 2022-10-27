@@ -80,7 +80,7 @@ lc3linker.sh day_of_week.asm multiplication_routine.asm division_routine.asm rea
 sbt run src/test/resources/day_of_week.asm src/test/resources/multiplication_routine.asm src/test/resources/division_routine.asm src/test/resources/read_multi_digit_routine.asm src/test/resources/ascii_to_binary_routine.asm src/test/resources/day_of_week.obj
 ```
 
-## Apendix
+## Appendix
 
 ### Implementation notes
 
@@ -89,7 +89,7 @@ The assembler is implemented as specified by [Introduction to Computing Systems:
 __Note__: in addition to the instructions described in the specification, the assembler implemented in this project also supports [JMPT](https://acg.cis.upenn.edu/milom/cse240-Fall05/handouts/Ch09-a.pdf) and [RRT](https://acg.cis.upenn.edu/milom/cse240-Fall05/handouts/Ch09-a.pdf). These instructions are a variant of `JMP` and `RET`, respectively, that have the additional effect of setting the privilege bit in PS (Process Status Register).
 
 
-### LC-3 Virtual Machines
+### LC-3 emulators
 
 The assembled/linked programs can be run in any of the multiple LC-3 emulators that can be found online:
 
