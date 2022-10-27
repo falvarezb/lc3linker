@@ -12,7 +12,7 @@ class UtilTest extends AnyFunSpec with Matchers :
     }
 
     it("multiple valid escape sequences are replaced") {
-      interpretEscapeSequence("hi\\nbye\\\"he\\ello\\\"")(using LineMetadata("", Nil, LineNumber(1), ""))  shouldBe Right("hi\nbye\"he\u001bllo\"\u0000")
+      interpretEscapeSequence("\\a\\b\\f\\r\\v hi\\nbye\\\"he\\ello\\\"")(using LineMetadata("", Nil, LineNumber(1), ""))  shouldBe Right("\u0007\b\f\r\u000b hi\nbye\"he\u001bllo\"\u0000")
     }
   }
 
