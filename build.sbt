@@ -13,7 +13,6 @@ libraryDependencies ++=Seq(
     "org.typelevel" %% "cats-core" % "2.7.0"
 )
 
-//Compile / mainClass := Some("com.github.falvarezb.Main")
 Docker / packageName := "fjab76/lc3linker"
 Docker / version := projectVersion
 dockerBaseImage := "eclipse-temurin:17-jre"
