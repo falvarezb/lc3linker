@@ -5,8 +5,11 @@
 ;
 
         .ORIG x3000
+        LEA R0,PROMPT
+        PUTSP
         GETC            ; R0 <- ASCII value of input char
-        JSR ASCII_TO_BINARY
+        LEA R1,ASCII_TO_BINARY
+        JSRR R1
 
         ; the address of the corresponding day is DAYS + i*10
         LEA R0, DAYS
@@ -16,8 +19,13 @@ LOOP    BRz OUTPUT
         ADD R1,R1,#-1   ; decrement loop variable
         BR LOOP
 
-OUTPUT  PUTS
+OUTPUT  TRAP x22        ; PUTS
         HALT
+
+PROMPT  .FILL x7954     ; Ty
+        .FILL x6570     ; pe
+        .FILL x0a3a     ; : 
+        .FILL x0
 
 DAYS    .STRINGZ    "Sunday   "
         .STRINGZ    "Monday   "
@@ -26,6 +34,5 @@ DAYS    .STRINGZ    "Sunday   "
         .STRINGZ    "Thursday "
         .STRINGZ    "Friday   "
         .STRINGZ    "Saturday "
-
 
         .END

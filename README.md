@@ -97,4 +97,5 @@ The assembled/linked programs can be run in any of the multiple LC-3 emulators t
 - there is also a [GUI](https://www.cis.upenn.edu/~milom/cse240-Fall05/handouts/lc3guide.html) for `lc3sim`
 - and here's another [virtual machine](https://www.jmeiners.com/lc3-vm/)
 
-`lc3sim` requires an [OS](https://acg.cis.upenn.edu/milom/cse240-Fall05/handouts/code/lc3os.asm) to run whereas the last VM has the OS built-in
+`lc3sim` requires an [OS](https://acg.cis.upenn.edu/milom/cse240-Fall05/handouts/code/lc3os.asm) to run whereas the last VM has the OS built-in.
+Additionally, `lc3sim` includes a debugger.

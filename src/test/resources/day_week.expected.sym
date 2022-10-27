@@ -2,8 +2,9 @@
 // Scope level 0:
 //	Symbol Name       Page Address
 //	----------------  ------------
-//	ASCII_TO_BINARY             3050
-//	OUTPUT             3008
-//	LOOP             3004
-//	DAYS             300a
-//	ASCII             3055
+//	ASCII_TO_BINARY             3057
+//	OUTPUT             300b
+//	LOOP             3007
+//	PROMPT             300d
+//	DAYS             3011
+//	ASCII             305c
