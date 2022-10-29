@@ -152,8 +152,8 @@ PVL_SAVE_R7     .BLKW 1
 PAINT_HORIZ_LINE
         ST R1,PHL_SAVE_R1        
         ST R2,PHL_SAVE_R2   
-        ADD R1,R1,#0    ; set condition codes 
-LOOP1   BRz END_LOOP1
+        ADD R1,R1,#-1    
+LOOP1   BRn END_LOOP1
         ADD R2,R0,R1        
         STR R3,R2,#0
         ADD R1,R1,#-1
