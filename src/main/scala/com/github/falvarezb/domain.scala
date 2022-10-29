@@ -24,7 +24,7 @@ case class LineMetadata(line: String, tokenizedLine: List[String], lineNumber: L
 case class InstructionMetadata(lineMetadata: LineMetadata, instructionLocation: InstructionLocation)
 
 enum OpCode:
-  case ADD, AND, NOT, JSR, JSRR, JMP, JMPT, LDR, STR, LD, ST, LDI, STI, LEA, BR, BRp, BRz, BRn, BRzp, BRnp, BRnz, BRnzp, TRAP, RET, RTI
+  case ADD, AND, NOT, JSR, JSRR, JMP, JMPT, LDR, STR, LD, ST, LDI, STI, LEA, BR, BRp, BRz, BRn, BRzp, BRnp, BRnz, BRnzp, TRAP, RET, RTT, RTI
 
 enum Directive:
   case `.ORIG`, HALT, `.STRINGZ`, `.BLKW`, `.FILL`, GETC, OUT, PUTS, IN, PUTSP

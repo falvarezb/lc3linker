@@ -203,6 +203,7 @@ class Assembler:
           case "BRzp" => parseBr(ConditionCode.ZP)
           case "BRnzp" | "BR" => parseBr(ConditionCode.NZP)
           case "RET" => Right(0xc1c0)
+          case "RTT" => Right(0xc1c1)
           case "RTI" => Right(0x8000)
           // Data movement instructions
           case "LD" => parseLd

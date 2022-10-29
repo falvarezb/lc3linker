@@ -82,20 +82,24 @@ sbt run src/test/resources/day_of_week.asm src/test/resources/multiplication_rou
 
 ## Appendix
 
-### Implementation notes
-
-The assembler is implemented as specified by [Introduction to Computing Systems: From bits and gates to C and beyond](https://highered.mheducation.com/sites/0072467509/)
-
-__Note__: in addition to the instructions described in the specification, the assembler implemented in this project also supports [JMPT](https://acg.cis.upenn.edu/milom/cse240-Fall05/handouts/Ch09-a.pdf) and [RRT](https://acg.cis.upenn.edu/milom/cse240-Fall05/handouts/Ch09-a.pdf). These instructions are a variant of `JMP` and `RET`, respectively, that have the additional effect of setting the privilege bit in PS (Process Status Register).
-
-
 ### LC-3 emulators
 
 The assembled/linked programs can be run in any of the multiple LC-3 emulators that can be found online:
 
-- [lc3tools](https://highered.mheducation.com/sites/0072467509/student_view0/lc-3_simulator.html) contains several LC-3-related utilities, among them the VM emulator `lc3sim`
-- there is also a [GUI](https://www.cis.upenn.edu/~milom/cse240-Fall05/handouts/lc3guide.html) for `lc3sim`
-- and here's another [virtual machine](https://www.jmeiners.com/lc3-vm/)
+- [lc3tools](https://highered.mheducation.com/sites/0072467509/student_view0/lc-3_simulator.html) contains several LC-3-related utilities, among them the emulator `lc3sim` that also includes a debugger
+- this other [emulator with a GUI](https://www.cis.upenn.edu/~milom/cse240-Fall05/handouts/lc3guide.html) is written in Java and supports video output 
+- and here's another [LC-3 virtual machine](https://www.jmeiners.com/lc3-vm/) written in C
 
-`lc3sim` requires an [OS](https://acg.cis.upenn.edu/milom/cse240-Fall05/handouts/code/lc3os.asm) to run whereas the last VM has the OS built-in.
-Additionally, `lc3sim` includes a debugger.
+The first two emulators require an [OS](https://acg.cis.upenn.edu/milom/cse240-Fall05/handouts/code/lc3os.asm) to handle `TRAP` calls and
+restrict access to different memory regions, whereas the last VM has that functionality built-in.
+
+
+### Implementation notes
+
+The assembler is implemented as specified by [Introduction to Computing Systems: From bits and gates to C and beyond](https://highered.mheducation.com/sites/0072467509/)
+
+In addition to the instructions described in the specification, the assembler implemented in this project also supports [JMPT](https://acg.cis.upenn.edu/milom/cse240-Fall05/handouts/Ch09-a.pdf) and [RTT](https://acg.cis.upenn.edu/milom/cse240-Fall05/handouts/Ch09-a.pdf). 
+These instructions are a variant of `JMP` and `RET`, respectively, that have the additional effect of setting to zero the privilege bit in PS (Process Status Register).
+
+__Note__: `lc3sim` does not support those instructions though.
+
