@@ -1,7 +1,7 @@
 package com.github.falvarezb
 
 import com.github.falvarezb.OpCode.{ADD, AND}
-import com.github.falvarezb.Util.{parseImmediate, parseNumericValue, parseRegister}
+import com.github.falvarezb.Util.{parseImmediate, parseNumericValue, parseRegister, twosComplement}
 
 object OperateInstructions:
   def parseAdd(using lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(ADD)

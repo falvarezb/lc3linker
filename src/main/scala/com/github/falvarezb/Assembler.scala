@@ -22,8 +22,8 @@ class Assembler:
 
   def link(asmFiles: Seq[String], objFile: String): Either[String, Unit] =
     /**
-     * Recursive function that iterates over all files passed as an argument to the linker, on each iteration
-     * the instructions' metadata of the file is calculated and accummulated to the result of the previous files.
+     * Recursive function that iterates over all asm files passed as an argument to the linker, on each iteration
+     * the instructions' metadata of that file is calculated and accummulated to the result of the previous files.
      *
      * Additionally, the symbol table of each file is created, with each file taking as offset the memory address
      * of the last instruction of the previous file:
@@ -64,9 +64,9 @@ class Assembler:
       instructionMetadataList <- createSymbolTable(linesMetadata, None)
       instructions <- doSyntaxAnalysis(instructionMetadataList._1)
     yield
-      val filePrefix = asmFileNamePath.split('.')(0)
-      serializeInstructions(instructions, s"$filePrefix.obj")
-      serializeSymbolTable(s"$filePrefix.sym")
+      val asmFileNameWithoutExtension = asmFileNamePath.split('.')(0)
+      serializeInstructions(instructions, s"$asmFileNameWithoutExtension.obj")
+      serializeSymbolTable(s"$asmFileNameWithoutExtension.sym")
 
   private def doLexicalAnalysis(asmFileNamePath: String): Either[String, List[LineMetadata]] =
     Using(Source.fromFile(asmFileNamePath)) { source =>
@@ -91,7 +91,8 @@ class Assembler:
    *
    * @param linesMetadata lines and metadata
    * @param instructionOffset
-   * @return lines with the instruction location
+   * @return tuple consisting in the lines with the instruction location and the first free memory address after the
+   *         last instruction
    */
   private def createSymbolTable(linesMetadata: List[LineMetadata], instructionOffset: Option[InstructionLocation]): Either[String, (List[InstructionMetadata], InstructionLocation)] =
 
@@ -106,15 +107,15 @@ class Assembler:
      *
      * - directive .STRINGZ increase instruction counter by the number of chars of the corresponding string
      *
-     * - directive .ORIG increase instruction counter by the value of its operand unless an instruction offset is
-     * provided, in which case the instruction counter is increased by 1
+     * - directive .ORIG increase instruction counter by the value of its operand
      *
      * As a side effect, found labels are stored in the symbol table
      *
      * @param line                line and metadata
      * @param instructionLocation instruction location corresponding to the given line; needed to build the symbol table
      * @param isLabelLine         flag used to help process lines containing label and instruction at the same time
-     * @return distance to the next instruction in memory
+     * @return tuple consisting of the distance to the next instruction in memory and a boolean to indicate whether the
+     *         line follows a label in the same line
      */
     @tailrec
     def processLine(instructionLocation: InstructionLocation, isLabelLine: Boolean = false)(using line: LineMetadata): Either[String, (Int, Boolean)] =

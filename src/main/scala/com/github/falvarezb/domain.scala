@@ -30,4 +30,3 @@ enum ConditionCode(val value: Int):
   case ZP extends ConditionCode(3) //011
   case NZP extends ConditionCode(7) //111
 
-def twosComplement(int: Int, numBits: Int) = if int < 0 then int + (1 << numBits) else int

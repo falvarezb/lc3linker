@@ -51,8 +51,11 @@ object Util:
    * retrieved from the symbol table.
    *
    * How to work out the offset:
+   *
    * - calculate difference between numeric value of the token and the instruction's memory address and then subtract 1
+   *
    * - validate the result of the previous step is within the range indicated by offsetNumBits
+   *
    * - calculate 2's complement
    */
   def parseOffset(token: String, instructionMemoryAddress: InstructionLocation, offsetNumBits: Int, symbolTable: SymbolTable)(using lineMetadata: LineMetadata): Either[String, Int] =
@@ -133,4 +136,6 @@ object Util:
 
   def parseTrapVector(token: String)(using lineMetadata: LineMetadata): Either[String, Int] =
     parseNumericValue(token, 0, 0xFF)
+
+  def twosComplement(int: Int, numBits: Int) = if int < 0 then int + (1 << numBits) else int
 
