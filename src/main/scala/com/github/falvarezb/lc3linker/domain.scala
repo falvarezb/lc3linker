@@ -1,4 +1,4 @@
-package com.github.falvarezb
+package com.github.falvarezb.lc3linker
 
 type SymbolTable = Map[String, InstructionMemoryAddress]
 

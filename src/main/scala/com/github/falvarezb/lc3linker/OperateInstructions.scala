@@ -1,7 +1,7 @@
-package com.github.falvarezb
+package com.github.falvarezb.lc3linker
 
-import com.github.falvarezb.OpCode.{ADD, AND}
-import com.github.falvarezb.Util.{parseImmediate, parseNumericValue, parseRegister, twosComplement}
+import OpCode.{ADD, AND}
+import Util.{parseImmediate, parseNumericValue, parseRegister, twosComplement}
 
 object OperateInstructions:
   def parseAdd(using lineMetadata: LineMetadata): Either[String, Int] = parseAddAnd(ADD)

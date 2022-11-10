@@ -1,6 +1,8 @@
-package com.github.falvarezb
+package com.github.falvarezb.lc3linker
 
-  @main
+import com.github.falvarezb.lc3linker.Assembler
+
+@main
   def main(files: String*): Either[String, Unit] =
     val result: Either[String, Unit] = if files.length == 1 then
       new Assembler().assemble(files.head)

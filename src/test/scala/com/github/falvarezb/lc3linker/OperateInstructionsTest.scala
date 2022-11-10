@@ -1,6 +1,6 @@
-package com.github.falvarezb
+package com.github.falvarezb.lc3linker
 
-import com.github.falvarezb.OperateInstructions.{parseAdd, parseAnd, parseNot}
+import OperateInstructions.{parseAdd, parseAnd, parseNot}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 

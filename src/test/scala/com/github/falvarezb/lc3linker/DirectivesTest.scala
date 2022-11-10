@@ -1,7 +1,7 @@
-package com.github.falvarezb
+package com.github.falvarezb.lc3linker
 
-import com.github.falvarezb.ControlInstructions.parseJsr
-import com.github.falvarezb.Directives.{parseFill, parseStringz}
+import ControlInstructions.parseJsr
+import Directives.{parseFill, parseStringz}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 

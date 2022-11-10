@@ -1,4 +1,4 @@
-package com.github.falvarezb
+package com.github.falvarezb.lc3linker
 
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.funsuite.AnyFunSuite

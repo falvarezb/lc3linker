@@ -1,7 +1,7 @@
-package com.github.falvarezb
+package com.github.falvarezb.lc3linker
 
-import com.github.falvarezb.ControlInstructions.*
-import com.github.falvarezb.OpCode.BR
+import ControlInstructions.*
+import OpCode.BR
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 

@@ -1,7 +1,7 @@
-package com.github.falvarezb
+package com.github.falvarezb.lc3linker
 
-import com.github.falvarezb.OpCode.{JMP, JMPT, JSRR}
-import com.github.falvarezb.Util.{interpretEscapeSequence, parseOffset, parseRegister, parseTrapVector}
+import OpCode.{JMP, JMPT, JSRR}
+import Util.{interpretEscapeSequence, parseOffset, parseRegister, parseTrapVector}
 
 object ControlInstructions:
   def parseJsr(using instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =

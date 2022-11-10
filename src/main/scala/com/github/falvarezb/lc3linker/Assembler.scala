@@ -1,4 +1,4 @@
-package com.github.falvarezb
+package com.github.falvarezb.lc3linker
 
 import java.io.{FileOutputStream, FileWriter}
 import scala.collection.immutable.{AbstractSeq, LinearSeq}
@@ -8,11 +8,11 @@ import scala.io.Source
 import cats.instances.either
 import cats.syntax.either.*
 import cats.syntax.all.toTraverseOps
-import com.github.falvarezb.ControlInstructions.{parseBr, parseJmp, parseJmpt, parseJsr, parseJsrr, parseTrap}
-import com.github.falvarezb.DataMovementInstructions.{parseLd, parseLdi, parseLdr, parseLea, parseSt, parseSti, parseStr}
-import com.github.falvarezb.OperateInstructions.{parseAdd, parseAnd, parseNot}
-import com.github.falvarezb.Util.parseMemoryAddress
-import com.github.falvarezb.Directives.*
+import ControlInstructions.{parseBr, parseJmp, parseJmpt, parseJsr, parseJsrr, parseTrap}
+import DataMovementInstructions.{parseLd, parseLdi, parseLdr, parseLea, parseSt, parseSti, parseStr}
+import OperateInstructions.{parseAdd, parseAnd, parseNot}
+import Util.parseMemoryAddress
+import Directives.*
 import scala.annotation.tailrec
 import scala.util.Using
 

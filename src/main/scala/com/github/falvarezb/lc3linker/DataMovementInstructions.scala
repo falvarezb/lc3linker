@@ -1,7 +1,7 @@
-package com.github.falvarezb
+package com.github.falvarezb.lc3linker
 
-import com.github.falvarezb.OpCode.{LD, LDI, LDR, LEA, ST, STI, STR}
-import com.github.falvarezb.Util.{parseOffset, parseRegister}
+import OpCode.{LD, LDI, LDR, LEA, ST, STI, STR}
+import Util.{parseOffset, parseRegister}
 
 object DataMovementInstructions:
   def parseLdr(using instructionMetadata: InstructionMetadata, symbolTable: SymbolTable): Either[String, Int] =

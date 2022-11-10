@@ -1,8 +1,8 @@
-package com.github.falvarezb
+package com.github.falvarezb.lc3linker
 
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
-import com.github.falvarezb.DataMovementInstructions.*
+import DataMovementInstructions.*
 
 class DataMovementInstructionsTest extends AnyFunSpec with Matchers:
   describe("LDR parser") {

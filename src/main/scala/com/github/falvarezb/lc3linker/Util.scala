@@ -1,4 +1,4 @@
-package com.github.falvarezb
+package com.github.falvarezb.lc3linker
 
 import cats.instances.either
 import cats.syntax.either.*

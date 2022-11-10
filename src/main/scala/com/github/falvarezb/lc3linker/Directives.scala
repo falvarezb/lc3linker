@@ -1,7 +1,7 @@
-package com.github.falvarezb
+package com.github.falvarezb.lc3linker
 
-import com.github.falvarezb.OpCode.*
-import com.github.falvarezb.Util.*
+import OpCode.*
+import Util.*
 import scala.collection.mutable
 //import cats.*
 //import cats.implicits.*
