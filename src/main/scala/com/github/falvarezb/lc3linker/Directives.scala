@@ -3,8 +3,6 @@ package com.github.falvarezb.lc3linker
 import OpCode.*
 import Util.*
 import scala.collection.mutable
-//import cats.*
-//import cats.implicits.*
 import cats.instances.either
 import cats.syntax.either.*
 

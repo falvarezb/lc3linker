@@ -3,11 +3,11 @@ package com.github.falvarezb.lc3linker
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
-
 import java.io.FileInputStream
 import java.util
 import scala.collection.mutable
 import scala.io.Source
+import scala.util.Using
 
 class AssemblerTest extends AnyFunSpec with Matchers :
 
@@ -16,12 +16,11 @@ class AssemblerTest extends AnyFunSpec with Matchers :
     val result = new Assembler().link(asmFileNames.map(asmFileName => s"$path/$asmFileName"), s"$path/$objFileName")
     result shouldBe Right(())
 
-    val expectedFile = new FileInputStream(s"$path/${objFileName.split('.')(0)}.expected.obj")
-    val actualFile = new FileInputStream(s"$path/$objFileName")
-
-    util.Arrays.compare(expectedFile.readAllBytes(), actualFile.readAllBytes()) shouldBe 0
-    expectedFile.close()
-    actualFile.close()
+    Using(new FileInputStream(s"$path/${objFileName.split('.')(0)}.expected.obj")) { expectedFile =>
+      Using(new FileInputStream(s"$path/$objFileName")) { actualFile =>
+        util.Arrays.compare(expectedFile.readAllBytes(), actualFile.readAllBytes()) shouldBe 0
+      }
+    }
 
   def runAssembledFileTest(asmFileName: String): Unit =
     val path = "src/test/resources"
@@ -29,12 +28,11 @@ class AssemblerTest extends AnyFunSpec with Matchers :
     result shouldBe Right(())
 
     val asmFileNameWithoutExtension = asmFileName.split('.')(0)
-    val expectedFile = new FileInputStream(s"$path/$asmFileNameWithoutExtension.expected.obj")
-    val actualFile = new FileInputStream(s"$path/$asmFileNameWithoutExtension.obj")
-
-    util.Arrays.compare(expectedFile.readAllBytes(), actualFile.readAllBytes()) shouldBe 0
-    expectedFile.close()
-    actualFile.close()
+    Using(new FileInputStream(s"$path/$asmFileNameWithoutExtension.expected.obj")) { expectedFile =>
+      Using(new FileInputStream(s"$path/$asmFileNameWithoutExtension.obj")) { actualFile =>
+        util.Arrays.compare(expectedFile.readAllBytes(), actualFile.readAllBytes()) shouldBe 0
+      }
+    }
 
   def runSymbolTableTest(asmFileName: String) =
     val path = "src/test/resources"
@@ -49,12 +47,11 @@ class AssemblerTest extends AnyFunSpec with Matchers :
     val result = new Assembler().link(asmFileNames.map(asmFileName => s"$path/$asmFileName"), s"$path/$objFileName")
     result shouldBe Right(())
 
-    val expectedFile = Source.fromFile(s"$path/${objFileName.split('.')(0)}.expected.sym")
-    val actualFile = Source.fromFile(s"$path/${objFileName.split('.')(0)}.sym")
-
-    expectedFile.getLines().toList shouldBe actualFile.getLines().toList
-    expectedFile.close()
-    actualFile.close()
+    Using(Source.fromFile(s"$path/${objFileName.split('.')(0)}.expected.sym")) { expectedFile =>
+      Using(Source.fromFile(s"$path/${objFileName.split('.')(0)}.sym")) { actualFile =>
+        expectedFile.getLines().toList shouldBe actualFile.getLines().toList
+      }
+    }
 
   def runErrorConditionTest(asmFileName: String) =
     val path = "src/test/resources"
