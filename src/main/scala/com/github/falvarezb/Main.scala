@@ -1,17 +1,21 @@
 package com.github.falvarezb
 
   @main
-  def main(files: String*): Unit =
+  def main(files: String*): Either[String, Unit] =
     val result: Either[String, Unit] = if files.length == 1 then
       new Assembler().assemble(files.head)
     else if files.length > 1 then
-      new Assembler().link(files.init, files.last)
+      if files.last.split('.').last == "obj" then
+        new Assembler().link(files.init, files.last)
+      else
+        Left("invalid input: output obj file not specified")
     else
-      Left("invalid input")
+      Left("invalid input: input asm file/s not specified")
 
     result match
-      case Left(value) => println(value)
+      case Left(err) => println(err)
       case Right(_) => println(s"asm files successfully assembled")
+    result
 
 
 

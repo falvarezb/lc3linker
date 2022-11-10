@@ -5,16 +5,8 @@ type SymbolTable = Map[String, InstructionLocation]
 case class LineNumber(value: Int) extends AnyVal
 
 case class InstructionLocation(value: Int) extends AnyVal :
-  def +(other: InstructionLocation): InstructionLocation = InstructionLocation(value + other.value)
-
   def -(other: InstructionLocation): InstructionLocation = InstructionLocation(value - other.value)
-
   def ∆+(other: Int): InstructionLocation = InstructionLocation(value + other)
-
-  def ∆-(other: Int): InstructionLocation = InstructionLocation(value - other)
-
-  def ∇+(other: Int): Int = value + other
-
   def ∇-(other: Int): Int = value - other
 
 case class LineMetadata(line: String, tokenizedLine: List[String], lineNumber: LineNumber, fileName: String):
