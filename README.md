@@ -43,7 +43,9 @@ manually rearranging the order of the subroutines in the list of arguments may f
 
 ### Examples
 
-The folder `src/test/resources` contains a few asm programs and subroutines that can be used to practise. 
+The folder `src/test/resources` contains a few asm programs and subroutines that can be used to practise.
+
+__Note__: some of the examples have been borrowed from public sources to help improve the unit tests
 
 The program __day_of_week.asm__ calculates the day of the week of a given date by using [Zeller's formula](https://en.wikipedia.org/wiki/Zeller%27s_congruence) and depends on the following subroutines:
 

@@ -1,3 +1,4 @@
+; obtained from https://acg.cis.upenn.edu/milom/cse240-Fall05/handouts/code/lc3os.asm
         .ORIG x0000
 
 ; the TRAP vector table
