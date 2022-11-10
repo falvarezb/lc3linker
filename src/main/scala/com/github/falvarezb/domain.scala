@@ -1,19 +1,19 @@
 package com.github.falvarezb
 
-type SymbolTable = Map[String, InstructionLocation]
+type SymbolTable = Map[String, InstructionMemoryAddress]
 
 case class LineNumber(value: Int) extends AnyVal
 
-case class InstructionLocation(value: Int) extends AnyVal :
-  def -(other: InstructionLocation): InstructionLocation = InstructionLocation(value - other.value)
-  def ∆+(other: Int): InstructionLocation = InstructionLocation(value + other)
+case class InstructionMemoryAddress(value: Int) extends AnyVal :
+  def -(other: InstructionMemoryAddress): InstructionMemoryAddress = InstructionMemoryAddress(value - other.value)
+  def ∆+(other: Int): InstructionMemoryAddress = InstructionMemoryAddress(value + other)
   def ∇-(other: Int): Int = value - other
 
 case class LineMetadata(line: String, tokenizedLine: List[String], lineNumber: LineNumber, fileName: String):
   val isOpCode = OpCode.values.map(_.toString).contains(this.tokenizedLine.headOption.getOrElse(""))
   val isDirective = Directive.values.map(_.toString).contains(this.tokenizedLine.headOption.getOrElse(""))
 
-case class InstructionMetadata(lineMetadata: LineMetadata, instructionLocation: InstructionLocation)
+case class InstructionMetadata(lineMetadata: LineMetadata, instructionMemoryAddress: InstructionMemoryAddress)
 
 enum OpCode:
   case ADD, AND, NOT, JSR, JSRR, JMP, JMPT, LDR, STR, LD, ST, LDI, STI, LEA, BR, BRp, BRz, BRn, BRzp, BRnp, BRnz, BRnzp, TRAP, RET, RTT, RTI

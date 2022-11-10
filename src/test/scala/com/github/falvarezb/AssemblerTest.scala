@@ -38,9 +38,9 @@ class AssemblerTest extends AnyFunSpec with Matchers :
 
   def runSymbolTableTest(asmFileName: String) =
     val path = "src/test/resources"
-    val symbolTableMock = mutable.HashMap.empty[String, InstructionLocation]
+    val symbolTableMock = mutable.HashMap.empty[String, InstructionMemoryAddress]
     val result = new Assembler {
-      override protected val symbolTable: mutable.Map[String, InstructionLocation] = symbolTableMock
+      override protected val symbolTable: mutable.Map[String, InstructionMemoryAddress] = symbolTableMock
     }.assemble(s"$path/$asmFileName")
     (result, symbolTableMock)
 
@@ -151,17 +151,17 @@ class AssemblerTest extends AnyFunSpec with Matchers :
     it("label and instruction are in the same line") {
       val (result, symbolTable) = runSymbolTableTest("t3.asm")
       result shouldBe Right(())
-      symbolTable should contain("LABEL" -> InstructionLocation(0x3003))
+      symbolTable should contain("LABEL" -> InstructionMemoryAddress(0x3003))
     }
 
     it("multiple labels associated to the same instruction") {
       val (result, symbolTable) = runSymbolTableTest("t4.asm")
       result shouldBe Right(())
-      symbolTable should contain("LABEL1" -> InstructionLocation(0x3003))
-      symbolTable should contain("LABEL2" -> InstructionLocation(0x3001))
-      symbolTable should contain("LABEL3" -> InstructionLocation(0x3002))
-      symbolTable should contain("LABEL4" -> InstructionLocation(0x3004))
-      symbolTable should contain("LABEL5" -> InstructionLocation(0x3003))
+      symbolTable should contain("LABEL1" -> InstructionMemoryAddress(0x3003))
+      symbolTable should contain("LABEL2" -> InstructionMemoryAddress(0x3001))
+      symbolTable should contain("LABEL3" -> InstructionMemoryAddress(0x3002))
+      symbolTable should contain("LABEL4" -> InstructionMemoryAddress(0x3004))
+      symbolTable should contain("LABEL5" -> InstructionMemoryAddress(0x3003))
     }
 
     it("two labels in the same line is illegal") {

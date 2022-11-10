@@ -18,7 +18,7 @@ import scala.util.Using
 
 class Assembler:
 
-  protected val symbolTable: mutable.Map[String, InstructionLocation] = mutable.Map.empty
+  protected val symbolTable: mutable.Map[String, InstructionMemoryAddress] = mutable.Map.empty
 
   def link(asmFiles: Seq[String], objFile: String): Either[String, Unit] =
     /**
@@ -41,7 +41,7 @@ class Assembler:
      * @return
      */
     @tailrec
-    def nextFile(asmFiles: Seq[String], accummulatedInstructionMetadataList: List[Either[String, List[InstructionMetadata]]], fileInstructionOffset: Option[InstructionLocation]): List[Either[String, List[InstructionMetadata]]] =
+    def nextFile(asmFiles: Seq[String], accummulatedInstructionMetadataList: List[Either[String, List[InstructionMetadata]]], fileInstructionOffset: Option[InstructionMemoryAddress]): List[Either[String, List[InstructionMetadata]]] =
       asmFiles match
         case Nil => accummulatedInstructionMetadataList
         case firstFile :: rest =>
@@ -94,7 +94,7 @@ class Assembler:
    * @return tuple consisting in the lines with the instruction location and the first free memory address after the
    *         last instruction
    */
-  private def createSymbolTable(linesMetadata: List[LineMetadata], instructionOffset: Option[InstructionLocation]): Either[String, (List[InstructionMetadata], InstructionLocation)] =
+  private def createSymbolTable(linesMetadata: List[LineMetadata], instructionOffset: Option[InstructionMemoryAddress]): Either[String, (List[InstructionMetadata], InstructionMemoryAddress)] =
 
     /**
      * Process given line to calculate and return the distance to the next instruction in memory, e.g.
@@ -112,13 +112,13 @@ class Assembler:
      * As a side effect, found labels are stored in the symbol table
      *
      * @param line                line and metadata
-     * @param instructionLocation instruction location corresponding to the given line; needed to build the symbol table
-     * @param isLabelLine         flag used to help process lines containing label and instruction at the same time
+     * @param instructionMemoryAddress memory address of the instruction corresponding to the given line; needed to build the symbol table
+     * @param isLabelLine         flag used to help process lines containing both label and instruction at the same time
      * @return tuple consisting of the distance to the next instruction in memory and a boolean to indicate whether the
      *         line follows a label in the same line
      */
     @tailrec
-    def processLine(instructionLocation: InstructionLocation, isLabelLine: Boolean = false)(using line: LineMetadata): Either[String, (Int, Boolean)] =
+    def processLine(instructionMemoryAddress: InstructionMemoryAddress, isLabelLine: Boolean = false)(using line: LineMetadata): Either[String, (Int, Boolean)] =
       val firstToken = line.tokenizedLine.head
       val lineNumber = line.lineNumber
       val fileName = line.fileName
@@ -137,7 +137,7 @@ class Assembler:
               case Some(_) =>
                 s"ERROR ($fileName - line ${lineNumber.value}): duplicate symbol ('$label')".asLeft[(Int, Boolean)]
               case _ =>
-                symbolTable += (label -> instructionLocation)
+                symbolTable += (label -> instructionMemoryAddress)
                 line.tokenizedLine.tail match
                   case Nil =>
                     // standalone label, there is nothing else in this line
@@ -145,22 +145,22 @@ class Assembler:
                   case tail =>
                     // process the rest of the line after the label
                     // NOTE: if we use Either.cond, processLine won't be tail recursive
-                    processLine(instructionLocation, true)(using line.copy(tokenizedLine = tail))
+                    processLine(instructionMemoryAddress, true)(using line.copy(tokenizedLine = tail))
 
 
     @tailrec
-    def nextLine(lines: List[LineMetadata], instructions: List[InstructionMetadata], instructionLocation: InstructionLocation): Either[String, (List[InstructionMetadata], InstructionLocation)] =
+    def nextLine(lines: List[LineMetadata], instructions: List[InstructionMetadata], instructionMemoryAddress: InstructionMemoryAddress): Either[String, (List[InstructionMetadata], InstructionMemoryAddress)] =
       lines match
-        case Nil => (instructions, instructionLocation).asRight[String]
+        case Nil => (instructions, instructionMemoryAddress).asRight[String]
         case firstLine :: remainingLines =>
-          processLine(instructionLocation)(using firstLine) match
-            case Left(str) => str.asLeft[(List[InstructionMetadata], InstructionLocation)]
+          processLine(instructionMemoryAddress)(using firstLine) match
+            case Left(str) => str.asLeft[(List[InstructionMetadata], InstructionMemoryAddress)]
             case Right((nextInstructionLocationIncrement, isLabelLine)) =>
-              val nextInstructionLocation = instructionLocation ∆+ nextInstructionLocationIncrement
+              val nextInstructionLocation = instructionMemoryAddress ∆+ nextInstructionLocationIncrement
               val updatedLine = if isLabelLine then firstLine.copy(tokenizedLine = firstLine.tokenizedLine.drop(1)) else firstLine
-              nextLine(remainingLines, InstructionMetadata(updatedLine, instructionLocation) :: instructions, nextInstructionLocation)
+              nextLine(remainingLines, InstructionMetadata(updatedLine, instructionMemoryAddress) :: instructions, nextInstructionLocation)
 
-    nextLine(linesMetadata, Nil, instructionOffset.getOrElse(InstructionLocation(0))).map { case (instructionMetadataList, nextInstructionLocation) =>
+    nextLine(linesMetadata, Nil, instructionOffset.getOrElse(InstructionMemoryAddress(0))).map { case (instructionMetadataList, nextInstructionLocation) =>
       (instructionMetadataList.reverse, nextInstructionLocation)
     }
 

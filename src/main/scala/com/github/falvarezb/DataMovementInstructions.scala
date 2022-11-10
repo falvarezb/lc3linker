@@ -36,7 +36,7 @@ object DataMovementInstructions:
       _ <- Either.cond(tokens.length >= numTokens, (), s"ERROR (${lineMetadata.fileName} - line ${lineMetadata.lineNumber.value}): missing operands")
       SR_DR <- parseRegister(tokens(1)).map(_ << 9)
       baseRegister <- parseRegister(tokens(2)).map(_ << 6)
-      offset <- parseOffset(tokens(3), instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
+      offset <- parseOffset(tokens(3), instructionMetadata.instructionMemoryAddress, offsetNumBits, symbolTable)
     yield (if opCode == LDR then 6 << 12 else 7 << 12) + SR_DR + baseRegister + offset
 
 
@@ -56,5 +56,5 @@ object DataMovementInstructions:
     for
       _ <- Either.cond(tokens.length >= numTokens, (), s"ERROR (${lineMetadata.fileName} - line ${lineMetadata.lineNumber.value}): missing operands")
       SR_DR <- parseRegister(tokens(1)).map(_ << 9)
-      offset <- parseOffset(tokens(2), instructionMetadata.instructionLocation, offsetNumBits, symbolTable)
+      offset <- parseOffset(tokens(2), instructionMetadata.instructionMemoryAddress, offsetNumBits, symbolTable)
     yield opCodeBinary + SR_DR + offset

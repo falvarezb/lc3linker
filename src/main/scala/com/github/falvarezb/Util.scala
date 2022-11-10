@@ -58,7 +58,7 @@ object Util:
    *
    * - calculate 2's complement
    */
-  def parseOffset(token: String, instructionMemoryAddress: InstructionLocation, offsetNumBits: Int, symbolTable: SymbolTable)(using lineMetadata: LineMetadata): Either[String, Int] =
+  def parseOffset(token: String, instructionMemoryAddress: InstructionMemoryAddress, offsetNumBits: Int, symbolTable: SymbolTable)(using lineMetadata: LineMetadata): Either[String, Int] =
     parseNumericValueWithAlternativeParser(token, -(1 << (offsetNumBits - 1)), (1 << (offsetNumBits - 1)) - 1) {
       Some(
         Either.catchOnly[NoSuchElementException] {

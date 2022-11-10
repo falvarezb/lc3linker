@@ -48,25 +48,25 @@ class DirectivesTest extends AnyFunSpec with Matchers :
   describe(".FILL parser") {
     it("successful parse when operand is an immediate value") {
       given lineMetadata: LineMetadata = LineMetadata("DOES NOT MATTER", List(".FILL", "10"), LineNumber(1), "")
-      given symbolTable: SymbolTable = Map[String, InstructionLocation]()
+      given symbolTable: SymbolTable = Map[String, InstructionMemoryAddress]()
       parseFill shouldBe Right(10)
     }
 
     it("successful parse when operand is a symbolic value") {
       given lineMetadata: LineMetadata = LineMetadata("DOES NOT MATTER", List(".FILL", "LABEL"), LineNumber(1), "")
-      given symbolTable: SymbolTable = Map[String, InstructionLocation]("LABEL" -> InstructionLocation(0x3003))
+      given symbolTable: SymbolTable = Map[String, InstructionMemoryAddress]("LABEL" -> InstructionMemoryAddress(0x3003))
       parseFill shouldBe Right(0x3003)
     }
 
     it("immediate too big") {
       given lineMetadata: LineMetadata = LineMetadata("DOES NOT MATTER", List(".FILL", "#70000"), LineNumber(1), "file")
-      given symbolTable: SymbolTable = Map[String, InstructionLocation]()
+      given symbolTable: SymbolTable = Map[String, InstructionMemoryAddress]()
       parseFill shouldBe Left("ERROR (file - line 1): Immediate operand (#70000) out of range (-32768 to 65535)")
     }
 
     it("immediate too small") {
       given lineMetadata: LineMetadata = LineMetadata("DOES NOT MATTER", List(".FILL", "#-33000"), LineNumber(1), "file")
-      given symbolTable: SymbolTable = Map[String, InstructionLocation]()
+      given symbolTable: SymbolTable = Map[String, InstructionMemoryAddress]()
       parseFill shouldBe Left("ERROR (file - line 1): Immediate operand (#-33000) out of range (-32768 to 65535)")
     }
   }
