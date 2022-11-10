@@ -83,15 +83,15 @@ class Assembler:
 
 
   /**
-   * Calculate the instruction location in memory corresponding to each line and with that information create
+   * Calculate the memory address corresponding to each line and with that information create
    * the symbol table. The offset to calculate instructions' address is given by the corresponding parameter.
    * If no offset is provided, the offset is the one given by the '.ORIG' directive
    *
-   * Lines corresponding to labels contain the instruction location of the next instruction
+   * Lines corresponding to labels contain the memory adress of the next instruction
    *
    * @param linesMetadata lines and metadata
    * @param instructionOffset
-   * @return tuple consisting in the lines with the instruction location and the first free memory address after the
+   * @return tuple consisting in the lines with the memory address and the first free memory address after the
    *         last instruction
    */
   private def createSymbolTable(linesMetadata: List[LineMetadata], instructionOffset: Option[InstructionMemoryAddress]): Either[String, (List[InstructionMetadata], InstructionMemoryAddress)] =
