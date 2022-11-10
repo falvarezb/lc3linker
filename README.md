@@ -7,7 +7,7 @@ Program to link LC-3 asm files
 
 ## Description
 
-This project is an assembler and linker written in Scala 3 for [Little Computer 3 (LC-3)](https://en.wikipedia.org/wiki/Little_Computer_3)
+This project is an assembler and linker for [Little Computer 3 (LC-3)](https://en.wikipedia.org/wiki/Little_Computer_3)
 
 The experience of using LC-3 subroutines can be improved by having each subroutine in its own compilable unit, making it possible for different programs to re-use the same subroutines.
 This approach requires a linker that assembles the code of each compilable unit and puts all the machine code into a single binary.
@@ -19,6 +19,9 @@ This approach requires a linker that assembles the code of each compilable unit 
 - name of the resulting object file
 
 It also generates a symbol table with the same name as the object file but suffix `.sym`
+
+__Note__: if only 1 asm file is passed as argument, there is no need to specify the object file (one with the same
+name as the asm file will be created by default)
 
 `lc3linker` cannot be used to:
 
@@ -38,7 +41,7 @@ In case of long programs or having many subroutines, some PC-relative or base re
 manually rearranging the order of the subroutines in the list of arguments may fix the problem.
 
 
-### Example
+### Examples
 
 The folder `src/test/resources` contains a few asm programs and subroutines that can be used to practise. 
 
@@ -67,7 +70,7 @@ Assuming the docker command is run from the folder containing the asm files:
 docker run --rm -v $(pwd):/data --name lc3linker fjab76/lc3linker:1.0.0 /data/day_of_week.asm /data/multiplication_routine.asm /data/division_routine.asm /data/read_multi_digit_routine.asm /data/ascii_to_binary_routine.asm /data/day_of_week.obj
 ```
 
-For convenience, we provide the script `lc3linker.sh` to simplify the call to the docker command:
+For convenience, the script [lc3linker.sh](https://github.com/falvarezb/lc3linker/blob/main/lc3linker.sh) simplifies the call to the docker command:
 
 ```
 lc3linker.sh day_of_week.asm multiplication_routine.asm division_routine.asm read_multi_digit_routine.asm ascii_to_binary_routine.asm day_of_week.obj
